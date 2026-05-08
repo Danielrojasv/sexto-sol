@@ -7,6 +7,7 @@ Contexto del proyecto para Claude Code. Léelo antes de tocar código.
 ## 0. Autoridad narrativa — Arco del Jugador
 
 > **CRÍTICO**: Antes de cualquier decisión narrativa (flavor text, cinemáticas, eventos, marketing, cartas legendarias, expansiones), validá contra `docs/lore/arco-del-jugador.md`. Es la biblia narrativa trans-expansiones. Cualquier decisión narrativa futura tiene que pasar los **5 filtros** del documento:
+>
 > 1. ¿Respeta la etapa del arco en la que estamos?
 > 2. ¿Preserva la disciplina narrativa requerida en esta etapa?
 > 3. ¿Acumula sin sustituir?
@@ -22,6 +23,7 @@ Specs en `docs/specs/`. Antes de empezar feature ≥ 3 días, que toque mecánic
 **Proceso canónico** (mecánica + lecciones de sprints reales): `~/.claude/skills/sdd/PROCESS.md`. El skill `sdd` activa automáticamente el flujo cuando el usuario pide armar una spec.
 
 **Convención:**
+
 - Antes de feature grande, leer `docs/specs/<feature>.md` si existe; si no existe pero el feature lo amerita, ofrecer crear uno usando el template.
 - Cualquier cambio de scope durante el PR actualiza la spec en el mismo PR.
 - Al cerrar feature, mover spec a `docs/specs/shipped/`.
@@ -50,20 +52,20 @@ Subvierte el trope colonialista de "los aliens ayudaron a las civilizaciones pre
 
 ### Stack técnico
 
-| Componente | Tecnología |
-|---|---|
-| Lenguaje | TypeScript 5+ |
-| Build | Vite |
-| Engine | Reducer puro event-driven (port del kernel de myl-game) |
-| RNG | Seedable (`src/engine/rng.ts`) |
-| Test | Vitest + fast-check (property tests para invariantes) |
-| UI shell | React 18 (web-first PWA — mobile/native después) |
+| Componente              | Tecnología                                                       |
+| ----------------------- | ---------------------------------------------------------------- |
+| Lenguaje                | TypeScript 5+                                                    |
+| Build                   | Vite                                                             |
+| Engine                  | Reducer puro event-driven (port del kernel de myl-game)          |
+| RNG                     | Seedable (`src/engine/rng.ts`)                                   |
+| Test                    | Vitest + fast-check (property tests para invariantes)            |
+| UI shell                | React 18 (web-first PWA — mobile/native después)                 |
 | Canvas (sector estelar) | **PixiJS** (no Konva — performance superior para muchos sprites) |
-| State management | **Zustand** (lightweight) |
-| Styling | **Tailwind v4** |
-| Animaciones de cartas | **Framer Motion** |
-| Package manager | pnpm |
-| Node | 22+ |
+| State management        | **Zustand** (lightweight)                                        |
+| Styling                 | **Tailwind v4**                                                  |
+| Animaciones de cartas   | **Framer Motion**                                                |
+| Package manager         | pnpm                                                             |
+| Node                    | 22+                                                              |
 
 ---
 
@@ -109,6 +111,7 @@ Subvierte el trope colonialista de "los aliens ayudaron a las civilizaciones pre
 ### Service / Repository
 
 Cuando llegue persistencia (cuentas, mazos, partidas):
+
 - Queries SQL en `repository.py` (o equivalente TS).
 - Lógica de negocio en `service.ts`.
 - Routers / handlers sólo orquestan HTTP, nada de SQL.
@@ -116,6 +119,15 @@ Cuando llegue persistencia (cuentas, mazos, partidas):
 ### Multi-tenancy
 
 Cuando exista backend con accounts: TODA query DB filtra por `user_id` del jugador autenticado. Sin excepciones.
+
+---
+
+## 3.1 Reglas vivas (OBLIGATORIO leer antes de tocar áreas sensibles)
+
+- [`SECURITY-RULES.md`](./SECURITY-RULES.md) — antes de tocar engine, RNG, persistencia, auth.
+- [`PERFORMANCE-RULES.md`](./PERFORMANCE-RULES.md) — antes de tocar reducer, canvas (PixiJS), componentes que renderizan cartas.
+
+Sub-agentes deben consultar estos archivos cuando entren a esas áreas. Si encontrás un patrón inseguro/lento repetido, agregá la regla acá en vez de fixearlo en silencio.
 
 ---
 
@@ -135,6 +147,7 @@ Cuando exista backend con accounts: TODA query DB filtra por `user_id` del jugad
 ### Sensibilidad cultural
 
 Las facciones están inspiradas en culturas reales (Mexica, Inca, Muisca, Mapuche). Cuando llegue el momento de:
+
 - Diseñar arte visual
 - Escribir flavor text
 - Bautizar cartas en lenguas indígenas (mapuzungun, quechua, náhuatl, muysccubun)
@@ -222,4 +235,4 @@ sexto-sol/
 
 ---
 
-*Sexto Sol — Inspirado en las civilizaciones del Quinto Sol*
+_Sexto Sol — Inspirado en las civilizaciones del Quinto Sol_
