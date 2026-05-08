@@ -6,17 +6,18 @@ Formato: `[status] título — nota`. Status: ` ` pending, `x` done, `~` in prog
 
 ---
 
-## Fase 0 — Infraestructura (en curso)
+## Fase 0 — Infraestructura ✅
 
 - [x] Crear scaffold del repo (`/opt/sexto-sol/`)
-- [x] CLAUDE.md, README.md, GAME-RULES.md, ARCHITECTURE.md, BACKLOG.md, docs/specs/_template.md
+- [x] CLAUDE.md, README.md, GAME-RULES.md, ARCHITECTURE.md, BACKLOG.md, docs/specs/\_template.md
 - [x] Spec maestra `design-v0.md` viva
-- [ ] `git init` + push a repo `Danielrojasv/sexto-sol` (pendiente decisión: privado vs público)
-- [ ] `pnpm init` + Node 22 + TypeScript + Vite scaffold
-- [ ] ESLint + Prettier + Vitest + fast-check
-- [ ] CI básico (lint + typecheck + test)
-- [ ] Pre-commit hook (gitleaks + lint-staged + coverage gate)
-- [ ] SECURITY-RULES.md y PERFORMANCE-RULES.md (cuando haya código)
+- [x] `git init` + push a repo `Danielrojasv/sexto-sol` (privado)
+- [x] `pnpm init` + Node 22 + TypeScript + Vite scaffold
+- [x] ESLint + Prettier + Vitest + fast-check
+- [x] CI básico (lint + typecheck + test + build + gitleaks)
+- [x] Pre-commit hook (husky + tsc + lint-staged + gitleaks graceful)
+- [x] SECURITY-RULES.md y PERFORMANCE-RULES.md (placeholders, vivos)
+- [ ] Coverage gate diferido a Phase 1 (cuando haya tests reales)
 
 ## Fase 1 — Engine kernel
 
@@ -41,21 +42,25 @@ Formato: `[status] título — nota`. Status: ` ` pending, `x` done, `~` in prog
 ## Fase 3 — Facciones (set base)
 
 ### Mapuche (PRIMERA — ancla histórica del balance)
+
 - [ ] `Newen` keyword: nave gana +1 fuerza permanente cuando recibe daño
 - [ ] `Lof` keyword: 2+ naves Mapuche en mismo planeta se buffean
 - [ ] ~30 cartas iniciales (placeholder design)
 
 ### Inca
+
 - [ ] `Tributo` keyword
 - [ ] `Mit'a` keyword
 - [ ] `Acllla` keyword
 - [ ] ~30 cartas
 
 ### Mexica
+
 - [ ] `Ofrenda` keyword
 - [ ] ~30 cartas
 
 ### Muisca
+
 - [ ] `Sumergir` keyword
 - [ ] ~30 cartas
 
@@ -114,21 +119,27 @@ Derivada del **Arco del Jugador** (`docs/lore/arco-del-jugador.md` v1.0). Estos 
 ## Roadmap de ediciones (post-lanzamiento)
 
 ### Set base — "Sexto Sol" (lanzamiento)
+
 4 facciones: Mexica, Inca, Muisca, Mapuche. ~120-150 cartas.
 
 ### Mini 1.1 — "Las Estrellas Recuerdan" (~3 meses post-lanzamiento)
+
 Plot reveal: los aliens vinieron a aprender, no a enseñar. Keyword `Eco` (cartas se repiten en ciclos posteriores). ~40-60 cartas.
 
 ### Mini 1.2 — "Pachacuti" (~6 meses)
+
 Facción **Maya** entra (astronomía / manipulación temporal). ~40-60 cartas.
 
 ### Mini 1.3 — "El Quinto Sol" (~9 meses)
+
 Climax narrativo. Las civilizaciones deben aliarse o competir por el Sexto Sol. Keyword `Alianza`.
 
 ### Edición 2 — "Eclipse" (~12 meses)
+
 Segunda edición base. Convergencia de las facciones. Posible facción nueva: **Mochica**.
 
 ### Localizaciones que desbloquean facciones
+
 - 🇵🇹/🇧🇷 **Lanzamiento portugués**: facción Tupi-Guaraní
 - 🇮🇹/🇪🇸 **Lanzamiento europeo**: ¿Olmecas? (lore "ancient mystery")
 - 🇨🇴/🇻🇪 **Lanzamiento norte sudamericano**: profundización de Muisca + Tairona
@@ -148,4 +159,4 @@ Segunda edición base. Convergencia de las facciones. Posible facción nueva: **
 
 ---
 
-*Vivo. Última actualización: 2026-05-08.*
+_Vivo. Última actualización: 2026-05-08._
