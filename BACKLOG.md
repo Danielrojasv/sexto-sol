@@ -78,6 +78,18 @@ Formato: `[status] título — nota`. Status: ` ` pending, `x` done, `~` in prog
 - [ ] Persistencia de mazos
 - [ ] Telemetría básica
 
+## Fase de Lore (paralela a las técnicas)
+
+Derivada del **Arco del Jugador** (`docs/lore/arco-del-jugador.md` v1.0). Estos son los próximos pasos sugeridos al final de ese documento — son requisitos para diseñar cualquier carta o cinemática del set base con autoridad narrativa.
+
+- [ ] **Cuatro despertares** — material foundational del set base. Cómo cada civilización (Mexica, Inca, Muisca, Mapuche) descubrió/desarrolló su tecnología espacial en aislamiento, narrado desde su propia cosmología. Sirve como ancla narrativa de cada faction.
+- [ ] **Perfiles detallados de los 4 líderes legendarios** — uno por civilización para el set base. Cada uno con sus sospechas privadas (que el jugador NO lee directamente — están implícitas en flavor text, no explícitas).
+- [ ] **Catálogo concreto de pistas de los Sabios para set base** — qué pistas se siembran en cartas/eventos del set base que solo se revelarán como pistas en Mini 1.1+. Disciplina: deben pasar desapercibidas en su momento (Regla 3 del arco).
+- [ ] **Diseño de las 6-10 cartas de "susurro mecánico"** — cartas del set base que tienen efectos extraños/inexplicables que en Mini 1.2 se reinterpretarán como manifestaciones tempranas del virus. Cuáles son, qué efecto raro tienen, cómo se reinterpretan.
+- [ ] **Spec de las "5 rutas del Sexto Sol"** — qué representa cada ruta cosmológicamente, cómo se determina canónicamente cuál ruta predomina al cierre del bloque inicial (encuesta entre jugadores? meta de torneos? evento global? decisión narrativa del equipo?), cómo se ofrece la "sexta opción" (romper el bucle) al jugador.
+- [ ] **Sub-spec del virus** — Regla 4 (no tiene voz, no se personifica). Cómo se manifiesta mecánicamente (efectos de Corrupción, propagación, espejos oscuros). Cómo se invoca sin invocar.
+- [ ] **Sub-spec de la Tierra-tumba** — Regla 6 (espejo, no escenario). Cómo se referencia en flavor text del set base sin desarrollarse, cómo se desarrolla parcialmente en Mini 1.3, cómo se mantiene fuera de cuadro a perpetuidad.
+
 ## Fase 6 — Beta + monetización
 
 - [ ] 50 jugadores invitados

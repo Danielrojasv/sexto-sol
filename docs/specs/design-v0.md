@@ -78,6 +78,8 @@ Daniel quiere construir un CCG (Collectible Card Game) PVP que resuelva problema
 
 ## Tema y narrativa
 
+> **Autoridad narrativa:** El arco del jugador trans-expansiones está documentado en `docs/lore/arco-del-jugador.md` (v1.0, 2026-05-08). Ese doc es la biblia narrativa: 5 etapas de descubrimiento (Set base → Mini 1.1 → Mini 1.2 → Mini 1.3 → Edición 2+), 6 reglas transversales inviolables, 5 filtros de validación obligatorios para toda decisión narrativa futura. Todo flavor text, cinemática, evento, carta legendaria, mecánica narrativa o expansión debe chequearse contra ese documento. Esta sección de design-v0 captura el resumen del worldbuilding superficial (Etapa 1 — set base); las capas profundas viven en el arco.
+
 ### Premisa
 *"El Quinto Sol está terminando. Las cuatro civilizaciones de los cuatro mundos pelean por quién controlará el Sexto."*
 

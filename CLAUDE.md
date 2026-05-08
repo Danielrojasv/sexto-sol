@@ -4,7 +4,18 @@ Contexto del proyecto para Claude Code. Léelo antes de tocar código.
 
 ---
 
-## 0. Spec-Driven Development (SDD)
+## 0. Autoridad narrativa — Arco del Jugador
+
+> **CRÍTICO**: Antes de cualquier decisión narrativa (flavor text, cinemáticas, eventos, marketing, cartas legendarias, expansiones), validá contra `docs/lore/arco-del-jugador.md`. Es la biblia narrativa trans-expansiones. Cualquier decisión narrativa futura tiene que pasar los **5 filtros** del documento:
+> 1. ¿Respeta la etapa del arco en la que estamos?
+> 2. ¿Preserva la disciplina narrativa requerida en esta etapa?
+> 3. ¿Acumula sin sustituir?
+> 4. ¿Se puede leer en su propia capa sin necesitar conocimiento futuro?
+> 5. ¿Le da al jugador material para inferir, no solo material para consumir?
+>
+> Si no pasa los 5, se ajusta o se posterga. Las **6 reglas transversales** (descubrimiento del jugador, capas independientes, pistas retroactivas, virus sin voz, Sabios no actúan, Tierra-tumba como espejo) son inviolables.
+
+## 1. Spec-Driven Development (SDD)
 
 Specs en `docs/specs/`. Antes de empezar feature ≥ 3 días, que toque mecánicas centrales del juego, normativa de balance, integración nueva, o decisiones de arquitectura del engine, escribir spec usando `docs/specs/_template.md`.
 
