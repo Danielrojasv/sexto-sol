@@ -1,0 +1,9 @@
+pnpm exec tsc -b --noEmit
+pnpm exec lint-staged
+
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --no-banner
+else
+  echo "⚠️  gitleaks no instalado — escaneo de secretos OMITIDO localmente (CI sí lo corre)."
+  echo "   Instala con: brew install gitleaks  o  apt install gitleaks"
+fi
