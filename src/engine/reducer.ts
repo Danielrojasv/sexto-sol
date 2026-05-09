@@ -395,13 +395,13 @@ function handleActivatePlanet(state: GameState, planetId: string): ReducerResult
   if (planet.exhausted) return { state, events: [] }
   if (ps.energy < 1) return { state, events: [] }
 
-  // Costo 1, gana 1: net 0 energía. El planeta queda agotado por este jugador.
+  // GAME-RULES §2.1: gastás 1 (cost), ganás +1 base + +1 bonus = +2 → net +1.
+  // El planeta queda agotado hasta el próximo turno del activador.
+  // Don effect del planeta diferido a Phase F+ (intérprete card-like).
   const newPlanets = state.sector.planets.map((p, i) =>
     i === planetIdx ? { ...p, exhausted: true, exhaustedBy: player } : p,
   )
-  // El "+1 energía esa fase" del Don: por simplicidad sumamos 1 inmediato
-  // (gastá 1 → ganá 1 → net 0, pero respeta la mecánica).
-  const nextPs = { ...ps, energy: ps.energy /* -1 +1 */ }
+  const nextPs = { ...ps, energy: ps.energy + 1 } // -1 cost + 2 income = +1 net
   let next = setPlayer(state, player, nextPs)
   next = { ...next, sector: { planets: newPlanets } }
   return {
