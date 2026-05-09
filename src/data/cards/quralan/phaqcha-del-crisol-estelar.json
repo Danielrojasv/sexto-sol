@@ -1,0 +1,29 @@
+{
+  "id": "quralan_phaqcha_del_crisol_estelar",
+  "name": "Phaqcha del Crisol Estelar",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 5,
+  "rarity": "rare",
+  "strength": 5,
+  "hp": 7,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "continuous" },
+      "category": "accumulative",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "quralan" },
+        "effect": {
+          "op": "modify_hp",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      }
+    }
+  ],
+  "flavorText": "Su crisol funde el resplandor del astro: cuanto mayor la flota, más grueso el blindaje."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "quralan_qillay_del_hangar_solar",
+  "name": "Q'illay del Hangar Solar",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 2,
+  "rarity": "common",
+  "strength": 2,
+  "hp": 3,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "continuous" },
+      "category": "accumulative",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "quralan" },
+        "effect": {
+          "op": "modify_strength",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      }
+    }
+  ],
+  "flavorText": "Despega del hangar dorado y la formación entera arde con un mismo cristal."
+}

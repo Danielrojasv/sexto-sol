@@ -1,0 +1,43 @@
+{
+  "id": "quralan_inka_untay_tutelar",
+  "name": "Inka-untay Tutelar",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 6,
+  "rarity": "legendary",
+  "strength": 7,
+  "hp": 10,
+  "keywords": ["bastion"],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "accumulative",
+      "effect": {
+        "op": "search",
+        "owner": "self",
+        "zone": "deck",
+        "filter": { "race": "quralan" },
+        "count": 1,
+        "destination": "hand"
+      },
+      "description": "Luz: al desplegarse, buscás una nave Q'ralan en tu mazo y la sumás a tu mano."
+    },
+    {
+      "trigger": { "kind": "continuous" },
+      "category": "accumulative",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "quralan" },
+        "effect": {
+          "op": "modify_strength",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      },
+      "description": "Sombra (Formación Solar): mientras esté en órbita, gana +1 fuerza permanente por cada otra nave Q'ralan que controles."
+    }
+  ],
+  "flavorText": "La nave-templo tutelar coordina sectores enteros: bajo su sombra, ningún escuadrón se pierde."
+}
