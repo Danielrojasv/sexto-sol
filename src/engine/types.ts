@@ -62,10 +62,16 @@ export interface ShipInstance {
   controller: PlayerId
   /** Fuerza actual (puede modificarse por Külen, Formación Solar, etc.). */
   strength: number
+  /** HP máximo de la nave (no cambia por combate, solo por buffs). */
+  maxHp: number
   /** HP actual (puede modificarse por daño/curación). */
   hp: number
   /** Daño acumulado desde que entró al campo. Usado por Külen. */
   damageTaken: number
+  /** Keywords activos (Bastión, Desgarro, Vuelo, Premonición, Resonancia, etc.). */
+  keywords: readonly string[]
+  /** True si esta instancia es el héroe del jugador. Su muerte vuelve al natal. */
+  isHero?: boolean
 }
 
 // ---- Héroe ----------------------------------------------------------------
@@ -137,10 +143,13 @@ export interface PlayerState {
 
 // ---- Estado global --------------------------------------------------------
 
+export type WinReason = 'homeworld_destroyed' | 'decking_out' | 'concession'
+export type DrawReason = 'simultaneous_homeworld_destruction'
+
 export type GameOutcome =
   | { kind: 'in_progress' }
-  | { kind: 'win'; winner: PlayerId; reason: 'homeworld_destroyed' | 'decking_out' | 'concession' }
-  | { kind: 'draw'; reason: 'simultaneous_homeworld_destruction' }
+  | { kind: 'win'; winner: PlayerId; reason: WinReason }
+  | { kind: 'draw'; reason: DrawReason }
 
 export interface GameState {
   /** Seed inmutable de la partida. */
@@ -181,6 +190,8 @@ export type GameAction =
 export type GameEvent =
   | { type: 'SHIP_DESTROYED'; shipId: ShipInstanceId; cause: 'combat' | 'sacrifice' | 'ability' }
   | { type: 'SHIP_DAMAGED'; shipId: ShipInstanceId; amount: number; source: string }
+  | { type: 'HOMEWORLD_DAMAGED'; player: PlayerId; amount: number; source: string }
+  | { type: 'CARD_DRAWN'; player: PlayerId }
   | { type: 'PLANET_ACTIVATED'; planetId: PlanetId; activatedBy: PlayerId }
   | { type: 'PHASE_START'; phase: TurnPhase; player: PlayerId }
   | { type: 'PHASE_END'; phase: TurnPhase; player: PlayerId }
