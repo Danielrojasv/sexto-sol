@@ -10,14 +10,21 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "continuous" },
+      "trigger": {
+        "kind": "continuous"
+      },
       "category": "accumulative",
       "effect": {
         "op": "for_each",
-        "filter": { "controller": "self", "race": "quralan" },
+        "filter": {
+          "controller": "self",
+          "race": "quralan"
+        },
         "effect": {
           "op": "modify_strength",
-          "target": { "kind": "self" },
+          "target": {
+            "kind": "self"
+          },
           "kind": "delta",
           "value": 1,
           "duration": "permanent"
@@ -25,5 +32,9 @@
       }
     }
   ],
-  "flavorText": "Su casco devora luz solar; cada nave hermana vuelve más afilado su disparo."
+  "flavorText": "Su casco devora luz solar; cada nave hermana vuelve más afilado su disparo.",
+  "artSlot": {
+    "row": 0,
+    "col": 3
+  }
 }

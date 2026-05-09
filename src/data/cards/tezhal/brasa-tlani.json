@@ -13,17 +13,30 @@
       "trigger": {
         "kind": "activated",
         "window": "any_time",
-        "cost": { "sacrificeShip": { "controller": "self" } }
+        "cost": {
+          "sacrificeShip": {
+            "controller": "self"
+          }
+        }
       },
       "category": "initiative",
       "effect": {
         "op": "modify_strength",
-        "target": { "kind": "chosen_ship", "filter": { "controller": "self" } },
+        "target": {
+          "kind": "chosen_ship",
+          "filter": {
+            "controller": "self"
+          }
+        },
         "kind": "delta",
         "value": 2,
         "duration": "end_of_turn"
       }
     }
   ],
-  "flavorText": "Su casco de obsidiana se ofrenda al hangar; otra nave arde con su tonalli."
+  "flavorText": "Su casco de obsidiana se ofrenda al hangar; otra nave arde con su tonalli.",
+  "artSlot": {
+    "row": 0,
+    "col": 0
+  }
 }

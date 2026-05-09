@@ -10,14 +10,22 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_destroy" },
+      "trigger": {
+        "kind": "on_destroy"
+      },
       "category": "post_combat",
       "effect": {
         "op": "shuffle_to_deck",
-        "target": { "kind": "self" },
+        "target": {
+          "kind": "self"
+        },
         "owner": "self"
       }
     }
   ],
-  "flavorText": "Balsa-templo de espejos solares: cuando el casco cede en órbita, la luz se transmuta de nuevo."
+  "flavorText": "Balsa-templo de espejos solares: cuando el casco cede en órbita, la luz se transmuta de nuevo.",
+  "artSlot": {
+    "row": 2,
+    "col": 0
+  }
 }

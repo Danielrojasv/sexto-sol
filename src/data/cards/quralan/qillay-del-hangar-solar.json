@@ -10,14 +10,21 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "continuous" },
+      "trigger": {
+        "kind": "continuous"
+      },
       "category": "accumulative",
       "effect": {
         "op": "for_each",
-        "filter": { "controller": "self", "race": "quralan" },
+        "filter": {
+          "controller": "self",
+          "race": "quralan"
+        },
         "effect": {
           "op": "modify_strength",
-          "target": { "kind": "self" },
+          "target": {
+            "kind": "self"
+          },
           "kind": "delta",
           "value": 1,
           "duration": "permanent"
@@ -25,5 +32,9 @@
       }
     }
   ],
-  "flavorText": "Despega del hangar dorado y la formación entera arde con un mismo cristal."
+  "flavorText": "Despega del hangar dorado y la formación entera arde con un mismo cristal.",
+  "artSlot": {
+    "row": 0,
+    "col": 0
+  }
 }

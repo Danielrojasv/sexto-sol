@@ -10,7 +10,9 @@
   "keywords": ["bastion"],
   "abilities": [
     {
-      "trigger": { "kind": "on_play" },
+      "trigger": {
+        "kind": "on_play"
+      },
       "category": "reactive",
       "effect": {
         "op": "draw",
@@ -23,15 +25,24 @@
       "trigger": {
         "kind": "on_event",
         "event": "ship_damaged",
-        "filter": { "shipFilter": { "controller": "self" } }
+        "filter": {
+          "shipFilter": {
+            "controller": "self"
+          }
+        }
       },
       "category": "reactive",
       "effect": {
         "op": "for_each",
-        "filter": { "controller": "self", "race": "wuron" },
+        "filter": {
+          "controller": "self",
+          "race": "wuron"
+        },
         "effect": {
           "op": "modify_strength",
-          "target": { "kind": "self" },
+          "target": {
+            "kind": "self"
+          },
           "kind": "delta",
           "value": 1,
           "duration": "permanent"
@@ -40,5 +51,9 @@
       "description": "Sombra (Külen): cuando una de tus naves recibe daño, todas tus naves Würon ganan +1 fuerza permanente."
     }
   ],
-  "flavorText": "El árbol más viejo del sur recuerda cada herida del bosque, y las devuelve hechas savia."
+  "flavorText": "El árbol más viejo del sur recuerda cada herida del bosque, y las devuelve hechas savia.",
+  "artSlot": {
+    "row": 2,
+    "col": 1
+  }
 }

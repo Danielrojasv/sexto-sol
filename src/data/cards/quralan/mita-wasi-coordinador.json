@@ -10,22 +10,32 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_play" },
+      "trigger": {
+        "kind": "on_play"
+      },
       "category": "accumulative",
       "effect": {
         "op": "conditional",
         "condition": {
           "kind": "count_filter",
-          "filter": { "controller": "self", "race": "quralan" },
+          "filter": {
+            "controller": "self",
+            "race": "quralan"
+          },
           "op": "gte",
           "value": 3
         },
         "thenEffect": {
           "op": "for_each",
-          "filter": { "controller": "self", "race": "quralan" },
+          "filter": {
+            "controller": "self",
+            "race": "quralan"
+          },
           "effect": {
             "op": "modify_strength",
-            "target": { "kind": "self" },
+            "target": {
+              "kind": "self"
+            },
             "kind": "delta",
             "value": 1,
             "duration": "permanent"
@@ -35,5 +45,9 @@
       "description": "Mit'a interno: si controlás 3 o más naves Q'ralan al desplegarla, todas tus naves Q'ralan ganan +1 fuerza permanente."
     }
   ],
-  "flavorText": "Coordina hangares enteros desde la cabina-templo: el tributo cósmico se vuelve disparo."
+  "flavorText": "Coordina hangares enteros desde la cabina-templo: el tributo cósmico se vuelve disparo.",
+  "artSlot": {
+    "row": 1,
+    "col": 0
+  }
 }

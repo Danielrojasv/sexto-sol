@@ -9,5 +9,9 @@
   "hp": 3,
   "keywords": ["bastion"],
   "abilities": [],
-  "flavorText": "Su casco labrado custodia las ciudadelas flotantes del sector Sumaq-suyu."
+  "flavorText": "Su casco labrado custodia las ciudadelas flotantes del sector Sumaq-suyu.",
+  "artSlot": {
+    "row": 0,
+    "col": 1
+  }
 }

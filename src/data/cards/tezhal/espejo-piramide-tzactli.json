@@ -13,17 +13,27 @@
       "trigger": {
         "kind": "activated",
         "window": "combate",
-        "cost": { "sacrificeShip": { "controller": "self" } }
+        "cost": {
+          "sacrificeShip": {
+            "controller": "self"
+          }
+        }
       },
       "category": "initiative",
       "effect": {
         "op": "modify_strength",
-        "target": { "kind": "self" },
+        "target": {
+          "kind": "self"
+        },
         "kind": "delta",
         "value": 3,
         "duration": "end_of_turn"
       }
     }
   ],
-  "flavorText": "Ofrenda otra nave del escuadrón y los espejos de obsidiana enfocan el sol sobre su propia proa."
+  "flavorText": "Ofrenda otra nave del escuadrón y los espejos de obsidiana enfocan el sol sobre su propia proa.",
+  "artSlot": {
+    "row": 1,
+    "col": 0
+  }
 }

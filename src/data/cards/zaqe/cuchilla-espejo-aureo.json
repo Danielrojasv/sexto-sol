@@ -8,16 +8,27 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_play" },
+      "trigger": {
+        "kind": "on_play"
+      },
       "category": "initiative",
       "effect": {
         "op": "grant_keyword",
-        "target": { "kind": "chosen_ship", "filter": { "controller": "self" } },
+        "target": {
+          "kind": "chosen_ship",
+          "filter": {
+            "controller": "self"
+          }
+        },
         "keyword": "desgarro",
         "duration": "permanent"
       }
     }
   ],
   "flavorText": "Filo forjado en espejo de lago: abre el casco enemigo y deja pasar la luz al sector siguiente.",
-  "intentionalOffCategory": true
+  "intentionalOffCategory": true,
+  "artSlot": {
+    "row": 0,
+    "col": 2
+  }
 }

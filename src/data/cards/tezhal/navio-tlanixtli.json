@@ -13,15 +13,28 @@
       "trigger": {
         "kind": "activated",
         "window": "combate",
-        "cost": { "sacrificeShip": { "controller": "self" } }
+        "cost": {
+          "sacrificeShip": {
+            "controller": "self"
+          }
+        }
       },
       "category": "initiative",
       "effect": {
         "op": "damage",
-        "target": { "kind": "chosen_ship", "filter": { "controller": "opponent" } },
+        "target": {
+          "kind": "chosen_ship",
+          "filter": {
+            "controller": "opponent"
+          }
+        },
         "amount": 4
       }
     }
   ],
-  "flavorText": "Cada nave-ofrenda del hangar carga sus cañones rituales: una proa propia se apaga, otra órbita arde."
+  "flavorText": "Cada nave-ofrenda del hangar carga sus cañones rituales: una proa propia se apaga, otra órbita arde.",
+  "artSlot": {
+    "row": 1,
+    "col": 2
+  }
 }

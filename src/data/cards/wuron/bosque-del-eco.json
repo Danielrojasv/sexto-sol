@@ -8,14 +8,21 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "continuous" },
+      "trigger": {
+        "kind": "continuous"
+      },
       "category": "accumulative",
       "effect": {
         "op": "for_each",
-        "filter": { "controller": "self", "race": "wuron" },
+        "filter": {
+          "controller": "self",
+          "race": "wuron"
+        },
         "effect": {
           "op": "modify_hp",
-          "target": { "kind": "self" },
+          "target": {
+            "kind": "self"
+          },
           "kind": "delta",
           "value": 1,
           "duration": "permanent"
@@ -24,5 +31,9 @@
     }
   ],
   "flavorText": "Cuando un brote canta, todos los troncos lo recuerdan: nadie cae solo en este bosque.",
-  "intentionalOffCategory": true
+  "intentionalOffCategory": true,
+  "artSlot": {
+    "row": 2,
+    "col": 0
+  }
 }
