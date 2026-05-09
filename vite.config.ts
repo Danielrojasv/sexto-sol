@@ -26,9 +26,15 @@ export default defineConfig({
         'coverage/**',
         'dist/**',
         '**/*.test.{ts,tsx}',
-        'src/tests/**',
+        '**/__tests__/**',
         '**/*.d.ts',
         'src/main.tsx',
+        // types.ts es puro tipos — v8 no encuentra ejecutable y reporta 0%.
+        'src/engine/types.ts',
+        // strategies/base.ts es puro interface — sin código a ejecutar.
+        'src/strategies/base.ts',
+        // App.tsx es placeholder UI; se cubrirá cuando llegue Phase 4.
+        'src/App.tsx',
         'vite.config.ts',
         'eslint.config.js',
       ],
