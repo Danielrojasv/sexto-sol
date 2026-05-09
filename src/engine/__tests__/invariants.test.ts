@@ -6,7 +6,7 @@ import fc from 'fast-check'
 import { createInitialState } from '../initialState'
 import { apply } from '../reducer'
 import { strategyFor } from '@/strategies'
-import type { GameAction, GameState, Race } from '../types'
+import type { Card, GameAction, GameState, Race } from '../types'
 
 const ALL_RACES: readonly Race[] = ['quralan', 'wuron', 'tezhal', 'zaqe']
 
@@ -17,6 +17,20 @@ const arbAction: fc.Arbitrary<GameAction> = fc.oneof(
   fc.constant<GameAction>({ type: 'CONCEDE', player: 'p1' }),
   fc.constant<GameAction>({ type: 'CONCEDE', player: 'p2' }),
 )
+
+function deck(size: number, race: Race = 'wuron'): Card[] {
+  return Array.from({ length: size }, (_, i) => ({
+    id: `c${i}`,
+    name: `Carta ${i}`,
+    type: 'ship',
+    race,
+    cost: 0,
+    rarity: 'common',
+    keywords: [],
+    strength: 1,
+    hp: 1,
+  }))
+}
 
 function runActions(initial: GameState, actions: readonly GameAction[]): GameState {
   let s = initial
@@ -33,7 +47,13 @@ describe('invariantes — HP y energía', () => {
         arbRace,
         fc.array(arbAction, { minLength: 0, maxLength: 30 }),
         (seed, p1Race, p2Race, actions) => {
-          const init = createInitialState({ seed, p1Race, p2Race })
+          const init = createInitialState({
+            seed,
+            p1Race,
+            p2Race,
+            p1Deck: deck(60, p1Race),
+            p2Deck: deck(60, p2Race),
+          })
           const final = runActions(init, actions)
           return final.players.p1.homeworld.hp >= 0 && final.players.p2.homeworld.hp >= 0
         },
@@ -50,7 +70,13 @@ describe('invariantes — HP y energía', () => {
         arbRace,
         fc.array(arbAction, { minLength: 0, maxLength: 30 }),
         (seed, p1Race, p2Race, actions) => {
-          const init = createInitialState({ seed, p1Race, p2Race })
+          const init = createInitialState({
+            seed,
+            p1Race,
+            p2Race,
+            p1Deck: deck(60, p1Race),
+            p2Deck: deck(60, p2Race),
+          })
           const final = runActions(init, actions)
           return final.players.p1.energy >= 0 && final.players.p2.energy >= 0
         },
@@ -69,7 +95,13 @@ describe('invariantes — turno y edad', () => {
         arbRace,
         fc.array(arbAction, { minLength: 0, maxLength: 30 }),
         (seed, p1Race, p2Race, actions) => {
-          const init = createInitialState({ seed, p1Race, p2Race })
+          const init = createInitialState({
+            seed,
+            p1Race,
+            p2Race,
+            p1Deck: deck(60, p1Race),
+            p2Deck: deck(60, p2Race),
+          })
           let s = init
           for (const a of actions) {
             const next = apply(s, a).state
@@ -91,7 +123,13 @@ describe('invariantes — turno y edad', () => {
         arbRace,
         fc.array(arbAction, { minLength: 0, maxLength: 30 }),
         (seed, p1Race, p2Race, actions) => {
-          const init = createInitialState({ seed, p1Race, p2Race })
+          const init = createInitialState({
+            seed,
+            p1Race,
+            p2Race,
+            p1Deck: deck(60, p1Race),
+            p2Deck: deck(60, p2Race),
+          })
           let s = init
           for (const a of actions) {
             const next = apply(s, a).state
@@ -115,7 +153,13 @@ describe('invariantes — outcome y log', () => {
         arbRace,
         fc.array(arbAction, { minLength: 0, maxLength: 30 }),
         (seed, p1Race, p2Race, actions) => {
-          const init = createInitialState({ seed, p1Race, p2Race })
+          const init = createInitialState({
+            seed,
+            p1Race,
+            p2Race,
+            p1Deck: deck(60, p1Race),
+            p2Deck: deck(60, p2Race),
+          })
           let s = init
           let terminated = false
           for (const a of actions) {
@@ -138,7 +182,13 @@ describe('invariantes — outcome y log', () => {
         arbRace,
         fc.array(arbAction, { minLength: 0, maxLength: 20 }),
         (seed, p1Race, p2Race, actions) => {
-          const init = createInitialState({ seed, p1Race, p2Race })
+          const init = createInitialState({
+            seed,
+            p1Race,
+            p2Race,
+            p1Deck: deck(60, p1Race),
+            p2Deck: deck(60, p2Race),
+          })
           let s = init
           for (const a of actions) {
             const before = s.log.length
