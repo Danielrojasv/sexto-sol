@@ -1,0 +1,44 @@
+{
+  "id": "tezhal_xolot_cuauhtli_ardiente",
+  "name": "Xolot Cuauhtli Ardiente",
+  "race": "tezhal",
+  "type": "ship",
+  "cost": 6,
+  "rarity": "legendary",
+  "strength": 8,
+  "hp": 7,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "damage",
+        "target": { "kind": "chosen_ship", "filter": { "controller": "opponent" } },
+        "amount": 3
+      },
+      "description": "Luz: al desplegar, marca una nave enemiga con plumaje de obsidiana y le hace 3 de daño."
+    },
+    {
+      "trigger": {
+        "kind": "activated",
+        "window": "any_time",
+        "cost": { "sacrificeShip": { "controller": "self" } }
+      },
+      "category": "initiative",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "damage",
+            "target": { "kind": "chosen_ship", "filter": { "controller": "opponent" } },
+            "amount": 5
+          },
+          { "op": "draw", "player": "self", "n": 1 }
+        ]
+      },
+      "description": "Sombra (Ignición): ofrenda otra nave del escuadrón; el Xolot lanza una andanada ritual de 5 de daño y robás 1 carta."
+    }
+  ],
+  "flavorText": "Casco labrado en pirámide-espejo: cada nave ofrendada en órbita carga sus cañones rituales."
+}
