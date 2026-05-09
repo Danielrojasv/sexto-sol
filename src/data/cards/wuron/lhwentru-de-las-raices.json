@@ -1,0 +1,44 @@
+{
+  "id": "wuron_lhwentru_de_las_raices",
+  "name": "Lhwentrü de las Raíces",
+  "race": "wuron",
+  "type": "ship",
+  "cost": 6,
+  "rarity": "legendary",
+  "strength": 7,
+  "hp": 10,
+  "keywords": ["bastion"],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "reactive",
+      "effect": {
+        "op": "draw",
+        "player": "self",
+        "n": 1
+      },
+      "description": "Luz: al entrar en juego, robás 1 carta."
+    },
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "ship_damaged",
+        "filter": { "shipFilter": { "controller": "self" } }
+      },
+      "category": "reactive",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "wuron" },
+        "effect": {
+          "op": "modify_strength",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      },
+      "description": "Sombra (Külen): cuando una de tus naves recibe daño, todas tus naves Würon ganan +1 fuerza permanente."
+    }
+  ],
+  "flavorText": "El árbol más viejo del sur recuerda cada herida del bosque, y las devuelve hechas savia."
+}

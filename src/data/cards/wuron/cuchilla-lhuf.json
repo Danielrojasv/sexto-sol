@@ -1,0 +1,23 @@
+{
+  "id": "wuron_cuchilla_lhuf",
+  "name": "Cuchilla Lhüf",
+  "race": "wuron",
+  "type": "weapon",
+  "cost": 1,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "grant_keyword",
+        "target": { "kind": "chosen_ship", "filter": { "controller": "self" } },
+        "keyword": "desgarro",
+        "duration": "permanent"
+      }
+    }
+  ],
+  "flavorText": "Filo de raíz fosilizada: corta, y la herida no cierra hasta llegar al hueso de la tierra.",
+  "intentionalOffCategory": true
+}

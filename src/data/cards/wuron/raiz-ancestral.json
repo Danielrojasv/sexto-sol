@@ -1,0 +1,33 @@
+{
+  "id": "wuron_raiz_ancestral",
+  "name": "Raíz Ancestral",
+  "race": "wuron",
+  "type": "ship",
+  "cost": 5,
+  "rarity": "rare",
+  "strength": 5,
+  "hp": 7,
+  "keywords": ["bastion"],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "ship_damaged",
+        "filter": { "shipFilter": { "controller": "self" } }
+      },
+      "category": "reactive",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "wuron" },
+        "effect": {
+          "op": "modify_strength",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      }
+    }
+  ],
+  "flavorText": "Cuando una raíz se hiere, todo el bosque siente; y todo el bosque crece."
+}

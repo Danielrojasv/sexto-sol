@@ -1,0 +1,28 @@
+{
+  "id": "wuron_bosque_del_eco",
+  "name": "Bosque del Eco",
+  "race": "wuron",
+  "type": "relic",
+  "cost": 5,
+  "rarity": "rare",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "continuous" },
+      "category": "accumulative",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "wuron" },
+        "effect": {
+          "op": "modify_hp",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      }
+    }
+  ],
+  "flavorText": "Cuando un brote canta, todos los troncos lo recuerdan: nadie cae solo en este bosque.",
+  "intentionalOffCategory": true
+}
