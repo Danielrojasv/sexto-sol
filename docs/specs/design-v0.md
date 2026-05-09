@@ -1,11 +1,11 @@
 # Sexto Sol — Spec maestra de diseño v0
 
-**Status:** in-progress (vivo)
+**Status:** superseded by v2.0 — preserved for context
 **Owner:** Daniel
 **Created:** 2026-05-08
-**Related specs:** —
+**Last update:** 2026-05-09
 
-> Esta es la spec viva del diseño del juego. Iteramos directamente sobre este archivo durante toda la fase de pre-código. Cuando el set base esté lockeado y producción arranque, partes se moverán a sub-specs (mecánicas por facción, balance, etc.).
+> ⚠️ **SUPERSEDED.** Las reglas oficiales del juego viven ahora en [`GAME-RULES.md`](../../GAME-RULES.md) (v2.0). El lore canónico vive en [`CANON-LORE.md`](../../CANON-LORE.md) (v2.0). Esta spec se conserva como registro de contexto y rationale del periodo v0/v1, pero las decisiones concretas de razas (Q'ralan, Würon, Tezhal, Zaqe), mecánicas firma (Külen, Ignición, Formación Solar, Refluencia) y sistema de Resolución por Naturaleza de Mecánica viven en los documentos canónicos. Antes de actuar sobre cualquier sección de este archivo, validá contra GAME-RULES / CANON-LORE.
 
 ---
 
@@ -20,6 +20,7 @@ Daniel quiere construir un CCG (Collectible Card Game) PVP que resuelva problema
 3. **Mana lineal automático**: el +1 mana automático cada turno (estilo MTG) es la firma del género; quien lo tiene no se diferencia.
 
 **Decisiones derivadas:**
+
 - Counter wheel **anclado a hechos históricos reales** (Mapuche resistió a Inca → Mapuche cuenta como counter de Inca en el juego). Esto hace al balance único y narrativamente sólido.
 - **Re-imaginación sci-fi de civilizaciones pre-colombinas** — espacio inexplorado en CCGs.
 - **Energía territorial**: el recurso depende de los planetas que controlás, no sube por defecto. Une recurso y posición espacial en una sola decisión.
@@ -30,15 +31,17 @@ Daniel quiere construir un CCG (Collectible Card Game) PVP que resuelva problema
 
 ## Goals
 
-### Diseño
-- [ ] Set base con 4 facciones balanceadas (Mexica, Inca, Muisca, Mapuche) y counter wheel funcional
-- [ ] Counter wheel anclado a hecho histórico (Mapuche > Inca, Batalla del Maule)
-- [ ] Mecánica firma única por facción (Newen, Ofrenda, Tributo, Sumergir)
+### Diseño (objetivos preservados; nombres y mecánicas redefinidos en v2)
+
+- [ ] Set base con 4 razas balanceadas (Q'ralan, Würon, Tezhal, Zaqe) y counter wheel emergente
+- [ ] Counter wheel emergente del orden Reactiva→Iniciativa→Acumulativa→Post-combate (sin reglas hardcoded por raza)
+- [ ] Mecánica firma única por raza (Külen, Ignición, Formación Solar, Refluencia)
 - [ ] Energía territorial como diferenciador del mana automático
-- [ ] 3 Edades narrativas como arco de partida (no rounds)
+- [ ] 3 Edades narrativas como escalada de poder (firma cuesta +1/normal/x2)
 - [ ] Win condition vía destrucción del mundo natal (HP 20)
 
 ### Producto
+
 - [ ] Soft P2W estilo Marvel Snap (F2P competitivo viable)
 - [ ] Sin rotación tipo Standard (cartas balanceadas vía nerfs/buffs)
 - [ ] Coleccionable con sobres + crafting con polvo
@@ -46,6 +49,7 @@ Daniel quiere construir un CCG (Collectible Card Game) PVP que resuelva problema
 - [ ] Localización vinculada a expansiones culturales (portugués → Tupi-Guaraní)
 
 ### Técnico
+
 - [ ] Engine event-driven con reducer puro (port del kernel `myl-game`)
 - [ ] RNG seedable + replay determinista
 - [ ] Property tests (fast-check) sobre invariantes del juego
@@ -81,20 +85,25 @@ Daniel quiere construir un CCG (Collectible Card Game) PVP que resuelva problema
 > **Autoridad narrativa:** El arco del jugador trans-expansiones está documentado en `docs/lore/arco-del-jugador.md` (v1.0, 2026-05-08). Ese doc es la biblia narrativa: 5 etapas de descubrimiento (Set base → Mini 1.1 → Mini 1.2 → Mini 1.3 → Edición 2+), 6 reglas transversales inviolables, 5 filtros de validación obligatorios para toda decisión narrativa futura. Todo flavor text, cinemática, evento, carta legendaria, mecánica narrativa o expansión debe chequearse contra ese documento. Esta sección de design-v0 captura el resumen del worldbuilding superficial (Etapa 1 — set base); las capas profundas viven en el arco.
 
 ### Premisa
-*"El Quinto Sol está terminando. Las cuatro civilizaciones de los cuatro mundos pelean por quién controlará el Sexto."*
+
+_"El Quinto Sol está terminando. Las cuatro civilizaciones de los cuatro mundos pelean por quién controlará el Sexto."_
 
 ### Worldbuilding
+
 - Las **4 facciones** son **reimaginaciones sci-fi** de civilizaciones pre-colombinas: Mexica, Inca, Muisca, Mapuche.
 - Cada civilización **desarrolló su tecnología independientemente en su propio planeta** dentro del mismo sistema estelar. No hubo "ayuda externa" — son aliens entre sí.
 - Las cuatro civilizaciones convivieron en aislamiento por siglos. **El Quinto Sol está terminando** (cosmología mexica) y se vuelven a contactar — para pelear por el Sexto.
 - La iconografía pre-colombina (textiles, oro, glifos, cosmología) se preserva como **estética visual y filosofía cultural**, pero en armaduras espaciales y naves rituales. Mexica con cascos jaguar bioluminiscentes, naves Mapuche talladas en madera y obsidiana, ciudades flotantes Inca con terrazas en órbita, naves doradas Muisca recubiertas en oro real.
 
 ### Subversión del trope colonialista
+
 - Trope que se subvierte: "los aliens visitaron a las civilizaciones pre-colombinas y les enseñaron astronomía/arquitectura porque los humanos sudamericanos no podrían haberlo hecho solos" (Daniken, "Chariots of the Gods").
 - La inversión: **las civilizaciones eran avanzadas por mérito propio**. Si hay aliens en el lore (mini-expansión "Las Estrellas Recuerdan"), es porque vinieron a APRENDER, no a enseñar.
 
 ### Sensibilidad cultural
+
 La premisa sci-fi reduce el riesgo de apropiación pero no lo elimina. Cuando lleguemos a:
+
 - Arte visual
 - Flavor text
 - Nombres de cartas en lenguas indígenas (mapuzungun, quechua, náhuatl, muysccubun)
@@ -112,6 +121,7 @@ La premisa sci-fi reduce el riesgo de apropiación pero no lo elimina. Cuando ll
 **Archetype:** **Control imperial.** Cartas duraderas, expansión territorial, build-up económico. Te desgasta en el largo plazo.
 
 **Mecánicas firma:**
+
 - **Tributo** — cartas weak alimentan a las strong (representa el sistema mit'a)
 - **Mit'a** — acumulación: planetas controlados sinergizán entre sí
 - **Acllla** — descuentos en cadena (la próxima carta cuesta -1)
@@ -127,6 +137,7 @@ La premisa sci-fi reduce el riesgo de apropiación pero no lo elimina. Cuando ll
 **Archetype:** **Aggro de sacrificio.** Partidas rápidas, intercambia recursos por poder. Si no remata rápido, pierde.
 
 **Mecánica firma:**
+
 - **Ofrenda** — sacrificás cartas en juego para potenciar la siguiente jugada (refleja la cosmología mexica de sacrificio para mantener el orden cósmico)
 
 **Lore:** Civilización guerrera-ritual cuyo planeta orbita una estrella moribunda. Saben que el Quinto Sol está terminando y creen que sólo a través de ofrendas pueden detenerlo. Su arquitectura de pirámides escalonadas se eleva en órbita como ciudades-templo.
@@ -140,6 +151,7 @@ La premisa sci-fi reduce el riesgo de apropiación pero no lo elimina. Cuando ll
 **Archetype:** **Combo económico.** Acumular oro/recursos para jugadas explosivas que cambian la partida.
 
 **Mecánica firma:**
+
 - **Sumergir** — cartas de oro se "ofrendan al lago", regresan transformadas N turnos después (encaja perfecto con el twist cíclico del juego)
 
 **Lore:** Civilización ritual con un planeta-océano dorado donde sus naves son ofrendadas a las profundidades. Las naves "sumergidas" reaparecen siglos después, transformadas por las profundidades en algo más poderoso.
@@ -153,6 +165,7 @@ La premisa sci-fi reduce el riesgo de apropiación pero no lo elimina. Cuando ll
 **Archetype:** **Midrange resiliente.** Defiende, contraataca, se recupera. NO se rinde.
 
 **Mecánicas firma:**
+
 - **Newen** — cuando una nave Mapuche recibe daño, gana +1 fuerza permanente. La fuerza espiritual se acumula con la adversidad.
 - **Lof** — clan auto-sinérgico: 2+ naves Mapuche en el mismo planeta se buffean entre sí, sin necesitar un líder. Refleja la descentralización política mapuche real (no había un "Inca" mapuche que capturar).
 
@@ -177,6 +190,7 @@ La premisa sci-fi reduce el riesgo de apropiación pero no lo elimina. Cuando ll
 - **Inca > Mexica** — control imperial supera agresión sostenida (los dos imperios más grandes nunca se enfrentaron en realidad, pero mecánicamente: la disciplina mit'a aguanta el desgaste mexica)
 
 **Matchups cruzados** (no en el cycle, neutral / decididos por skill):
+
 - **Mexica vs Mapuche** — ambos pueblos guerreros, decisión depende de listas/jugador
 - **Inca vs Muisca** — Inca expandió hacia Colombia pero nunca chocó directo con Muisca
 
@@ -187,15 +201,18 @@ La premisa sci-fi reduce el riesgo de apropiación pero no lo elimina. Cuando ll
 ## Mecánicas core
 
 ### Win condition primaria
+
 **Destruir el mundo natal del oponente** (HP 20).
 
 ### Recurso: Energía territorial
+
 - Mundo natal: 1 energía/turno base
 - Cada planeta neutral conquistado: +1 energía/turno
 - Cada planeta enemigo conquistado: +1 vos, -1 enemigo (decisión doble)
 - **NO sube +1 automático cada turno**. Más recurso requiere conquistar territorio.
 
 ### Estructura de turno (estilo myl)
+
 1. **Recolección** — generás energía + robás 1 carta
 2. **Despliegue** — jugás cartas
 3. **Combate** — atacás unidades, planetas neutros, mundo enemigo
@@ -214,56 +231,64 @@ Las Edades NO resetean state. Son fases del arco. Transición gatillada por turn
 
 ### Tipos de carta (vocabulario myl recontextualizado)
 
-| Sexto Sol | myl equivalent | Función |
-|---|---|---|
-| **Nave** | Aliado | Unidad de combate (fuerza/vida) |
-| **Arma** | Arma | Equipa una nave aliada |
-| **Tecnología** | Talismán | Efecto inmediato + descarte |
-| **Reliquia** | Tótem | Efecto pasivo continuo |
-| **Evento** | — | Response card en turno enemigo |
+| Sexto Sol      | myl equivalent | Función                         |
+| -------------- | -------------- | ------------------------------- |
+| **Nave**       | Aliado         | Unidad de combate (fuerza/vida) |
+| **Arma**       | Arma           | Equipa una nave aliada          |
+| **Tecnología** | Talismán       | Efecto inmediato + descarte     |
+| **Reliquia**   | Tótem          | Efecto pasivo continuo          |
+| **Evento**     | —              | Response card en turno enemigo  |
 
 ---
 
 ## Roadmap de ediciones
 
 ### Set base — "Sexto Sol" (lanzamiento)
+
 - 4 facciones: Mexica, Inca, Muisca, Mapuche
 - ~120-150 cartas
 - Refresh visual fuerte. Todo el año se construye lore alrededor.
 
 ### Mini 1.1 — "Las Estrellas Recuerdan" (~3 meses)
+
 - Plot reveal: los aliens vinieron a aprender, no a enseñar
 - Keyword `Eco` (cartas se repiten en ciclos posteriores)
 - ~40-60 cartas
 
 ### Mini 1.2 — "Pachacuti" (~6 meses)
+
 - Facción **Maya** entra (astronomía, manipulación temporal)
 - Mecánica firma propuesta: `Calendario` (eventos pre-anunciados que dispan en turnos futuros específicos)
 - ~40-60 cartas
 
 ### Mini 1.3 — "El Quinto Sol" (~9 meses)
+
 - Climax narrativo
 - Las civilizaciones deben aliarse o competir por el Sexto Sol
 - Keyword `Alianza` (cartas que requieren 2 facciones distintas)
 
 ### Edición 2 — "Eclipse" (~12 meses)
+
 - Segunda edición base
 - Convergencia
 - Posible nueva facción: **Mochica** (sangre/cerámica/místico, archetype TBD)
 
 ### Localizaciones que desbloquean facciones
+
 - 🇵🇹/🇧🇷 Lanzamiento portugués → **Tupi-Guaraní** (selva/swarm)
 - 🇮🇹/🇪🇸 Lanzamiento europeo → **Olmecas** (lore "ancient mystery")
 - 🇨🇴/🇻🇪 Lanzamiento norte sudamericano → profundización **Tairona** (oro/economía)
 - 🇨🇱 Edición especial → **Selk'nam** (austral, Tierra del Fuego)
 
 ### Cadencia
+
 - 1 set base por año (~120-150 cartas)
 - 3 mini-expansiones por año (~40-60 cartas cada una)
 - Total: ~250-330 cartas/año
 - Sostenible para equipo indie (1-2 personas full + freelance art)
 
 ### Sin rotación
+
 Estilo Marvel Snap: las cartas NO caducan. El meta se mantiene fresco vía balance patches (nerfs/buffs). Esto cumple el pilar "soft P2W" — no fuerza compras nuevas para mantenerse competitivo.
 
 ---
@@ -277,11 +302,11 @@ Anti-referencias: MTG paper, Pokémon TCG paper, Yu-Gi-Oh paper (P2W brutal), He
 
 ### Tres monedas
 
-| Moneda | Cómo se obtiene | Para qué |
-|---|---|---|
-| 🪙 **Oro** | Quests, victorias, ranked. NUNCA con plata. | Comprar sobres, daily packs |
-| 💨 **Polvo** | Desencantar cartas duplicadas | Crafting target de cartas específicas (anti-RNG) |
-| 💎 **Cristales** | Plata real (microtransacciones) | Cosméticos, battle pass, bundles. **NO compra cartas individuales (no singles market)** |
+| Moneda           | Cómo se obtiene                             | Para qué                                                                                |
+| ---------------- | ------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 🪙 **Oro**       | Quests, victorias, ranked. NUNCA con plata. | Comprar sobres, daily packs                                                             |
+| 💨 **Polvo**     | Desencantar cartas duplicadas               | Crafting target de cartas específicas (anti-RNG)                                        |
+| 💎 **Cristales** | Plata real (microtransacciones)             | Cosméticos, battle pass, bundles. **NO compra cartas individuales (no singles market)** |
 
 ### Sobres (boosters)
 
@@ -302,12 +327,14 @@ Anti-referencias: MTG paper, Pokémon TCG paper, Yu-Gi-Oh paper (P2W brutal), He
 **$9.99 USD/mes** o **$24.99 quarterly = $7.99/mes** (commit de 3 meses)
 
 **Beneficios pasivos** (todos los días, durante la suscripción activa):
+
 - **+25% Oro** en todas las victorias (jugás 5 partidas → 60 Oro vs 50 Oro F2P)
 - **+1 sobre garantizado/día** (vs free track: 1 sobre cada 3 días)
 - **Daily quest bonus**: +50 Oro extra al completar quests del día
 - **Pity timer mejorado**: 8 sobres → Épica+ (vs 10 F2P)
 
 **Track premium del battle pass** (~50 niveles a lo largo del mes):
+
 - ~6-8 sobres premium adicionales
 - ~3-5 cartas garantizadas (mix de rarezas, algunas exclusivas-de-temporada — **cosmética flair-only**, NO cards exclusivas que rompan balance)
 - Polvo bonus (~500-1000 polvo/temporada)
@@ -315,6 +342,7 @@ Anti-referencias: MTG paper, Pokémon TCG paper, Yu-Gi-Oh paper (P2W brutal), He
 - 1 variante de carta exclusiva del mes (cosmética)
 
 **Track free** (lo que un F2P recibe igual cada mes):
+
 - ~3-5 sobres a lo largo del mes vía progresión
 - ~2 cartas garantizadas
 - Avatar genérico de la temporada
@@ -353,12 +381,12 @@ Anti-referencias: MTG paper, Pokémon TCG paper, Yu-Gi-Oh paper (P2W brutal), He
 
 ### Math F2P vs Suscriptor (a validar en playtest)
 
-| | F2P | Suscriptor ($9.99/mes) |
-|---|---|---|
-| Sobres/mes | ~12 | ~22 (12 base + 30 daily) |
-| Polvo/mes | ~800 | ~1800 |
-| Cartas/mes | ~60 | ~110 |
-| Tiempo a colección base completa | ~3 meses | ~5-6 semanas |
+|                                  | F2P      | Suscriptor ($9.99/mes)   |
+| -------------------------------- | -------- | ------------------------ |
+| Sobres/mes                       | ~12      | ~22 (12 base + 30 daily) |
+| Polvo/mes                        | ~800     | ~1800                    |
+| Cartas/mes                       | ~60      | ~110                     |
+| Tiempo a colección base completa | ~3 meses | ~5-6 semanas             |
 
 El suscriptor llega antes pero NO es imbatible. Un F2P comprometido cae en la misma colección sin pagar — sólo necesita más tiempo. Esto es exactamente lo que separa "soft P2W" (LoR/Snap) de "hard P2W" (MTG/Pokémon paper).
 
@@ -367,6 +395,7 @@ El suscriptor llega antes pero NO es imbatible. Un F2P comprometido cae en la mi
 ## Approach técnico
 
 ### Stack
+
 - TypeScript 5+ strict
 - Vite + React 18 (UI shell)
 - **PixiJS** para el canvas del sector estelar (planetas, naves, animaciones de combate)
@@ -379,29 +408,36 @@ El suscriptor llega antes pero NO es imbatible. Un F2P comprometido cae en la mi
 - Engine: reducer puro event-driven (port del kernel `myl-game`)
 
 ### Plataforma target
+
 **Web-first PWA** en el lanzamiento de pre-alpha/alpha. Permite:
+
 - Iteración 10x más rápida que mobile nativo (necesario en fase de validar mecánicas)
 - Instalable en iOS/Android como PWA, sin pasar App Store gates
 - Deploy en Cloudflare Pages (gratis, CDN global)
 - Sin IAP funcional durante pre-alpha — está bien porque NO se monetiza en pre-alpha
 
 Cuando las mecánicas estén validadas con 50-100 jugadores beta web, se decide:
+
 - Migrar a React Native (mobile nativo, IAP funcional, mejor feel)
 - O empacar PWA con Capacitor (codebase única, IAP via plugin, tradeoff de performance)
 - Marvel Snap + LoR son mobile-first nativo — el mercado CCG está en mobile a largo plazo
 
 ### Determinismo
+
 - Cero LLM en el motor de reglas
 - RNG seedable (`src/engine/rng.ts`)
 - Reducer puro: `(state, action) => newState`
 - Replay determinista para PVP async
 
 ### Strategy pattern por facción
+
 - Cada facción es una `BaseFactionStrategy` que registra keywords y passives
 - Agregar facción nueva = nueva estrategia, sin tocar las existentes (Open/Closed)
 
 ### Roadmap técnico (resumen)
+
 Ver `ARCHITECTURE.md` Fase 0-6 para detalle. Highlights:
+
 - Fase 0-1 (semanas 1-4): scaffold + engine kernel
 - Fase 2-3 (semanas 5-14): mecánicas core + 4 facciones
 - Fase 4 (semanas 15-20): UI playable contra IA
@@ -412,66 +448,77 @@ Ver `ARCHITECTURE.md` Fase 0-6 para detalle. Highlights:
 ## Decisions log
 
 ### 2026-05-08 — Tema sci-fi pre-colombino (Opción A)
+
 - **Considered:** A) Reimaginación sci-fi pre-colombina, B) Pivote total a sci-fi sin anchor cultural, C) Pre-colombino terrestre + 5ta facción alien literal
 - **Chose:** A
 - **Why:** Conserva el work cultural (Mapuche > Inca anchor histórico, identidades culturales fuertes). La iconografía pre-colombina en sci-fi es un look visual que NADIE ha hecho. La premisa "civilizaciones desarrolladas independientemente, son aliens entre sí" elimina el trope colonialista de "los aliens ayudaron".
 - **Cost:** Hay que diseñar el visual sci-fi-pre-colombino con cuidado para que NO se vea ridículo (ej: Mexica con jetpacks-jaguar). Más demanda artística.
 
 ### 2026-05-08 — Win condition: destruir mundo natal (no scoring de planetas)
+
 - **Considered:** A) HP del mundo natal estilo myl, B) Scoring por presencia en planetas estilo Marvel Snap, C) Best-of-3 rondas estilo Gwent
 - **Chose:** A
 - **Why:** Daniel pidió "que se acerque más a myl". El push-pull de defender vs atacar el "castillo" es la dinámica clásica del CCG y se siente coherente con el resto de la estructura myl-style.
 - **Cost:** No exploramos la elegancia del 3-rondas Gwent. Si en playtest la partida se sienten muy lineal, podemos agregar mid-game objectives.
 
 ### 2026-05-08 — Energía territorial (NO mana automático)
+
 - **Considered:** A) Mana lineal +1/turno (MTG/Hearthstone), B) Energía generada por planetas controlados, C) Doble función carta-recurso (Eternal-style)
 - **Chose:** B
 - **Why:** Daniel rechazó A explícitamente ("se parece a Magic"). B fusiona recurso + posición espacial en una sola decisión, encaja perfecto con el setting de planetas, y es genuinamente diferente del género.
 - **Cost:** Más complejidad para nuevos jugadores. Riesgo de "snowball": el que conquista primero sigue ganando energía. Se mitiga con mecánicas de re-conquista barata + protección de mundo natal en Edad I.
 
 ### 2026-05-08 — Counter wheel anclado en historia (Mapuche > Inca)
+
 - **Considered:** A) Counter wheel TCG estándar (Aggro > Control > Midrange > Aggro), B) Counter wheel con anchor histórico (Mapuche > Inca por Batalla del Maule)
 - **Chose:** B
 - **Why:** Daniel detectó que la opción A (Inca > Mapuche por ser control vs midrange) traicionaba la historia. La opción B fuerza una mecánica única (`Newen` punisha removal) y crea diferenciación inmediata en el meta.
 - **Cost:** El balance se vuelve menos predecible — no podés copiar matrices estándar de TCG. Requiere playtest extensivo. Pero es exactamente lo que diferencia al juego.
 
 ### 2026-05-08 — 4 facciones lanzamiento (no 5+)
+
 - **Considered:** A) 4 facciones, B) 5-6 facciones, C) Empezar con 4 y agregar Maya en mini 1.x
 - **Chose:** A (con C como roadmap)
 - **Why:** 4 factions = 6 matchups balanceables por equipo indie. 5+ se vuelve infierno (10+ matchups). Maya queda como evento de expansión (más impacto narrativo).
 - **Cost:** Se sacrifica la mecánica astronómica/temporal de Maya para el lanzamiento. Pero el twist cíclico se preserva como mecánica global del juego.
 
 ### 2026-05-08 — Faccions de lanzamiento: Mexica, Inca, Muisca, Mapuche
+
 - **Considered:** Mexica + Maya + Inca + Mapuche (sesgo geográfico — 50% Mesoamérica, 50% Cono Sur). Daniel detectó el sesgo.
 - **Chose:** Mexica + Inca + **Muisca** + Mapuche
 - **Why:** Mejor spread geográfico (Mesoamérica + Andes + Norte sudamericano + Sur austral). Muisca trae el mito El Dorado, archetype combo económico. Tupi-Guaraní queda para lanzamiento portugués.
 - **Cost:** Se posterga Maya (mecánica astronómica). Maya entra en mini 1.x.
 
 ### 2026-05-08 — Working title "Sexto Sol"
+
 - **Considered:** Pachacuti, Quinto Sol, Tahuantin, Pacha, Sexto Sol, Chakana, Hanan Pacha
 - **Chose:** Sexto Sol (luego de descartar Quinto Sol por conflicto con indie game existente)
 - **Why:** Sexto Sol = "lo que viene después del Quinto Sol que está terminando". Hook narrativo de una línea ("la guerra por el Sexto Sol"). Verificado libre en Steam y rounds-ups indie 2026.
 - **Cost:** Mexica-centric en origen (cosmología del 5to/6to sol es mexica), aunque el concepto cíclico es trans-cultural pre-colombino. Mitigado por la premisa narrativa que distribuye el "ocaso del 5to sol" entre las 4 civilizaciones.
 
 ### 2026-05-08 — Repo nuevo `/opt/sexto-sol/` (no fork de myl-game)
+
 - **Considered:** A) Fork de myl-game con rebrand, B) Repo nuevo + port a demanda de pieces del engine
 - **Chose:** B
 - **Why:** Sexto Sol es un juego distinto (espacio, energía territorial, edades, 4 facciones nuevas, win condition diferente). Nada del card data ni del rules engine de myl-game se reutiliza tal cual. Fork arrastraría 174 cartas inútiles + tech debt + naming confusion.
 - **Cost:** Doble setup de tooling (pnpm, ts, vitest, etc.). Se mitiga porque el setup es estándar y rápido.
 
 ### 2026-05-08 — PixiJS para canvas (no Konva)
+
 - **Considered:** Konva (lo usado en fasico-web), PixiJS, Three.js, Phaser
 - **Chose:** PixiJS
 - **Why:** Mejor performance para muchos sprites animados — el sector estelar va a tener naves, planetas, efectos de combate, partículas. PixiJS está optimizado para esto (Marvel Snap-tier). Konva es más simple pero pelea con cantidad de sprites. Three.js sería overkill 3D y mata performance mobile. Phaser saca del ecosistema React.
 - **Cost:** Curva de aprendizaje un poco más alta que Konva. Daniel acepta el tradeoff.
 
 ### 2026-05-08 — Web-first PWA (no mobile nativo en pre-alpha)
+
 - **Considered:** A) Web-first PWA, B) Mobile-first React Native, C) Web + Capacitor híbrido, D) React Native + react-native-web
 - **Chose:** A para pre-alpha/alpha; reevaluar antes de beta cerrada
 - **Why:** Iteración 10x más rápida que mobile nativo en fase de validar mecánicas. Marvel Snap + LoR son mobile-first nativo, pero esos equipos validaron mecánicas web/internamente antes. Cuando las mecánicas de Sexto Sol estén lockeadas, se decide migración.
 - **Cost:** Sin IAP funcional durante pre-alpha. Está bien — NO se monetiza en pre-alpha. Mobile feel inferior temporal.
 
 ### 2026-05-08 — Modelo soft P2W con Pase del Sol + sobres + crafting + bundles
+
 - **Considered:** A) Marvel Snap-style Collection Level (sin sobres, cards drip-feed), B) LoR/Hearthstone-style sobres + crafting + battle pass, C) Híbrido con suscripción que da bonificaciones pasivas
 - **Chose:** B + C — sobres + crafting con polvo + Pase del Sol mensual con beneficios pasivos
 - **Why:** Daniel pidió explícitamente que se vendan sobres ("la gente entiende sobres"). LoR es el mejor referente de soft P2W con sobres (mejor que Hearthstone gracias al pity timer + crafting target). Pase del Sol agrega vector de revenue recurrente con beneficios pasivos (más oro/sobres) que NO comprometen el principio "soft P2W" — el suscriptor paga por velocidad, no por poder.
@@ -510,6 +557,7 @@ Ver `BACKLOG.md` para fases de implementación detalladas. Resumen:
 ## Open questions
 
 ### Diseño
+
 - [ ] ¿Cuántos turnos exactos dura cada Edad? (Edad I ~4-5, Edad II ~3-4, Edad III ~3-4 → partida ~10-13 turnos por jugador. Validar en playtest.)
 - [ ] Reglas exactas de bloqueo en combate (¿defensor elige? ¿se declara primero attacker?)
 - [ ] Daño residual: ¿pasa al planeta? ¿al mundo natal? Ambos?
@@ -518,17 +566,20 @@ Ver `BACKLOG.md` para fases de implementación detalladas. Resumen:
 - [ ] Win condition alternativa por scoring de planetas — descartado por ahora pero podría volver si playtest sugiere
 
 ### Producto
+
 - [ ] PVP async (Marvel Snap-style) vs realtime (LoR-style)?
 - [ ] Mobile-first o web-first?
 - [ ] Lanzamiento Steam, mobile (iOS+Android), o web?
 - [ ] Repo público o privado al inicio?
 
 ### Cultural
+
 - [ ] ¿Cómo organizamos consultorías culturales? (Mapuche, Inca, Muisca, Mexica especialistas)
 - [ ] ¿Voice acting en lenguas originarias? (mapuzungun, quechua, náhuatl, muysccubun)
 - [ ] ¿Soundtrack original con instrumentos pre-colombinos? (kultrun mapuche, quena andina, teponaztli mexica)
 
 ### Técnico
+
 - [ ] Cuándo arrancamos a codear vs seguir iterando spec?
 - [ ] Backend stack: Node + WebSocket vs Cloudflare Durable Objects vs otro?
 - [ ] Persistencia: PostgreSQL vs SQLite vs algo más liviano?
@@ -546,4 +597,4 @@ Ver `BACKLOG.md` para fases de implementación detalladas. Resumen:
 
 ---
 
-*Vivo. Última actualización: 2026-05-08.*
+_Vivo. Última actualización: 2026-05-08._

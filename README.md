@@ -1,38 +1,41 @@
 # Sexto Sol
 
-> *"El Quinto Sol está terminando. Las cuatro civilizaciones de los cuatro mundos pelean por quién controlará el Sexto."*
+> _"El Quinto Sol está terminando. Cuatro razas espaciales pelean por quién controlará el Sexto. Pero el virus que las infecta fue traído del futuro al pasado por los Sabios que intentaban salvarlas."_
 
-Un CCG (Collectible Card Game) PVP inspirado en una **reimaginación sci-fi de las civilizaciones pre-colombinas**. Las facciones — Mexica, Inca, Muisca, Mapuche — desarrollaron tecnología y cosmología avanzadas en sus propios planetas dentro de un mismo sistema estelar.
+Un TCG de combate directo entre cuatro razas espaciales — **Q'ralan, Würon, Tezhal, Zaqe** — descendientes de civilizaciones ancestrales de un mismo sistema estelar. Construido sobre un bucle causal cerrado tipo Evangelion / Dark / Steins;Gate.
 
-## Premisa
+## Innovación central
 
-Subvierte el trope colonialista de "los aliens ayudaron a las civilizaciones pre-colombinas a evolucionar". En Sexto Sol, las civilizaciones son auto-suficientes y aliens entre sí — ningún imperio externo (europeo o galáctico) las "salvó" del primitivismo. El Quinto Sol cósmico (la era actual según la cosmología mexica) está terminando. Cuatro civilizaciones pelean por controlar el Sexto.
+- **Sistema de Resolución por Naturaleza de Mecánica**: cada raza pelea según una categoría (Reactiva / Iniciativa / Acumulativa / Post-combate), y el orden natural de resolución produce un counter wheel emergente sin reglas hardcodeadas.
+- **Habilidades duales Luz/Sombra** en Legendarias.
+- **3 Edades como escalada de poder narrativo**: firma cuesta +1 en Edad I, normal en II, x2 en III + daño directo desde la mano.
 
 ## Pilares de diseño
 
 - **PVP coleccionable** estilo Marvel Snap / Legends of Runeterra
-- **Soft P2W** — F2P competitivo, monetización vía boosters + battle pass + cosmética. NO MTG-tier brutal.
-- **Balance histórico** — el counter wheel respeta hechos reales (Mapuche resistió al imperio Inca → Mapuche cuenta como counter del Inca en el juego)
-- **Energía territorial** — sin mana automático lineal; tu recurso depende de los planetas que controlás
-- **Sin rotación** — las cartas no se descartan por tiempo (se balancean con nerfs/buffs estilo Marvel Snap)
-- **Espacial** — el tablero es un sistema estelar con planetas, no abstracto
+- **Soft P2W** — F2P competitivo, monetización vía boosters + battle pass + cosmética. NO MTG-tier brutal, sin singles market.
+- **Counter wheel emergente** del sistema de resolución, no hardcoded
+- **Energía territorial** con planetas no conquistables (recursos compartidos con Dones únicos)
+- **Sin rotación** — las cartas no se descartan por tiempo, se balancean con nerfs/buffs
+
+## Ancla cultural
+
+Las razas son **inventadas**. Las culturas precolombinas reales (Mapuche, Inca, Mexica, Muisca, Maya, etc.) aparecen como **ecos resonantes** en el lore — memoria parcial del camino correcto, no razas jugables. Ver `CANON-LORE.md`.
 
 ## Estado del proyecto
 
-🚧 **Pre-alpha — diseño en curso.** Spec maestra viva en `docs/specs/design-v0.md`.
+🚧 **Pre-alpha — diseño v2.0 (mayo 2026).** Phase 0 técnica cerrada, Phase 1 (engine kernel) en planeamiento.
 
 ## Stack
 
-TypeScript / Vite / React 18 / Vitest. Engine event-driven con reducer puro (port del kernel `myl-game`).
+TypeScript / Vite / React 18 / Vitest. Engine event-driven con reducer puro. Canvas con PixiJS, animaciones con Framer Motion, state con Zustand, styling con Tailwind v4.
 
 ## Documentación
 
 - `CLAUDE.md` — contexto para colaboradores y agentes IA
-- `GAME-RULES.md` — reglas del juego (vivo)
+- `GAME-RULES.md` — reglas oficiales del juego (v2.0, vivo)
+- `CANON-LORE.md` — cosmología y narrativa canónica (v2.0, vivo)
 - `ARCHITECTURE.md` — patrones técnicos del engine
 - `BACKLOG.md` — roadmap actual
 - `docs/specs/` — Spec-Driven Development
-
-## Sensibilidad cultural
-
-Las facciones están inspiradas en pueblos pre-colombinos reales. La premisa sci-fi reduce el riesgo de apropiación, pero no lo elimina. Nos comprometemos a consultar con personas y expertos de esas culturas para arte, flavor text y nombres en lenguas indígenas (mapuzungun, quechua, náhuatl, muysccubun).
+- `docs/lore/arco-del-jugador.md` — biblia narrativa trans-expansiones

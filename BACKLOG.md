@@ -21,58 +21,64 @@ Formato: `[status] título — nota`. Status: ` ` pending, `x` done, `~` in prog
 
 ## Fase 1 — Engine kernel
 
-- [ ] Port `rng.ts` desde myl-game (con seed conocida)
-- [ ] Definir `GameState` types
-- [ ] Reducer puro skeleton + acciones básicas
-- [ ] Event bus + queue de eventos pendientes
-- [ ] Strategy pattern base + skeleton vacío para las 4 facciones
+- [ ] Port `rng.ts` desde myl-game (splitmix32 + xoshiro128\*\*, seed conocida)
+- [ ] Definir `GameState` types (con `MechanicCategory`, `Age`, `PlanetGift`, `Hero`)
+- [ ] Reducer puro skeleton + acciones triviales (CONCEDE, END_PHASE)
+- [ ] Event bus con resolución por categoría (Reactive→Initiative→Accumulative→Post-combat) + Premonition
+- [ ] Strategy pattern base + skeleton vacío para las 4 razas (Q'ralan, Würon, Tezhal, Zaqe)
 - [ ] Property tests baseline con fast-check (invariantes)
 - [ ] Replay tests: seed + acciones producen mismo state
 
 ## Fase 2 — Mecánicas core
 
 - [ ] Despliegue de naves
-- [ ] Combate (atacante / defensor / daño simultáneo)
-- [ ] Energía territorial (mundo natal genera 1, conquistar planeta = +1)
-- [ ] Conquista de planetas neutrales
-- [ ] Reconquista de planetas enemigos
-- [ ] Win condition: homeworld destruido
-- [ ] Transición entre Edades (turn-based)
+- [ ] Combate simultáneo (sin DECLARE_BLOCK; bloqueo solo via Bastión)
+- [ ] Daño residual via Desgarro
+- [ ] Energía territorial: mundo natal +1, activación de planetas neutros (gastá 1 → +1)
+- [ ] Dones de planetas (efecto único + agotamiento hasta el próximo turno del activador)
+- [ ] Transición entre Edades (turnos 5/9 globales) con costo +1 / normal / x2 a la firma
+- [ ] Win condition: mundo natal HP 0
+- [ ] Sistema de Héroe (Edad I residente / Edad II desplegable / Edad III natales)
 
-## Fase 3 — Facciones (set base)
+## Fase 3 — Razas (set base, ~30 cartas por raza)
 
-### Mapuche (PRIMERA — ancla histórica del balance)
+### Würon (PRIMERA — categoría Reactiva, ancla narrativa)
 
-- [ ] `Newen` keyword: nave gana +1 fuerza permanente cuando recibe daño
-- [ ] `Lof` keyword: 2+ naves Mapuche en mismo planeta se buffean
+- [ ] `Külen`: nave gana +1 fuerza permanente al recibir daño
+- [ ] `Lof`: clanes vinculados se buffean entre sí
 - [ ] ~30 cartas iniciales (placeholder design)
 
-### Inca
+### Q'ralan (Acumulativa)
 
-- [ ] `Tributo` keyword
-- [ ] `Mit'a` keyword
-- [ ] `Acllla` keyword
+- [ ] `Formación Solar`: +1 fuerza por cada otra nave Q'ralan en juego
+- [ ] `Mit'a interno` (submecánica): tributo acumulado activa habilidades especiales
 - [ ] ~30 cartas
 
-### Mexica
+### Tezhal (Iniciativa)
 
-- [ ] `Ofrenda` keyword
+- [ ] `Ignición`: sacrificás nave propia para potenciar otra acción
 - [ ] ~30 cartas
 
-### Muisca
+### Zaqe (Post-combate)
 
-- [ ] `Sumergir` keyword
+- [ ] `Refluencia`: naves derrotadas vuelven al fondo del mazo, -1 al ser robadas otra vez
 - [ ] ~30 cartas
+
+### Cross-raza
+
+- [ ] Habilidades duales Luz/Sombra en Legendarias (Sombra activa por condición de la firma)
+- [ ] 1-3 héroes por raza
+- [ ] 12-16 Dones de planetas únicos
 
 ## Fase 4 — UI playable
 
 - [ ] React shell + routing
-- [ ] Canvas del sector estelar (Konva)
-- [ ] Mano + deck + tablero
+- [ ] Canvas del sector estelar (PixiJS)
+- [ ] Mano + deck + tablero + héroe en mundo natal
 - [ ] Drag & drop de cartas
 - [ ] Animaciones de combate básicas
-- [ ] AI greedy básica (port de myl-game greedy AI)
-- [ ] Modo "Playtest local" (1 humano vs AI)
+- [ ] AI scripted ("si puedo matar, mato; si no, defiendo")
+- [ ] Modo "Playtest local" (1 humano vs IA + hot-seat)
 
 ## Fase 5 — Multiplayer (TBD)
 
@@ -120,42 +126,35 @@ Derivada del **Arco del Jugador** (`docs/lore/arco-del-jugador.md` v1.0). Estos 
 
 ### Set base — "Sexto Sol" (lanzamiento)
 
-4 facciones: Mexica, Inca, Muisca, Mapuche. ~120-150 cartas.
+4 razas: Q'ralan, Würon, Tezhal, Zaqe. ~120-150 cartas.
 
-### Mini 1.1 — "Las Estrellas Recuerdan" (~3 meses post-lanzamiento)
+### Expansiones futuras (TBD)
 
-Plot reveal: los aliens vinieron a aprender, no a enseñar. Keyword `Eco` (cartas se repiten en ciclos posteriores). ~40-60 cartas.
+Mecanismos canónicos para introducir nuevas razas (ver `CANON-LORE.md` §10):
 
-### Mini 1.2 — "Pachacuti" (~6 meses)
+- **Semillas tardías** — semillas que viajaron más lento por el espacio-tiempo y recién despiertan.
+- **Civilizaciones terrestres que escaparon** — pueblos que preservaron suficiente conexión con su semilla original como para emerger después como civilizaciones espaciales jóvenes.
+- **Civilizaciones de otros sistemas estelares** — semillas que cayeron en mundos imprevistos.
 
-Facción **Maya** entra (astronomía / manipulación temporal). ~40-60 cartas.
+Para cada raza nueva: nombre propio inventado, cosmovisión inspirada pero distinta, categoría de mecánica (Reactiva / Iniciativa / Acumulativa / Post-combate o nueva), eco terrestre en lore (sin nombrarlo como raza jugable).
 
-### Mini 1.3 — "El Quinto Sol" (~9 meses)
+### Posible facción "Espejo Oscuro"
 
-Climax narrativo. Las civilizaciones deben aliarse o competir por el Sexto Sol. Keyword `Alianza`.
-
-### Edición 2 — "Eclipse" (~12 meses)
-
-Segunda edición base. Convergencia de las facciones. Posible facción nueva: **Mochica**.
-
-### Localizaciones que desbloquean facciones
-
-- 🇵🇹/🇧🇷 **Lanzamiento portugués**: facción Tupi-Guaraní
-- 🇮🇹/🇪🇸 **Lanzamiento europeo**: ¿Olmecas? (lore "ancient mystery")
-- 🇨🇴/🇻🇪 **Lanzamiento norte sudamericano**: profundización de Muisca + Tairona
-- 🇨🇱 **Edición especial**: Selk'nam (austral, Tierra del Fuego)
+Versiones tecno-industriales corruptas de cada raza, manifestación del virus. Material para Edición 2 o 3, no del set inicial. Ver `CANON-LORE.md` §6.4.
 
 ---
 
 ## Open questions / decisiones pendientes
 
-- [ ] Repo público o privado al inicio?
-- [ ] Stack frontend mobile-first o web-first?
 - [ ] Multiplayer realtime o async?
 - [ ] Async tipo Marvel Snap (turnos enviados) vs LoR (sesiones live)?
 - [ ] Sobres como modelo principal o subscripción?
 - [ ] Engine híbrido determinista + UI procedural (para animations)?
 - [ ] Voice acting / soundtrack original?
+- [ ] Lista cerrada de Dones de planetas (target: 12-16)
+- [ ] Confirmación de nombres definitivos de mecánicas firma (Külen, Ignición, Formación Solar, Refluencia son provisionales)
+- [ ] Diseño de los 4 héroes principales (1 por raza para v0.1)
+- [ ] Reglas para cartas multi-categoría (si las habrá)
 
 ---
 

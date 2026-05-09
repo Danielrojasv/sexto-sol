@@ -36,19 +36,20 @@ Specs en `docs/specs/`. Antes de empezar feature ≥ 3 días, que toque mecánic
 
 ## 1. Contexto del proyecto
 
-**Sexto Sol** es un CCG (Collectible Card Game) PVP de cartas inspirado en una **reimaginación sci-fi de las civilizaciones pre-colombinas**. Las 4 facciones del set base — **Mexica, Inca, Muisca, Mapuche** — desarrollan civilizaciones avanzadas en sus propios planetas dentro de un mismo sistema estelar. El Quinto Sol cósmico está terminando; las civilizaciones pelean por controlar el Sexto.
+**Sexto Sol** es un TCG (Trading Card Game) PVP de combate directo entre **cuatro razas espaciales inventadas** — **Q'ralan, Würon, Tezhal, Zaqe** — descendientes de civilizaciones ancestrales de un sistema estelar. Cada raza pelea según una **categoría de mecánica** distinta (Reactiva / Iniciativa / Acumulativa / Post-combate), y el orden natural de resolución produce un counter wheel emergente.
 
-Subvierte el trope colonialista de "los aliens ayudaron a las civilizaciones pre-colombinas a evolucionar" haciendo que cada civilización desarrollase su tecnología y cosmología independientemente — son aliens entre sí, ningún imperio europeo o externo las "ayudó".
+Las culturas precolombinas reales (Mapuche, Inca, Mexica, Muisca, Maya, etc.) **NO son razas jugables** — aparecen como ecos resonantes en el lore (ver `CANON-LORE.md`). El proyecto se construye dentro de un **bucle causal cerrado** tipo Evangelion/Dark/Steins;Gate: el virus que infecta a las civilizaciones fue traído del futuro al pasado por los Sabios que intentaban salvarlas.
 
 ### Pilares de diseño (no negociables)
 
 1. **PVP** (jugador vs jugador, async o realtime — TBD)
-2. **Coleccionable** (compra de sobres, crafting con polvo, intercambio TBD)
-3. **Soft P2W** estilo Marvel Snap / LoR — F2P jugable competitivamente, monetización vía boosters + battle pass + cosmética. **NO MTG-tier brutal**, NO singles market.
-4. **Balance histórico**: el counter wheel respeta hechos históricos reales, no la teoría TCG estándar. Ejemplo: **Mapuche > Inca** (ancla en la Batalla del Maule, donde el Tahuantinsuyu fue detenido por la resistencia mapuche descentralizada).
-5. **Diferenciación mecánica de myl**: estructura de turnos por fases similar a myl pero **sin mana automático lineal** (eso es MTG). En su lugar, **energía territorial**: tu energía depende de los planetas que controlás.
-6. **Espacial**: el tablero NO es abstracto, es un sistema estelar con planetas. Conquistar territorio = generar más recurso.
-7. **Sin rotación tipo Standard**: las cartas no se descartan por tiempo. El meta se mantiene fresco vía nerfs/buffs (modelo Marvel Snap).
+2. **Coleccionable** (sobres + crafting; sin singles market estilo MTG)
+3. **Soft P2W** estilo Marvel Snap / LoR — F2P jugable competitivamente.
+4. **Counter wheel emergente**: el orden de resolución entre categorías de mecánica (Reactiva→Iniciativa→Acumulativa→Post-combate) produce el counter wheel naturalmente. **Sin reglas hardcodeadas de tipo "raza X vence raza Y"**.
+5. **Habilidades duales Luz/Sombra** en Legendarias: Sombra activa bajo condición específica de la mecánica firma de la raza.
+6. **3 Edades como escalada de poder narrativo**: Edad I firma cuesta +1, Edad II costo normal + Resonancia, Edad III firma x2 + daño directo desde mano. Transición global turno 5/9.
+7. **Sin rotación tipo Standard**: las cartas no se descartan por tiempo. Meta se mantiene fresco vía nerfs/buffs.
+8. **Energía territorial con planetas no conquistables**: planetas son recursos compartidos con Dones únicos; activarlos cuesta 1 energía y otorga +1 esa fase. No hay control persistente de planeta.
 
 ### Stack técnico
 
@@ -71,25 +72,29 @@ Subvierte el trope colonialista de "los aliens ayudaron a las civilizaciones pre
 
 ## 2. Reglas del juego (high-level)
 
-**El detalle vivo está en `GAME-RULES.md` y `docs/specs/design-v0.md`.** Acá el resumen para que Claude Code pueda razonar sin abrir esos archivos.
+**El detalle vivo está en `GAME-RULES.md` (v2.0) y el lore en `CANON-LORE.md`.** Acá el resumen para que Claude Code pueda razonar sin abrir esos archivos.
 
-- **Win condition**: destruir el **mundo natal** (homeworld) del oponente. HP base 20.
-- **Mazos**: 30 cartas (no 60 como MTG, no 100 como Commander; cercano a Snap/LoR).
-- **Mano inicial**: 4 cartas, mulligan opcional una vez.
-- **Recurso**: **energía territorial**. Tu mundo natal genera 1 energía/turno; cada planeta neutral conquistado +1; cada planeta enemigo conquistado +1 (-1 para el enemigo).
-- **Turnos por fases** (estilo myl):
-  1. **Recolección** — generás energía + robás 1 carta
-  2. **Despliegue** — jugás cartas
-  3. **Combate** — declarás ataques contra unidades, planetas neutros o el mundo natal enemigo
-  4. **Regroup** — reposicionar naves
-  5. **Vigilia** — habilidades activadas (myl-style)
-- **3 Edades**: arco narrativo (no rounds independientes). Edad I los mundos natales son intocables; Edad II se pueden atacar; Edad III combate total.
-- **4 Facciones** con archetypes distintos:
-  - **Mexica** (aggro/sacrificio): mecánica firma `Ofrenda` — sacrificás cartas para potenciar la siguiente jugada
-  - **Inca** (control imperial): mecánicas firma `Tributo` (cartas weak alimentan strong) + `Mit'a` (acumulación) + `Acllla` (descuentos)
-  - **Muisca** (combo económico): mecánica firma `Sumergir` — cartas de oro al lago, regresan transformadas turnos después
-  - **Mapuche** (midrange resiliente): mecánicas firma `Newen` (regeneran/+fuerza con daño) + `Lof` (clan auto-sinérgico sin líder)
-- **Counter wheel**: Mexica → Muisca → Mapuche → Inca → Mexica. Matchups cruzados (Mexica vs Mapuche, Inca vs Muisca) son neutrales/skill.
+- **Win condition**: destruir el mundo natal del oponente (HP 20). También gana por decking out o concesión.
+- **Mazos**: 30 cartas de UNA raza, máx 3 copias (Legendarias 1).
+- **Mano inicial**: 4 cartas (5 para segundo jugador). Mulligan: una vez, mano completa, 1 al fondo. Cap mano: 7.
+- **Recurso (Energía Territorial)**: no acumulable entre turnos. Mundo natal +1/turno. Planetas neutrales **no se conquistan** — activarlos cuesta 1, otorga +1 esa fase y agota el planeta hasta tu siguiente turno. Cada planeta tiene un **Don** único revelado al setup (12-16 Dones distintos en el set inicial; cada partida usa 3).
+- **Turnos por fases**:
+  1. **Recolección** — recibís energía + robás 1
+  2. **Despliegue** — jugás cartas (Naves/Armas/Tecnologías/Reliquias)
+  3. **Combate** — atacás. Combate simultáneo, daño = fuerza. Bloqueo solo via keyword **Bastión**; daño residual solo via **Desgarro**
+  4. **Regroup** — mover naves gratis (en Despliegue cuesta 1)
+  5. **Vigilia** — habilidades activadas y respuestas. Energía no gastada se pierde
+- **3 Edades** (transición global turno 5 → II, turno 9 → III):
+  - **Edad I "El Despertar"**: firma cuesta +1, stats base
+  - **Edad II "Las Estrellas Recuerdan"**: firma costo normal, **Resonancia** activa
+  - **Edad III "El Sexto Sol"**: firma x2, **daño directo desde la mano** habilitado
+- **4 Razas** (cada una con una categoría de mecánica):
+  - **Q'ralan** "Hijos del Sol Pétreo" — Acumulativa. Firma: **Formación Solar** (+1 fuerza por cada otra nave Q'ralan en juego)
+  - **Würon** "Pueblos del Sur Profundo" — Reactiva. Firma: **Külen** (cada daño recibido = +1 fuerza permanente)
+  - **Tezhal** "Devotos del Corazón Ardiente" — Iniciativa. Firma: **Ignición** (sacrificás nave propia para potenciar otra acción)
+  - **Zaqe** "Mercaderes del Lago Cósmico" — Post-combate. Firma: **Refluencia** (naves derrotadas vuelven al fondo del mazo, -1 al ser robadas de nuevo)
+- **Sistema de Resolución por Naturaleza de Mecánica**: toda interacción simultánea resuelve en orden Reactiva→Iniciativa→Acumulativa→Post-combate. **Counter wheel emergente** (Würon > Q'ralan > Tezhal > Zaqe > Würon) sin reglas hardcoded por raza. Keyword **Premonición** rompe el orden con preparación de mazo.
+- **Héroe**: 1 por mazo. Edad I vive en mundo natal (hero power 1-2 activadas/turno). Edad II despliega como Nave Legendaria. Edad III ataca natales. Si muere vuelve al natal con 1 turno de cooldown.
 
 ---
 
@@ -105,8 +110,9 @@ Subvierte el trope colonialista de "los aliens ayudaron a las civilizaciones pre
 
 ### Strategy pattern para reglas
 
-- Cada **facción** implementa una `BaseFactionStrategy` con sus mecánicas firma (`Newen`, `Ofrenda`, etc.).
-- Agregar facción nueva = nueva estrategia, sin tocar las existentes (Open/Closed).
+- Cada **raza** implementa una `BaseRaceStrategy` con su categoría de mecánica (`reactive` / `initiative` / `accumulative` / `post_combat`) y su mecánica firma (`Külen`, `Ignición`, `Formación Solar`, `Refluencia`).
+- Agregar raza nueva = nueva estrategia, sin tocar las existentes (Open/Closed).
+- El orden de resolución del event bus respeta las categorías; el counter wheel cae como propiedad emergente, no como switch hardcoded.
 
 ### Service / Repository
 
@@ -140,19 +146,13 @@ Sub-agentes deben consultar estos archivos cuando entren a esas áreas. Si encon
 - **JSDoc en español** en funciones públicas.
 - **Idiomas**:
   - Código (variables, funciones, clases): **inglés**
-  - Comentarios de lore/cultura: **español** (ej: `// Newen — fuerza espiritual mapuche`)
+  - Comentarios de lore/raza: **español** (ej: `// Külen — fuerza vital Würon, +1 fuerza al recibir daño`)
   - JSDoc: **español**
 - **Imports** absolutos cuando sea posible (`@/engine/...` style).
 
 ### Sensibilidad cultural
 
-Las facciones están inspiradas en culturas reales (Mexica, Inca, Muisca, Mapuche). Cuando llegue el momento de:
-
-- Diseñar arte visual
-- Escribir flavor text
-- Bautizar cartas en lenguas indígenas (mapuzungun, quechua, náhuatl, muysccubun)
-
-…**consultar con personas de esas culturas o expertos académicos**. La premisa del juego (sci-fi reimagining + alien plot subvertido) reduce el riesgo de apropiación, pero no lo elimina. No copiar glifos sagrados directos. No usar nombres de deidades vivas todavía-veneradas sin contexto.
+Las razas son **inventadas** (Q'ralan, Würon, Tezhal, Zaqe). Inspiradas en cosmovisiones precolombinas pero **distintas y propias**. Las culturas terrestres reales aparecen solo como ecos resonantes en el lore (ver `CANON-LORE.md` §6.3). Antes de cualquier publicación de expansión que toque inspiración indígena, consultar con personas de las comunidades referenciadas — no es obligación legal, es buena práctica creativa y blindaje contra crítica legítima.
 
 ---
 

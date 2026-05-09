@@ -9,12 +9,14 @@ Documento técnico del engine y patrones. Vivo.
 ## 1. Filosofía del engine
 
 ### Determinismo total
+
 - **Cero LLM** en el motor de reglas.
 - **Reducer puro**: `(state, action) => newState`. Mismo input → mismo output.
 - **RNG seedable**: toda aleatoriedad pasa por un PRNG con seed conocida (estilo `seedrandom` o `xorshift32`).
 - Tests de regresión pasan seeds y replays exactos.
 
 ### Por qué este approach
+
 - Replay determinista para PVP async (envías la lista de acciones, el cliente reproduce el game state)
 - Testabilidad extrema (property tests + invariant tests con `fast-check`)
 - Anti-cheat: el server puede re-validar cualquier acción
@@ -26,45 +28,50 @@ Documento técnico del engine y patrones. Vivo.
 
 ```ts
 type GameState = {
-  seed: number               // RNG seed (immutable)
-  rngState: number           // current RNG state (mutable across turns)
-  turn: number               // global turn counter
-  age: 1 | 2 | 3             // current Edad
+  seed: number // RNG seed (immutable)
+  rngState: number // current RNG state (mutable across turns)
+  turn: number // global turn counter
+  age: 1 | 2 | 3 // current Edad
   activePlayer: 'p1' | 'p2'
-  phase: TurnPhase           // 'recoleccion' | 'despliegue' | 'combate' | 'regroup' | 'vigilia'
+  phase: TurnPhase // 'recoleccion' | 'despliegue' | 'combate' | 'regroup' | 'vigilia'
 
   players: {
     p1: PlayerState
     p2: PlayerState
   }
 
-  sector: SectorState        // tablero espacial
+  sector: SectorState // tablero espacial
   pendingEvents: GameEvent[] // event bus queue
-  log: GameAction[]          // action log para replay
+  log: GameAction[] // action log para replay
 }
 
 type PlayerState = {
-  faction: 'mexica' | 'inca' | 'muisca' | 'mapuche'
-  homeworld: { hp: number, maxHp: number, position: PlanetId }
+  race: 'quralan' | 'wuron' | 'tezhal' | 'zaqe'
+  homeworld: { hp: number; maxHp: number } // HP base 20
+  hero: HeroInstance | null // 1 héroe por mazo
   hand: Card[]
-  deck: Card[]               // ordered, top of deck = index 0
+  deck: Card[] // ordered, top of deck = index 0
   graveyard: Card[]
-  energy: number             // current turn energy (gastable)
-  energyIncome: number       // base income from territory
-  controlledPlanets: PlanetId[]
+  energy: number // gastable este turno (no acumula)
+  fleet: ShipInstance[] // naves desplegadas en el campo
 }
 
 type SectorState = {
-  planets: Record<PlanetId, PlanetState>
+  planets: PlanetState[] // 3 planetas neutrales con Don revelado al setup
 }
 
 type PlanetState = {
   id: PlanetId
   name: string
-  controller: 'p1' | 'p2' | 'neutral' | 'hidden'   // 'hidden' = todavía no revelado
-  garrison: ShipInstance[]
-  modifier?: PlanetModifier  // efectos especiales (ej. Trayenko: +1 Newen al final de Edad)
+  gift: PlanetGift // efecto único activable (Don del Archivo, etc.)
+  exhausted: boolean // true después de activarse, hasta el próximo turno del activador
+  exhaustedBy: PlayerId | null // quién lo agotó (vuelve disponible al inicio de su turno)
 }
+
+// Categorías de mecánica que dictan el orden de resolución del event bus.
+type MechanicCategory = 'reactive' | 'initiative' | 'accumulative' | 'post_combat'
+
+type Age = 1 | 2 | 3 // I, II, III; transición global en turnos 5 y 9
 ```
 
 ---
@@ -74,9 +81,10 @@ type PlanetState = {
 ```ts
 type GameAction =
   | { type: 'PLAY_CARD'; cardId: string; targets?: Target[] }
-  | { type: 'DECLARE_ATTACK'; attackerShipId: string; target: Target }
-  | { type: 'DECLARE_BLOCK'; blockerShipId: string; attackerShipId: string }
-  | { type: 'MOVE_SHIP'; shipId: string; from: PlanetId; to: PlanetId }
+  | { type: 'DECLARE_ATTACK'; attackerShipId: string; target: Target } // sin DECLARE_BLOCK — bloqueo solo via Bastión
+  | { type: 'ACTIVATE_PLANET'; planetId: PlanetId } // activa Don del planeta, agota
+  | { type: 'ACTIVATE_HERO_POWER'; abilityId: string } // hero power Edad I+
+  | { type: 'DEPLOY_HERO' } // Edad II+
   | { type: 'ACTIVATE_ABILITY'; sourceId: string; abilityId: string }
   | { type: 'END_PHASE' }
   | { type: 'CONCEDE'; player: 'p1' | 'p2' }
@@ -86,49 +94,67 @@ El reducer aplica una acción y devuelve `{ newState, eventsTriggered }`. Los ev
 
 ---
 
-## 4. Event bus
+## 4. Event bus + Resolución por Naturaleza de Mecánica
 
-Habilidades triggered escuchan eventos. Cuando un evento ocurre, todas las habilidades suscriptas se evalúan en orden:
+Habilidades triggered escuchan eventos. Cuando un evento ocurre, todas las habilidades suscriptas se evalúan **en orden de categoría de mecánica**:
+
+1. **Reactive** (Würon)
+2. **Initiative** (Tezhal)
+3. **Accumulative** (Q'ralan)
+4. **Post-combat** (Zaqe)
+
+Este orden es la regla central del juego. Produce el counter wheel emergente sin lógica hardcodeada por raza. La keyword `Premonition` permite a una habilidad romper el orden y resolver primero.
 
 ```ts
 type GameEvent =
-  | { type: 'SHIP_DESTROYED'; shipId: string; cause: 'combat' | 'sacrifice' | 'tech' }
+  | { type: 'SHIP_DESTROYED'; shipId: string; cause: 'combat' | 'sacrifice' | 'ability' }
   | { type: 'SHIP_DAMAGED'; shipId: string; amount: number; source: string }
-  | { type: 'PLANET_CONQUERED'; planetId: string; newController: PlayerId }
+  | { type: 'PLANET_ACTIVATED'; planetId: string; activatedBy: PlayerId }
   | { type: 'PHASE_START'; phase: TurnPhase; player: PlayerId }
-  | { type: 'AGE_CHANGED'; from: number; to: number }
+  | { type: 'AGE_CHANGED'; from: Age; to: Age }
   | { type: 'CARD_PLAYED'; cardId: string; player: PlayerId }
-  // ... más
+  | { type: 'HERO_DEPLOYED' | 'HERO_RETURNED'; player: PlayerId }
+// ... más
 ```
 
 Las habilidades se registran como:
+
 ```ts
 {
   trigger: 'SHIP_DAMAGED',
-  filter: (event, ctx) => event.shipId === ctx.selfId,  // newen activa cuando el self recibe daño
+  category: 'reactive',                                  // dicta el orden de resolución
+  premonition: false,                                    // si true, salta antes de cualquier categoría
+  filter: (event, ctx) => event.shipId === ctx.selfId,   // ej. Külen activa cuando el self recibe daño
   effect: (event, state) => /* +1 fuerza permanente */
 }
 ```
 
 ---
 
-## 5. Strategy pattern por facción
+## 5. Strategy pattern por raza
 
-Cada facción implementa `BaseFactionStrategy`:
+Cada raza implementa `BaseRaceStrategy`:
 
 ```ts
-interface BaseFactionStrategy {
-  faction: FactionId
-  startingDeck: Card[]              // mazo inicial sugerido
-  homeworldId: PlanetId             // mundo natal por defecto
+interface BaseRaceStrategy {
+  race: RaceId // 'quralan' | 'wuron' | 'tezhal' | 'zaqe'
+  category: MechanicCategory // categoría firma (reactive | initiative | accumulative | post_combat)
+  signatureKeyword: string // 'kulen' | 'ignicion' | 'formacion_solar' | 'refluencia'
+  startingDeck: Card[] // mazo inicial sugerido
+  heroOptions: HeroDefinition[] // 1-3 héroes elegibles
 
-  // Mecánicas firma — hooks específicos por facción
+  // Mecánicas firma — hooks específicos por raza
   registerKeywords(): KeywordHandler[]
   registerPassives(): PassiveEffect[]
 }
 ```
 
-Ejemplo: `MapucheStrategy` registra el keyword `newen` que se hookea a `SHIP_DAMAGED` para sumar fuerza permanente. `MexicaStrategy` registra `ofrenda` que permite consumir naves propias para potenciar la siguiente jugada.
+Ejemplos:
+
+- `WuronStrategy` registra el keyword `kulen` que se hookea a `SHIP_DAMAGED` (categoría `reactive`) para sumar +1 fuerza permanente al receptor.
+- `TezhalStrategy` registra `ignicion` (categoría `initiative`) que permite consumir naves propias para potenciar otra acción.
+- `QuralanStrategy` registra `formacion_solar` (categoría `accumulative`): cada nave Q'ralan en el campo otorga +1 fuerza a las demás.
+- `ZaqeStrategy` registra `refluencia` (categoría `post_combat`): naves derrotadas vuelven al fondo del mazo, -1 al ser robadas otra vez.
 
 ---
 
@@ -150,6 +176,7 @@ El port se hace **a demanda** — copiamos cuando necesitamos, no por defecto. C
 ## 7. Testing
 
 ### Niveles
+
 - **Unit**: cada reducer action, cada keyword handler.
 - **Integration**: secuencias de acciones representando partidas reales.
 - **Property tests**: invariantes del juego que NUNCA pueden romperse:
@@ -161,6 +188,7 @@ El port se hace **a demanda** — copiamos cuando necesitamos, no por defecto. C
 - **Replay tests**: seed + lista de acciones produce siempre el mismo estado final.
 
 ### Cobertura objetivo
+
 - Engine puro: ≥90%
 - UI: ≥70%
 - Globales: ≥80%
@@ -184,50 +212,61 @@ El port se hace **a demanda** — copiamos cuando necesitamos, no por defecto. C
 
 ## 9. Roadmap técnico
 
-### Fase 0 — Infraestructura (semana 1-2)
-- [ ] `git init` + repo `Danielrojasv/sexto-sol`
-- [ ] `pnpm init` + Node 22 + TypeScript + Vite
-- [ ] ESLint + Prettier + Vitest + fast-check
-- [ ] CI básico (GitHub Actions: lint + typecheck + test)
-- [ ] Pre-commit hook (gitleaks + lint-staged)
+### Fase 0 — Infraestructura ✅
 
-### Fase 1 — Engine kernel (semana 3-4)
-- [ ] Port RNG seedable desde myl-game
-- [ ] Definir GameState types
-- [ ] Reducer puro skeleton
-- [ ] Event bus
-- [ ] Tests baseline (property tests con fast-check)
+- Scaffold Vite + React 18 + TS strict, ESLint + Prettier + Vitest + fast-check, CI con gitleaks, husky pre-commit. Cerrada 2026-05-08.
 
-### Fase 2 — Mecánicas core (semana 5-8)
-- [ ] Despliegue básico de naves
-- [ ] Combate básico
-- [ ] Energía territorial
-- [ ] Conquista de planetas
-- [ ] Win condition (homeworld destroyed)
+### Fase 1 — Engine kernel
 
-### Fase 3 — 4 facciones (semana 9-14)
-- [ ] Mapuche con `Newen` + `Lof` (primera, ancla histórica)
-- [ ] Inca con `Tributo` + `Mit'a` + `Acllla`
-- [ ] Mexica con `Ofrenda`
-- [ ] Muisca con `Sumergir`
-- [ ] ~30 cartas por facción para set base mínimo
+- [ ] Port RNG seedable desde myl-game (splitmix32 + xoshiro128\*\*)
+- [ ] Definir GameState types (con `MechanicCategory`, `Age`, `PlanetGift`, `Hero`)
+- [ ] Reducer puro skeleton + acciones triviales (CONCEDE, END_PHASE)
+- [ ] Event bus con resolución por categoría (Reactive→Initiative→Accumulative→Post-combat) + Premonition
+- [ ] Strategy pattern base + 4 esqueletos (Q'ralan, Würon, Tezhal, Zaqe)
+- [ ] Property tests baseline (fast-check) sobre invariantes
+- [ ] Replay tests deterministas
 
-### Fase 4 — UI playable (semana 15-20)
-- [ ] React shell
-- [ ] Canvas del sector estelar (Konva)
-- [ ] Mano + deck + tablero
-- [ ] AI greedy básica para playtest solo
+### Fase 2 — Mecánicas core
+
+- [ ] Despliegue de naves
+- [ ] Combate simultáneo (sin DECLARE_BLOCK; bloqueo solo via Bastión)
+- [ ] Daño residual via Desgarro
+- [ ] Energía territorial: mundo natal +1, planetas neutros activables (gastá 1 → +1)
+- [ ] Activación de Don de planeta (efecto único + agotamiento)
+- [ ] Transición de Edades (turno 5 → II, turno 9 → III) con costo +1 / normal / x2 a la firma
+- [ ] Win condition: mundo natal HP 0
+- [ ] Sistema de Héroe (Edad I residente, Edad II desplegable, Edad III natales)
+
+### Fase 3 — 4 razas (set base mínimo, ~30 cartas por raza)
+
+- [ ] Würon con `Külen` (Reactiva) — primera por ancla narrativa
+- [ ] Q'ralan con `Formación Solar` (Acumulativa)
+- [ ] Tezhal con `Ignición` (Iniciativa)
+- [ ] Zaqe con `Refluencia` (Post-combate)
+- [ ] Habilidades duales Luz/Sombra en Legendarias
+- [ ] 1-3 héroes por raza
+- [ ] 12-16 Dones de planetas únicos
+
+### Fase 4 — UI playable
+
+- [ ] React shell + routing
+- [ ] Canvas del sector estelar (PixiJS)
+- [ ] Mano + deck + tablero + héroe en mundo natal
+- [ ] AI scripted ("si puedo matar, mato; si no, defiendo")
+- [ ] Modo "Playtest local" (1 humano vs IA + hot-seat)
 
 ### Fase 5 — Multiplayer (TBD)
-- [ ] Backend: arquitectura TBD (Node + WebSocket? Cloudflare Workers Durable Objects?)
+
+- [ ] Backend: arquitectura TBD (Node + WebSocket vs Cloudflare Durable Objects)
 - [ ] Async PVP estilo Marvel Snap: enviar acciones, replay
 - [ ] Matchmaking básico
 
 ### Fase 6 — Beta cerrada
+
 - [ ] 50 jugadores invitados
-- [ ] Telemetría de balance
+- [ ] Telemetría de balance por raza
 - [ ] Iteración de meta
 
 ---
 
-*Vivo. Última actualización: 2026-05-08.*
+_Vivo. Última actualización: 2026-05-09._
