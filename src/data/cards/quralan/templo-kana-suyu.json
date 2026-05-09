@@ -1,0 +1,27 @@
+{
+  "id": "quralan_templo_kana_suyu",
+  "name": "Templo K'ana-suyu",
+  "race": "quralan",
+  "type": "relic",
+  "cost": 5,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "continuous" },
+      "category": "accumulative",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "quralan" },
+        "effect": {
+          "op": "modify_hp",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      }
+    }
+  ],
+  "flavorText": "Ciudadela monumental anclada en planeta: irradia luz a cada casco hermano que cruza su órbita."
+}

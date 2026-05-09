@@ -1,0 +1,39 @@
+{
+  "id": "quralan_mita_wasi_coordinador",
+  "name": "Mit'a-wasi Coordinador",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 4,
+  "rarity": "rare",
+  "strength": 4,
+  "hp": 5,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "accumulative",
+      "effect": {
+        "op": "conditional",
+        "condition": {
+          "kind": "count_filter",
+          "filter": { "controller": "self", "race": "quralan" },
+          "op": "gte",
+          "value": 3
+        },
+        "thenEffect": {
+          "op": "for_each",
+          "filter": { "controller": "self", "race": "quralan" },
+          "effect": {
+            "op": "modify_strength",
+            "target": { "kind": "self" },
+            "kind": "delta",
+            "value": 1,
+            "duration": "permanent"
+          }
+        }
+      },
+      "description": "Mit'a interno: si controlás 3 o más naves Q'ralan al desplegarla, todas tus naves Q'ralan ganan +1 fuerza permanente."
+    }
+  ],
+  "flavorText": "Coordina hangares enteros desde la cabina-templo: el tributo cósmico se vuelve disparo."
+}

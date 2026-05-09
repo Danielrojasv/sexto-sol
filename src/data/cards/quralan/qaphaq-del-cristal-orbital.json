@@ -1,0 +1,29 @@
+{
+  "id": "quralan_qaphaq_del_cristal_orbital",
+  "name": "Q'aphaq del Cristal Orbital",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 4,
+  "rarity": "common",
+  "strength": 4,
+  "hp": 6,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "continuous" },
+      "category": "accumulative",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "quralan" },
+        "effect": {
+          "op": "modify_strength",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      }
+    }
+  ],
+  "flavorText": "Su casco devora luz solar; cada nave hermana vuelve más afilado su disparo."
+}
