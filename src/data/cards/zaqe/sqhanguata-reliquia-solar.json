@@ -1,0 +1,23 @@
+{
+  "id": "zaqe_sqhanguata_reliquia_solar",
+  "name": "Sqhanguata Reliquia Solar",
+  "race": "zaqe",
+  "type": "ship",
+  "cost": 5,
+  "rarity": "common",
+  "strength": 5,
+  "hp": 6,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_destroy" },
+      "category": "post_combat",
+      "effect": {
+        "op": "shuffle_to_deck",
+        "target": { "kind": "self" },
+        "owner": "self"
+      }
+    }
+  ],
+  "flavorText": "Balsa-templo de espejos solares: cuando el casco cede en órbita, la luz se transmuta de nuevo."
+}

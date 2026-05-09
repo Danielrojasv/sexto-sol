@@ -1,0 +1,33 @@
+{
+  "id": "zaqe_sumzhua_del_sexto_sol",
+  "name": "Sumzhua del Sexto Sol",
+  "race": "zaqe",
+  "type": "ship",
+  "cost": 6,
+  "rarity": "legendary",
+  "strength": 7,
+  "hp": 7,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_destroy" },
+      "category": "post_combat",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "shuffle_to_deck",
+            "target": { "kind": "self" },
+            "owner": "self"
+          },
+          {
+            "op": "draw",
+            "player": "self",
+            "n": 1
+          }
+        ]
+      }
+    }
+  ],
+  "flavorText": "Nave-balsa colosal: si la anomalía estelar la rompe, del lago emerge una orden nueva."
+}

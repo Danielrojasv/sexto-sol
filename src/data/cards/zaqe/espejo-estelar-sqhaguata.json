@@ -1,0 +1,23 @@
+{
+  "id": "zaqe_espejo_estelar_sqhaguata",
+  "name": "Espejo Estelar Sqhaguata",
+  "race": "zaqe",
+  "type": "ship",
+  "cost": 4,
+  "rarity": "common",
+  "strength": 4,
+  "hp": 5,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_destroy" },
+      "category": "post_combat",
+      "effect": {
+        "op": "shuffle_to_deck",
+        "target": { "kind": "self" },
+        "owner": "self"
+      }
+    }
+  ],
+  "flavorText": "Nave-balsa de casco-espejo: refleja la batalla del cielo y se hunde en el lago para volver."
+}
