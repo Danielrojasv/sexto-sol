@@ -5,13 +5,33 @@ import { describe, expect, it } from 'vitest'
 import fc from 'fast-check'
 import { createInitialState } from '../initialState'
 import { apply } from '../reducer'
-import type { GameAction, Race } from '../types'
+import type { Card, GameAction, Race } from '../types'
+
+function deck(size: number, race: Race = 'wuron'): Card[] {
+  return Array.from({ length: size }, (_, i) => ({
+    id: `c${i}`,
+    name: `Carta ${i}`,
+    type: 'ship',
+    race,
+    cost: 0,
+    rarity: 'common',
+    keywords: [],
+    strength: 1,
+    hp: 1,
+  }))
+}
 
 const ALL_RACES: readonly Race[] = ['quralan', 'wuron', 'tezhal', 'zaqe']
 
 describe('replay — determinismo total', () => {
   it('seed + END_PHASE x10 produce el mismo state byte-a-byte', () => {
-    const setup = { seed: 12345, p1Race: 'wuron' as const, p2Race: 'quralan' as const }
+    const setup = {
+      seed: 12345,
+      p1Race: 'wuron' as const,
+      p2Race: 'quralan' as const,
+      p1Deck: deck(60, 'wuron'),
+      p2Deck: deck(60, 'quralan'),
+    }
     const actions: readonly GameAction[] = Array.from({ length: 10 }, () => ({
       type: 'END_PHASE',
     }))
@@ -40,12 +60,24 @@ describe('replay — determinismo total', () => {
         }),
         (seed, p1Race, p2Race, actions) => {
           const stateA = (() => {
-            let s = createInitialState({ seed, p1Race, p2Race })
+            let s = createInitialState({
+              seed,
+              p1Race,
+              p2Race,
+              p1Deck: deck(60, p1Race),
+              p2Deck: deck(60, p2Race),
+            })
             for (const a of actions) s = apply(s, a).state
             return s
           })()
           const stateB = (() => {
-            let s = createInitialState({ seed, p1Race, p2Race })
+            let s = createInitialState({
+              seed,
+              p1Race,
+              p2Race,
+              p1Deck: deck(60, p1Race),
+              p2Deck: deck(60, p2Race),
+            })
             for (const a of actions) s = apply(s, a).state
             return s
           })()
@@ -64,7 +96,13 @@ describe('replay — determinismo total', () => {
         fc.integer({ min: 0, max: 8 }),
         fc.constantFrom('p1' as const, 'p2' as const),
         (seed, prefixLen, conceder) => {
-          const setup = { seed, p1Race: 'tezhal' as const, p2Race: 'zaqe' as const }
+          const setup = {
+            seed,
+            p1Race: 'tezhal' as const,
+            p2Race: 'zaqe' as const,
+            p1Deck: deck(60, 'tezhal'),
+            p2Deck: deck(60, 'zaqe'),
+          }
           const prefix: GameAction[] = Array.from({ length: prefixLen }, () => ({
             type: 'END_PHASE',
           }))
