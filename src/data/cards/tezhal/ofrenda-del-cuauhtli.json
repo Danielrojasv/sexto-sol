@@ -1,0 +1,26 @@
+{
+  "id": "tezhal_ofrenda_del_cuauhtli",
+  "name": "Ofrenda del Cuauhtli",
+  "race": "tezhal",
+  "type": "tech",
+  "cost": 2,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "sacrifice",
+            "target": { "kind": "chosen_ship", "filter": { "controller": "self" } }
+          },
+          { "op": "draw", "player": "self", "n": 2 }
+        ]
+      }
+    }
+  ],
+  "flavorText": "Una nave del escuadrón se ofrenda en órbita; el humo del casco trae dos presagios al hangar."
+}

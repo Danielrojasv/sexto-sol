@@ -1,0 +1,29 @@
+{
+  "id": "tezhal_espejo_piramide_tzactli",
+  "name": "Espejo-Pirámide Tzactli",
+  "race": "tezhal",
+  "type": "ship",
+  "cost": 3,
+  "rarity": "common",
+  "strength": 3,
+  "hp": 4,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "activated",
+        "window": "combate",
+        "cost": { "sacrificeShip": { "controller": "self" } }
+      },
+      "category": "initiative",
+      "effect": {
+        "op": "modify_strength",
+        "target": { "kind": "self" },
+        "kind": "delta",
+        "value": 3,
+        "duration": "end_of_turn"
+      }
+    }
+  ],
+  "flavorText": "Ofrenda otra nave del escuadrón y los espejos de obsidiana enfocan el sol sobre su propia proa."
+}
