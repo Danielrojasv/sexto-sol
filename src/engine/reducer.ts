@@ -9,6 +9,7 @@
 // DEPLOY_HERO, ACTIVATE_HERO_POWER (skeleton), mano cap 7, win conditions.
 
 import { createRng } from './rng'
+import { executeEffect } from './interpreter'
 import type {
   Age,
   AttackTarget,
@@ -357,15 +358,30 @@ function handlePlayCard(state: GameState, cardId: string): ReducerResult {
     keywords: card.keywords,
   }
 
-  const next = setPlayer(state, player, {
+  let next = setPlayer(state, player, {
     ...ps,
     hand: [...ps.hand.slice(0, idx), ...ps.hand.slice(idx + 1)],
     fleet: [...ps.fleet, ship],
     energy: ps.energy - card.cost,
   })
+  next = { ...next, rng: rng.snapshot() }
+  const events: GameEvent[] = [{ type: 'CARD_PLAYED', cardId, player }]
+
+  // Ejecutar abilities con trigger 'on_play' a través del interpreter.
+  for (const ability of card.abilities) {
+    if (ability.trigger.kind !== 'on_play') continue
+    const result = executeEffect(ability.effect, next, {
+      controller: player,
+      selfShipId: instanceId,
+      sourceCardId: card.id,
+    })
+    next = result.state
+    for (const e of result.emit) events.push(e)
+  }
+
   return {
-    state: appendLog({ ...next, rng: rng.snapshot() }, { type: 'PLAY_CARD', cardId }),
-    events: [{ type: 'CARD_PLAYED', cardId, player }],
+    state: appendLog(next, { type: 'PLAY_CARD', cardId }),
+    events,
   }
 }
 
