@@ -1,0 +1,29 @@
+{
+  "id": "quralan_centinela_petreo",
+  "name": "Centinela Pétreo",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 1,
+  "rarity": "rare",
+  "strength": 2,
+  "hp": 4,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "continuous" },
+      "category": "accumulative",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "quralan" },
+        "effect": {
+          "op": "modify_strength",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      }
+    }
+  ],
+  "flavorText": "En formación somos una sola luz."
+}
