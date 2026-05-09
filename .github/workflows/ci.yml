@@ -44,8 +44,10 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test
-        run: pnpm test:run
+      - name: Test + Coverage
+        # Engine kernel debe mantenerse en alta cobertura. Si querés bajar
+        # el gate por una buena razón, justificalo en el PR description.
+        run: pnpm test:coverage --coverage.thresholds.lines=85 --coverage.thresholds.functions=85 --coverage.thresholds.branches=85 --coverage.thresholds.statements=85
 
       - name: Build
         run: pnpm build
