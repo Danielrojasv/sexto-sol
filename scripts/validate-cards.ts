@@ -229,6 +229,13 @@ const CardSchema = z.object({
   abilities: z.array(AbilitySchema),
   flavorText: z.string().max(100).optional(),
   artUrl: z.string().optional(),
+  // Posición en el sprite sheet 4×3 de la raza.
+  artSlot: z
+    .object({
+      row: z.number().int().min(0).max(2),
+      col: z.number().int().min(0).max(3),
+    })
+    .optional(),
   // Metadata opcional para flag intencional de off-category.
   intentionalOffCategory: z.boolean().optional(),
 })

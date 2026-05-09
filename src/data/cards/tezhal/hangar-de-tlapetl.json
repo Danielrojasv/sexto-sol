@@ -13,16 +13,29 @@
       "trigger": {
         "kind": "activated",
         "window": "any_time",
-        "cost": { "sacrificeShip": { "controller": "self" } }
+        "cost": {
+          "sacrificeShip": {
+            "controller": "self"
+          }
+        }
       },
       "category": "initiative",
       "effect": {
         "op": "grant_keyword",
-        "target": { "kind": "chosen_ship", "filter": { "controller": "self" } },
+        "target": {
+          "kind": "chosen_ship",
+          "filter": {
+            "controller": "self"
+          }
+        },
         "keyword": "desgarro",
         "duration": "end_of_turn"
       }
     }
   ],
-  "flavorText": "El hangar nodriza ofrenda una nave hermana: el casco que sale al sector arde con filo de obsidiana."
+  "flavorText": "El hangar nodriza ofrenda una nave hermana: el casco que sale al sector arde con filo de obsidiana.",
+  "artSlot": {
+    "row": 0,
+    "col": 3
+  }
 }

@@ -9,5 +9,9 @@
   "hp": 4,
   "keywords": [],
   "abilities": [],
-  "flavorText": "Cuatro escuadrones, una sola órbita: el T'awa-pampa nunca rompe formación."
+  "flavorText": "Cuatro escuadrones, una sola órbita: el T'awa-pampa nunca rompe formación.",
+  "artSlot": {
+    "row": 0,
+    "col": 2
+  }
 }

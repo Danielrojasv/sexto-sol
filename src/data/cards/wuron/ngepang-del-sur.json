@@ -13,17 +13,27 @@
       "trigger": {
         "kind": "on_event",
         "event": "ship_damaged",
-        "filter": { "shipFilter": { "controller": "self" } }
+        "filter": {
+          "shipFilter": {
+            "controller": "self"
+          }
+        }
       },
       "category": "reactive",
       "effect": {
         "op": "modify_strength",
-        "target": { "kind": "self" },
+        "target": {
+          "kind": "self"
+        },
         "kind": "delta",
         "value": 1,
         "duration": "permanent"
       }
     }
   ],
-  "flavorText": "Donde el bosque termina y el cielo empieza, su grito hace temblar a las dos cosas."
+  "flavorText": "Donde el bosque termina y el cielo empieza, su grito hace temblar a las dos cosas.",
+  "artSlot": {
+    "row": 1,
+    "col": 1
+  }
 }

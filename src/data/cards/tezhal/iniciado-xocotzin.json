@@ -13,17 +13,30 @@
       "trigger": {
         "kind": "activated",
         "window": "any_time",
-        "cost": { "sacrificeShip": { "controller": "self" } }
+        "cost": {
+          "sacrificeShip": {
+            "controller": "self"
+          }
+        }
       },
       "category": "initiative",
       "effect": {
         "op": "modify_strength",
-        "target": { "kind": "chosen_ship", "filter": { "controller": "self" } },
+        "target": {
+          "kind": "chosen_ship",
+          "filter": {
+            "controller": "self"
+          }
+        },
         "kind": "delta",
         "value": 1,
         "duration": "end_of_turn"
       }
     }
   ],
-  "flavorText": "El novicio entra al combate sabiendo que su nave alimentará a otra antes del próximo sol."
+  "flavorText": "El novicio entra al combate sabiendo que su nave alimentará a otra antes del próximo sol.",
+  "artSlot": {
+    "row": 0,
+    "col": 1
+  }
 }

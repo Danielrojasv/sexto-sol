@@ -8,14 +8,21 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_play" },
+      "trigger": {
+        "kind": "on_play"
+      },
       "category": "initiative",
       "effect": {
         "op": "for_each",
-        "filter": { "controller": "self", "race": "wuron" },
+        "filter": {
+          "controller": "self",
+          "race": "wuron"
+        },
         "effect": {
           "op": "modify_strength",
-          "target": { "kind": "self" },
+          "target": {
+            "kind": "self"
+          },
           "kind": "delta",
           "value": 1,
           "duration": "permanent"
@@ -24,5 +31,9 @@
     }
   ],
   "flavorText": "El bosque no habla en palabras: pasa el viento, y todos los nuestros entienden a la vez.",
-  "intentionalOffCategory": true
+  "intentionalOffCategory": true,
+  "artSlot": {
+    "row": 1,
+    "col": 2
+  }
 }

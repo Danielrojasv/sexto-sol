@@ -11,7 +11,12 @@
       "trigger": {
         "kind": "on_event",
         "event": "ship_destroyed",
-        "filter": { "shipFilter": { "controller": "self", "race": "tezhal" } }
+        "filter": {
+          "shipFilter": {
+            "controller": "self",
+            "race": "tezhal"
+          }
+        }
       },
       "category": "initiative",
       "effect": {
@@ -22,5 +27,9 @@
       }
     }
   ],
-  "flavorText": "El espejo-pirámide en órbita lee cada nave caída del escuadrón y devuelve su tonalli al hangar."
+  "flavorText": "El espejo-pirámide en órbita lee cada nave caída del escuadrón y devuelve su tonalli al hangar.",
+  "artSlot": {
+    "row": 2,
+    "col": 0
+  }
 }

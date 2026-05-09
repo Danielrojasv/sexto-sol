@@ -10,14 +10,22 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_destroy" },
+      "trigger": {
+        "kind": "on_destroy"
+      },
       "category": "post_combat",
       "effect": {
         "op": "shuffle_to_deck",
-        "target": { "kind": "self" },
+        "target": {
+          "kind": "self"
+        },
         "owner": "self"
       }
     }
   ],
-  "flavorText": "Su casco refleja la órbita: las balsas escolta leen en su brillo el mapa del lago de luz."
+  "flavorText": "Su casco refleja la órbita: las balsas escolta leen en su brillo el mapa del lago de luz.",
+  "artSlot": {
+    "row": 0,
+    "col": 3
+  }
 }

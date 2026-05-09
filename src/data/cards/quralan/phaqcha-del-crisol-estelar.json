@@ -10,14 +10,21 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "continuous" },
+      "trigger": {
+        "kind": "continuous"
+      },
       "category": "accumulative",
       "effect": {
         "op": "for_each",
-        "filter": { "controller": "self", "race": "quralan" },
+        "filter": {
+          "controller": "self",
+          "race": "quralan"
+        },
         "effect": {
           "op": "modify_hp",
-          "target": { "kind": "self" },
+          "target": {
+            "kind": "self"
+          },
           "kind": "delta",
           "value": 1,
           "duration": "permanent"
@@ -25,5 +32,9 @@
       }
     }
   ],
-  "flavorText": "Su crisol funde el resplandor del astro: cuanto mayor la flota, más grueso el blindaje."
+  "flavorText": "Su crisol funde el resplandor del astro: cuanto mayor la flota, más grueso el blindaje.",
+  "artSlot": {
+    "row": 1,
+    "col": 1
+  }
 }

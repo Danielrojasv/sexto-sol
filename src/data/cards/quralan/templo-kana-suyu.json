@@ -8,14 +8,21 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "continuous" },
+      "trigger": {
+        "kind": "continuous"
+      },
       "category": "accumulative",
       "effect": {
         "op": "for_each",
-        "filter": { "controller": "self", "race": "quralan" },
+        "filter": {
+          "controller": "self",
+          "race": "quralan"
+        },
         "effect": {
           "op": "modify_hp",
-          "target": { "kind": "self" },
+          "target": {
+            "kind": "self"
+          },
           "kind": "delta",
           "value": 1,
           "duration": "permanent"
@@ -23,5 +30,9 @@
       }
     }
   ],
-  "flavorText": "Ciudadela monumental anclada en planeta: irradia luz a cada casco hermano que cruza su órbita."
+  "flavorText": "Ciudadela monumental anclada en planeta: irradia luz a cada casco hermano que cruza su órbita.",
+  "artSlot": {
+    "row": 2,
+    "col": 1
+  }
 }

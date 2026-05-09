@@ -13,17 +13,27 @@
       "trigger": {
         "kind": "on_event",
         "event": "ship_damaged",
-        "filter": { "shipFilter": { "controller": "self" } }
+        "filter": {
+          "shipFilter": {
+            "controller": "self"
+          }
+        }
       },
       "category": "reactive",
       "effect": {
         "op": "modify_strength",
-        "target": { "kind": "self" },
+        "target": {
+          "kind": "self"
+        },
         "kind": "delta",
         "value": 1,
         "duration": "permanent"
       }
     }
   ],
-  "flavorText": "Brota donde la tierra duele; cada golpe lo enraíza."
+  "flavorText": "Brota donde la tierra duele; cada golpe lo enraíza.",
+  "artSlot": {
+    "row": 0,
+    "col": 0
+  }
 }

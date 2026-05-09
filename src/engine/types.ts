@@ -63,6 +63,9 @@ export interface Card {
   flavorText?: string
   /** Placeholder hasta Phase 4 (arte profesional + Kickstarter). */
   artUrl?: string
+  /** Posición de la carta en el sprite sheet de su raza. Grid 4 cols × 3 rows.
+   *  Frontend renderiza con background-image: /art/<race>.jpg + background-position. */
+  artSlot?: { row: number; col: number }
 }
 
 export interface ShipInstance {

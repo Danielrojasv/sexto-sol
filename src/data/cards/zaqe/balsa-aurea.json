@@ -10,14 +10,22 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_destroy" },
+      "trigger": {
+        "kind": "on_destroy"
+      },
       "category": "post_combat",
       "effect": {
         "op": "shuffle_to_deck",
-        "target": { "kind": "self" },
+        "target": {
+          "kind": "self"
+        },
         "owner": "self"
       }
     }
   ],
-  "flavorText": "Casco de oro líquido: cuando el escuadrón la hunde, vuelve al fondo del mazo a transmutarse."
+  "flavorText": "Casco de oro líquido: cuando el escuadrón la hunde, vuelve al fondo del mazo a transmutarse.",
+  "artSlot": {
+    "row": 0,
+    "col": 1
+  }
 }

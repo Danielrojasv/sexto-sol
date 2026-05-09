@@ -10,14 +10,18 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_destroy" },
+      "trigger": {
+        "kind": "on_destroy"
+      },
       "category": "post_combat",
       "effect": {
         "op": "sequence",
         "effects": [
           {
             "op": "shuffle_to_deck",
-            "target": { "kind": "self" },
+            "target": {
+              "kind": "self"
+            },
             "owner": "self"
           },
           {
@@ -29,5 +33,9 @@
       }
     }
   ],
-  "flavorText": "Nave-balsa colosal: si la anomalía estelar la rompe, del lago emerge una orden nueva."
+  "flavorText": "Nave-balsa colosal: si la anomalía estelar la rompe, del lago emerge una orden nueva.",
+  "artSlot": {
+    "row": 2,
+    "col": 1
+  }
 }

@@ -8,18 +8,26 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_play" },
+      "trigger": {
+        "kind": "on_play"
+      },
       "category": "initiative",
       "effect": {
         "op": "search",
         "owner": "self",
         "zone": "deck",
-        "filter": { "race": "quralan" },
+        "filter": {
+          "race": "quralan"
+        },
         "count": 1,
         "destination": "hand"
       }
     }
   ],
   "flavorText": "Los cristales del hangar central vibran en coro y revelan el siguiente escuadrón a botar.",
-  "intentionalOffCategory": true
+  "intentionalOffCategory": true,
+  "artSlot": {
+    "row": 1,
+    "col": 2
+  }
 }

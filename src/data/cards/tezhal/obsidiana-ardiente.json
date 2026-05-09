@@ -8,21 +8,33 @@
   "keywords": [],
   "abilities": [
     {
-      "trigger": { "kind": "on_play" },
+      "trigger": {
+        "kind": "on_play"
+      },
       "category": "initiative",
       "effect": {
         "op": "sequence",
         "effects": [
           {
             "op": "modify_strength",
-            "target": { "kind": "chosen_ship", "filter": { "controller": "self" } },
+            "target": {
+              "kind": "chosen_ship",
+              "filter": {
+                "controller": "self"
+              }
+            },
             "kind": "delta",
             "value": 2,
             "duration": "permanent"
           },
           {
             "op": "grant_keyword",
-            "target": { "kind": "chosen_ship", "filter": { "controller": "self" } },
+            "target": {
+              "kind": "chosen_ship",
+              "filter": {
+                "controller": "self"
+              }
+            },
             "keyword": "desgarro",
             "duration": "permanent"
           }
@@ -30,5 +42,9 @@
       }
     }
   ],
-  "flavorText": "Filo ritual soldado al casco: cada impacto en órbita es ofrenda que el sector entero recuerda."
+  "flavorText": "Filo ritual soldado al casco: cada impacto en órbita es ofrenda que el sector entero recuerda.",
+  "artSlot": {
+    "row": 1,
+    "col": 3
+  }
 }
