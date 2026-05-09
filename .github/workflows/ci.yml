@@ -54,3 +54,25 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  validate-cards:
+    name: Validate card data
+    runs-on: ubuntu-latest
+    # Job separado: si solo cambian cartas, fallar este job es señal específica
+    # de que el balance/naming está roto, sin contaminar el job principal.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate cards
+        run: pnpm validate:cards
