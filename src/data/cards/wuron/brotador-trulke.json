@@ -1,0 +1,29 @@
+{
+  "id": "wuron_brotador_trulke",
+  "name": "Brotador Trülke",
+  "race": "wuron",
+  "type": "ship",
+  "cost": 1,
+  "rarity": "common",
+  "strength": 1,
+  "hp": 3,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "ship_damaged",
+        "filter": { "shipFilter": { "controller": "self" } }
+      },
+      "category": "reactive",
+      "effect": {
+        "op": "modify_strength",
+        "target": { "kind": "self" },
+        "kind": "delta",
+        "value": 1,
+        "duration": "permanent"
+      }
+    }
+  ],
+  "flavorText": "Brota donde la tierra duele; cada golpe lo enraíza."
+}

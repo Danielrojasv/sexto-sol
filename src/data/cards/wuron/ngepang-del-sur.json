@@ -1,0 +1,29 @@
+{
+  "id": "wuron_ngepang_del_sur",
+  "name": "Ñgepang del Sur",
+  "race": "wuron",
+  "type": "ship",
+  "cost": 4,
+  "rarity": "common",
+  "strength": 4,
+  "hp": 5,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "ship_damaged",
+        "filter": { "shipFilter": { "controller": "self" } }
+      },
+      "category": "reactive",
+      "effect": {
+        "op": "modify_strength",
+        "target": { "kind": "self" },
+        "kind": "delta",
+        "value": 1,
+        "duration": "permanent"
+      }
+    }
+  ],
+  "flavorText": "Donde el bosque termina y el cielo empieza, su grito hace temblar a las dos cosas."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "wuron_wutrupang_resistente",
+  "name": "Wütrüpang Resistente",
+  "race": "wuron",
+  "type": "ship",
+  "cost": 3,
+  "rarity": "common",
+  "strength": 3,
+  "hp": 5,
+  "keywords": ["bastion"],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "ship_damaged",
+        "filter": { "shipFilter": { "controller": "self" } }
+      },
+      "category": "reactive",
+      "effect": {
+        "op": "modify_strength",
+        "target": { "kind": "self" },
+        "kind": "delta",
+        "value": 1,
+        "duration": "permanent"
+      }
+    }
+  ],
+  "flavorText": "Tronco viejo, corteza gruesa: lo que lo hiere se queda dentro y lo enseña a doler mejor."
+}

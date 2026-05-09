@@ -1,0 +1,29 @@
+{
+  "id": "wuron_lhupang_del_rio",
+  "name": "Lhüpang del Río",
+  "race": "wuron",
+  "type": "ship",
+  "cost": 2,
+  "rarity": "common",
+  "strength": 2,
+  "hp": 4,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "ship_damaged",
+        "filter": { "shipFilter": { "controller": "self" } }
+      },
+      "category": "reactive",
+      "effect": {
+        "op": "modify_strength",
+        "target": { "kind": "self" },
+        "kind": "delta",
+        "value": 1,
+        "duration": "permanent"
+      }
+    }
+  ],
+  "flavorText": "El río no se rompe cuando lo golpean; se hace más hondo."
+}
