@@ -95,6 +95,7 @@ function drawSetupHand(
     cost: 0,
     rarity: 'common',
     keywords: [],
+    abilities: [],
   }))
   return { hand: [...deck, ...placeholders], deck: [] }
 }

@@ -4,6 +4,11 @@
 // Sin mutación in-place. Sin LLM en el motor de reglas.
 
 import type { RngState } from './rng'
+// Re-export Ability del catálogo de primitives. Card.abilities lo usa.
+// Cuidado: orden de imports — types.ts es importado por primitives/spec.ts,
+// así que el tipo Ability vive ahí y se importa acá como type-only.
+export type { Ability } from '@/data/primitives/spec'
+import type { Ability } from '@/data/primitives/spec'
 
 // ---- Identidades del juego ------------------------------------------------
 
@@ -52,8 +57,12 @@ export interface Card {
   hp?: number
   /** Lista de keywords (Bastión, Desgarro, Resonancia, Premonición, Vuelo, etc.). */
   keywords: readonly string[]
+  /** Abilities declarativas (árbol JSON de primitives). Vacío para vanilla ships. */
+  abilities: readonly Ability[]
   /** Texto narrativo al pie de la carta. */
   flavorText?: string
+  /** Placeholder hasta Phase 4 (arte profesional + Kickstarter). */
+  artUrl?: string
 }
 
 export interface ShipInstance {

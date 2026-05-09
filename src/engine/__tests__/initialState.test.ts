@@ -11,6 +11,7 @@ function sampleDeck(size: number): Card[] {
     cost: 0,
     rarity: 'common',
     keywords: [],
+    abilities: [],
     strength: 1,
     hp: 1,
   }))
