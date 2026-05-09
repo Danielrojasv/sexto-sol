@@ -27,6 +27,7 @@ function deck(size: number, race: Race = 'wuron'): Card[] {
     cost: 0,
     rarity: 'common',
     keywords: [],
+    abilities: [],
     strength: 1,
     hp: 1,
   }))
