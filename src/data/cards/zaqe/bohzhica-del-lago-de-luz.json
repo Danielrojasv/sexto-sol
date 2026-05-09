@@ -1,0 +1,23 @@
+{
+  "id": "zaqe_bohzhica_del_lago_de_luz",
+  "name": "Bohzhica del Lago de Luz",
+  "race": "zaqe",
+  "type": "ship",
+  "cost": 5,
+  "rarity": "rare",
+  "strength": 5,
+  "hp": 7,
+  "keywords": ["bastion"],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_destroy" },
+      "category": "post_combat",
+      "effect": {
+        "op": "shuffle_to_deck",
+        "target": { "kind": "self" },
+        "owner": "self"
+      }
+    }
+  ],
+  "flavorText": "Balsa-buque de vanguardia: hundida en el lago de luz, su casco se transmuta para el próximo ciclo."
+}

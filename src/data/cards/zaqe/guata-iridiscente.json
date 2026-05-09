@@ -1,0 +1,23 @@
+{
+  "id": "zaqe_guata_iridiscente",
+  "name": "Guata Iridiscente",
+  "race": "zaqe",
+  "type": "ship",
+  "cost": 3,
+  "rarity": "common",
+  "strength": 3,
+  "hp": 3,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_destroy" },
+      "category": "post_combat",
+      "effect": {
+        "op": "shuffle_to_deck",
+        "target": { "kind": "self" },
+        "owner": "self"
+      }
+    }
+  ],
+  "flavorText": "Su casco refleja la órbita: las balsas escolta leen en su brillo el mapa del lago de luz."
+}

@@ -1,0 +1,23 @@
+{
+  "id": "zaqe_navegante_sumzhua",
+  "name": "Navegante de Sumzhua",
+  "race": "zaqe",
+  "type": "ship",
+  "cost": 1,
+  "rarity": "common",
+  "strength": 1,
+  "hp": 2,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_destroy" },
+      "category": "post_combat",
+      "effect": {
+        "op": "shuffle_to_deck",
+        "target": { "kind": "self" },
+        "owner": "self"
+      }
+    }
+  ],
+  "flavorText": "La balsa pequeña explora el lago de luz; si la rompen, el lago la guarda."
+}

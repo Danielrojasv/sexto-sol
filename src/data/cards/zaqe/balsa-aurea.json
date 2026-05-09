@@ -1,0 +1,23 @@
+{
+  "id": "zaqe_balsa_aurea",
+  "name": "Balsa Áurea",
+  "race": "zaqe",
+  "type": "ship",
+  "cost": 2,
+  "rarity": "common",
+  "strength": 2,
+  "hp": 3,
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_destroy" },
+      "category": "post_combat",
+      "effect": {
+        "op": "shuffle_to_deck",
+        "target": { "kind": "self" },
+        "owner": "self"
+      }
+    }
+  ],
+  "flavorText": "Casco de oro líquido: cuando el escuadrón la hunde, vuelve al fondo del mazo a transmutarse."
+}
