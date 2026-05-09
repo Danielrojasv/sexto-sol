@@ -304,18 +304,24 @@ function PlanetButton({
         planet.exhausted
           ? 'border-slate-700 bg-slate-900/60 opacity-60 cursor-not-allowed'
           : canActivate
-            ? 'border-amber-700 bg-amber-950/40 hover:border-amber-500 cursor-pointer'
+            ? 'border-amber-700 bg-amber-950/40 hover:border-amber-500 hover:scale-105 cursor-pointer ring-2 ring-amber-500/30'
             : 'border-amber-900/50 bg-amber-950/20 cursor-not-allowed'
       }`}
     >
       <div className="text-[9px] uppercase text-slate-500">{planet.id}</div>
       <div className="text-xs font-semibold mt-1 leading-tight">{planet.gift.name}</div>
-      <div className="text-[9px] text-slate-500 mt-1.5 line-clamp-3 leading-tight">
+      <div className="text-[9px] text-slate-500 mt-1.5 line-clamp-2 leading-tight">
         {planet.gift.description}
       </div>
-      {planet.exhausted && (
-        <div className="text-[9px] uppercase tracking-wider text-amber-400 mt-1.5">
-          Agotado
+      {planet.exhausted ? (
+        <div className="text-[9px] uppercase tracking-wider text-amber-400 mt-1.5">Agotado</div>
+      ) : canActivate ? (
+        <div className="text-[10px] font-bold tracking-wide text-amber-300 mt-1.5">
+          Activar +1 ⚡
+        </div>
+      ) : (
+        <div className="text-[9px] uppercase tracking-wider text-slate-600 mt-1.5">
+          Necesitás 1 ⚡
         </div>
       )}
     </button>

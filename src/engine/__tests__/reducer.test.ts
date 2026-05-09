@@ -278,6 +278,13 @@ describe('reducer — ACTIVATE_PLANET', () => {
     })
   })
 
+  it('activar planeta da +1 energía neta (rules §2.1)', () => {
+    const s = fresh()
+    const before = s.players.p1.energy
+    const r = apply(s, { type: 'ACTIVATE_PLANET', planetId: 'planet_1' })
+    expect(r.state.players.p1.energy).toBe(before + 1)
+  })
+
   it('activar planeta agotado es no-op', () => {
     let s = fresh()
     s = apply(s, { type: 'ACTIVATE_PLANET', planetId: 'planet_1' }).state
