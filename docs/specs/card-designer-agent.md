@@ -7,6 +7,19 @@
 
 ---
 
+## TODO — exposure como subagent_type del harness
+
+El agente está definido en `.claude/agents/card-designer.md` y es funcional como persona/instructions. Sin embargo, **no aparece como `subagent_type` válido en la Agent tool del harness de Claude Code** — sólo se exponen los agents estándar (general-purpose, Explore, Plan, claude-code-guide, statusline-setup) y los del marketplace global.
+
+Workaround validado en sesión 2026-05-10 (canary Würon): operar siguiendo `.claude/agents/card-designer.md` desde main conversation cuando el usuario pida diseño de cartas. Esto preserva la regla "preguntar antes de decidir solo" — un subagent autónomo no puede consultar al usuario mid-flight.
+
+A implementar:
+
+- [ ] Investigar si project-level `.claude/agents/<name>.md` se pueden registrar como subagent_types invocables.
+- [ ] Mientras tanto, dejar workaround documentado: el agente se invoca leyendo el archivo y operando desde main.
+
+---
+
 ## Why
 
 Sexto Sol necesita ~120-150 cartas para el set base (~30 por raza × 4 razas). Diseñar cartas a mano, una por una, no es solo lento — también es propenso a:
