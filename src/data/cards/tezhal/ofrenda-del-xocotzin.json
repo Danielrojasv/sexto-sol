@@ -5,7 +5,7 @@
   "type": "tech",
   "cost": 2,
   "rarity": "common",
-  "keywords": [],
+  "keywords": ["ignicion"],
   "abilities": [
     {
       "trigger": {

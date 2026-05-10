@@ -7,7 +7,7 @@
   "rarity": "common",
   "strength": 2,
   "hp": 1,
-  "keywords": [],
+  "keywords": ["ignicion"],
   "abilities": [
     {
       "trigger": {
