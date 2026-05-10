@@ -1,0 +1,26 @@
+{
+  "id": "wuron_brote_espinado",
+  "name": "Brote Espinado",
+  "race": "wuron",
+  "type": "event",
+  "cost": 2,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "ship_attacked",
+        "filter": { "shipFilter": { "controller": "self", "race": "wuron" } }
+      },
+      "category": "reactive",
+      "effect": {
+        "op": "damage",
+        "target": { "kind": "attacker" },
+        "amount": 2
+      },
+      "description": "Cuando una nave enemiga ataca a una de tus naves Würon, hace 2 daño al atacante."
+    }
+  ],
+  "flavorText": "Tocas el bosque y el bosque vuelve a tocarte."
+}
