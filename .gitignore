@@ -74,3 +74,8 @@ logs/
 .cache/
 tmp/
 temp/
+
+
+# Python bytecode cache
+__pycache__/
+*.pyc
