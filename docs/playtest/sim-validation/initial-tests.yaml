@@ -1,0 +1,96 @@
+date_run: 2026-05-10
+simulator_version: v0 (pre-Phase-1 kernel)
+agent_spec: .claude/agents/game-simulator.md
+tests_passed: 6
+tests_total: 7
+all_passed: false
+meta_pool: docs/playtest/decks/ (12 mazos del SPEC 2)
+notes:
+  - Simulator interpreta cartas a nivel de habilidad legible (no engine kernel).
+  - Solo ~12 habilidades individuales hardcodeadas (eventos/relics/tech más impactantes).
+  - 'Resto de habilidades se tratan como "vanilla event sin efecto" y se loggean con ambiguity_flagged: true.'
+  - Esto es esperado y honesto — Phase 1 kernel resolverá la cobertura completa.
+  - Determinismo absoluto verificado vía seed.
+  - Mecánicas firma (kulen/formacion_solar/ignicion/refluencia) implementadas full.
+tests:
+  - test: 1_determinism_via_seed
+    passed: true
+    detail:
+      run1_vs_run2_identical: true
+      run1_vs_run3_identical: true
+      final_turn_run1: 6
+      winner_run1: a
+  - test: 2_basic_rules
+    passed: true
+    detail:
+      turn1_energy: 1
+      turn1_max_play_cost: 0
+      turn1_combat_empty: true
+      final_turn: 6
+  - test: 3_firma_mechanics_activate
+    passed: true
+    detail:
+      kulen_activations: 4
+      all_firma:
+        kulen: 4
+        formacion_solar: 0
+        ignicion: 3
+        refluencia: 0
+      final_turn: 6
+  - test: 4_archetype_respect
+    passed: false
+    known_limitation: 'v0 simulator AI no diferencia heurísticas de combate por archetype/variant — siempre ataca natal cuando puede. Este test EXPONE el gap: el spec esperaba avg_zaqe_longgame ≥ 7-10+ pero el AI scripted v0 produce ~5-6 (el deck Zaqe juega aggro igual que Tezhal). Iteración futura del simulator debe implementar heurísticas variant-aware del spec sec 2.R2 (Aggro/Midrange/Control/Combo) para pasar este test honestamente. NO se ajusta el threshold para fake-pass (Restricción 5: no trampas).'
+    detail:
+      tezhal_aggro_avg_turn: 5.0
+      tezhal_aggro_expected: 5-7 (per spec sec 9 Test 4)
+      zaqe_longgame_avg_turn: 5.6
+      zaqe_longgame_expected: 10+ (per spec sec 9 Test 4)
+      differentiation_observed: 0.6
+      tezhal_turns_dist:
+        - 4
+        - 5
+        - 6
+        - 5
+        - 4
+        - 5
+        - 6
+        - 5
+        - 5
+        - 5
+      zaqe_turns_dist:
+        - 6
+        - 5
+        - 5
+        - 7
+        - 5
+        - 5
+        - 6
+        - 5
+        - 6
+        - 6
+  - test: 5_replay_deterministic
+    passed: true
+    detail:
+      matches_original: true
+      original_winner: a
+      replay_winner: a
+      turn_count_match: true
+  - test: 6_batch_summary
+    passed: true
+    detail:
+      games_played: 20
+      wins_a: 11
+      wins_b: 9
+      ties: 0
+      sum_check: 20
+      avg_turn_duration: 7.3
+  - test: 7_ambiguity_transparent
+    passed: true
+    detail:
+      ambiguity_flagged_count: 2
+      sample_notes:
+        - 'T2: Cristal del Eclipse Pétreo: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+        - 'T4: Coraza del Sumaq-Wasi: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+      unimplemented_cards_observed:
+        - Coraza del Sumaq-Wasi
+        - Cristal del Eclipse Pétreo
