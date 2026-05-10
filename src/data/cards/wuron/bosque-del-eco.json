@@ -27,7 +27,8 @@
           "value": 1,
           "duration": "permanent"
         }
-      }
+      },
+      "description": "Mientras esté en juego: cada una de tus naves Würon gana +1 HP permanente por cada otra nave Würon que controles."
     }
   ],
   "flavorText": "Cuando un brote canta, todos los troncos lo recuerdan: nadie cae solo en este bosque.",
