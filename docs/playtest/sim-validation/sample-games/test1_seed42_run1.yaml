@@ -1,0 +1,554 @@
+game:
+  id: sim_42
+  seed: 42
+  date: '2026-05-10T23:57:45Z'
+  setup:
+    player_a:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/wuron/wuron-midrange-tank.yaml
+      deck_name: Külen Midrange Tank
+      race: wuron
+      archetype: kulen-stacking
+      variant: midrange
+      goes_first: true
+      mulligan: false
+      initial_hand:
+        - Aullido del Bosque
+        - Lhüñke Cazador
+        - Brote Espinado
+        - Raíz Ancestral
+    player_b:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/zaqe/zaqe-long-game-pure.yaml
+      deck_name: Persistencia Long-Game Pure
+      race: zaqe
+      archetype: persistencia-economica
+      variant: control
+      goes_first: false
+      mulligan: false
+      initial_hand:
+        - Guata Iridiscente
+        - Coraza del Lago Áureo
+        - Eclipse del Pozo Astral
+        - Visión del Pozo Astral
+        - Inmersión Áurea
+  turns:
+    - turn: 1
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Ñgepang del Sur
+          hand_size: 5
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+    - turn: 1
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Espejo Estelar Sqhaguata
+          hand_size: 6
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 6
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Lhüpang del Río
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Lhüpang del Río
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 6
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Inmersión Áurea
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Visión del Pozo Astral
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 7
+          board: []
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+    - turn: 3
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Explorador del Brote
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Lhüñke Cazador
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#1'
+              damage: 2
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 18
+          hand: 7
+          board: []
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+    - turn: 3
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 3
+          drew: null
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Guata Iridiscente
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 18
+          hand: 6
+          board:
+            - Guata Iridiscente (4/5)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+    - turn: 4
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Raíz Profunda
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Ñgepang del Sur
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#1'
+              damage: 2
+              opponent_hp_remaining: 16
+            - action: attack_homeworld
+              attacker: 'Lhüñke Cazador#2'
+              damage: 4
+              opponent_hp_remaining: 12
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 12
+          hand: 6
+          board:
+            - Guata Iridiscente (4/5)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+    - turn: 4
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Espejo Estelar Sqhaguata
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Espejo Estelar Sqhaguata
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Guata Iridiscente#3'
+              damage: 4
+              opponent_hp_remaining: 16
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 16
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 12
+          hand: 6
+          board:
+            - Guata Iridiscente (4/5)
+            - Espejo Estelar Sqhaguata (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 20
+    - turn: 5
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Raíz Profunda
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Raíz Ancestral
+              cost: 5
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#1'
+              damage: 2
+              opponent_hp_remaining: 10
+            - action: attack_homeworld
+              attacker: 'Lhüñke Cazador#2'
+              damage: 4
+              opponent_hp_remaining: 6
+            - action: attack_homeworld
+              attacker: 'Ñgepang del Sur#4'
+              damage: 5
+              opponent_hp_remaining: 1
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 16
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+            - Raíz Ancestral (4/6)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 1
+          hand: 6
+          board:
+            - Guata Iridiscente (4/5)
+            - Espejo Estelar Sqhaguata (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 20
+    - turn: 5
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Visión del Pozo Astral
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Espejo Estelar Sqhaguata
+              cost: 4
+          energy_remaining: 1
+        combate:
+          actions:
+            - action: combat
+              attacker: 'Guata Iridiscente#3'
+              defender: 'Raíz Ancestral#6'
+              damage_to_defender: 4
+              damage_to_attacker: 4
+            - action: combat
+              attacker: 'Espejo Estelar Sqhaguata#5'
+              defender: 'Raíz Ancestral#6'
+              damage_to_defender: 5
+              damage_to_attacker: 5
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions:
+        - action: kulen_trigger
+          ship: 'Raíz Ancestral#6'
+          new_strength: 5
+        - action: ship_destroyed
+          ship: 'Raíz Ancestral#6'
+      end_state:
+        a:
+          hp: 16
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 1
+          hand: 6
+          board:
+            - Guata Iridiscente (4/1)
+            - Espejo Estelar Sqhaguata (5/2)
+            - Espejo Estelar Sqhaguata (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 19
+    - turn: 6
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 6
+          drew: Wütrüpang Resistente
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Wütrüpang Resistente
+              cost: 3
+            - action: play
+              card: Aullido del Bosque
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#1'
+              damage: 2
+              opponent_hp_remaining: 0
+            - action: attack_homeworld
+              attacker: 'Lhüñke Cazador#2'
+              damage: 4
+              opponent_hp_remaining: 0
+            - action: attack_homeworld
+              attacker: 'Ñgepang del Sur#4'
+              damage: 5
+              opponent_hp_remaining: 0
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      interpretation_notes:
+        - 'Aullido del Bosque: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+      ambiguity_flagged: true
+      end_state:
+        a:
+          hp: 16
+          hand: 4
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+            - Wütrüpang Resistente (3/5)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 20
+        b:
+          hp: 0
+          hand: 6
+          board:
+            - Guata Iridiscente (4/1)
+            - Espejo Estelar Sqhaguata (5/2)
+            - Espejo Estelar Sqhaguata (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 19
+  result:
+    winner: a
+    condition: mundo_natal_destroyed
+    final_turn: 6
+  analysis:
+    firma_activations:
+      kulen: 1
+      formacion_solar: 0
+      ignicion: 0
+      refluencia: 0
+    ambiguity_flagged_count: 1
+    interpretation_notes:
+      - 'T6: Aullido del Bosque: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+    final_state:
+      a:
+        hp: 16
+        hand: 4
+        board:
+          - Lhüpang del Río (2/4)
+          - Lhüñke Cazador (4/5)
+          - Ñgepang del Sur (5/7)
+          - Wütrüpang Resistente (3/5)
+        pozo_astral: 2
+        disolucion: 0
+        deck: 20
+      b:
+        hp: 0
+        hand: 6
+        board:
+          - Guata Iridiscente (4/1)
+          - Espejo Estelar Sqhaguata (5/2)
+          - Espejo Estelar Sqhaguata (5/7)
+        pozo_astral: 1
+        disolucion: 0
+        deck: 19

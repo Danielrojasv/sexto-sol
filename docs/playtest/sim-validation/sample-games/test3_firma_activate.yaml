@@ -1,0 +1,623 @@
+game:
+  id: sim_10
+  seed: 10
+  date: '2026-05-10T23:57:45Z'
+  setup:
+    player_a:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/wuron/wuron-midrange-tank.yaml
+      deck_name: Külen Midrange Tank
+      race: wuron
+      archetype: kulen-stacking
+      variant: midrange
+      goes_first: false
+      mulligan: false
+      initial_hand:
+        - Lhüpang del Río
+        - Wütrüpang Resistente
+        - Ñgepang del Sur
+        - Explorador del Brote
+        - Brotal de Üntu
+    player_b:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/tezhal/tezhal-full-aggro.yaml
+      deck_name: Kamikaze Full Aggro
+      race: tezhal
+      archetype: kamikaze-tempo
+      variant: aggro
+      goes_first: true
+      mulligan: false
+      initial_hand:
+        - Salva Ritual
+        - Obsidiana Ardiente
+        - Salva Ritual
+        - Iniciado Xocotzin
+  turns:
+    - turn: 1
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Espejo-Pirámide Tzactli
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: Iniciado Xocotzin
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 4
+          board:
+            - Iniciado Xocotzin (1/1)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+    - turn: 1
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Brote Espinado
+          hand_size: 6
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 6
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 4
+          board:
+            - Iniciado Xocotzin (1/1)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+    - turn: 2
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Plumaje Encendido
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: Obsidiana Ardiente
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Iniciado Xocotzin#1'
+              damage: 1
+              opponent_hp_remaining: 19
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      interpretation_notes:
+        - 'Obsidiana Ardiente: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+      ambiguity_flagged: true
+      end_state:
+        a:
+          hp: 19
+          hand: 6
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 4
+          board:
+            - Iniciado Xocotzin (1/1)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Raíz Ancestral
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Lhüpang del Río
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 6
+          board:
+            - Lhüpang del Río (2/4)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 20
+          hand: 4
+          board:
+            - Iniciado Xocotzin (1/1)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 24
+    - turn: 3
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Piloto de Obsidiana
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: Espejo-Pirámide Tzactli
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Iniciado Xocotzin#1'
+              damage: 1
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 6
+          board:
+            - Lhüpang del Río (2/4)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 20
+          hand: 4
+          board:
+            - Iniciado Xocotzin (1/1)
+            - Espejo-Pirámide Tzactli (3/3)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Raíz Profunda
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Wütrüpang Resistente
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#2'
+              damage: 2
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 6
+          board:
+            - Lhüpang del Río (2/4)
+            - Wütrüpang Resistente (3/5)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 18
+          hand: 4
+          board:
+            - Iniciado Xocotzin (1/1)
+            - Espejo-Pirámide Tzactli (3/3)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 23
+    - turn: 4
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Espejo-Pirámide Tzactli
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: Salva Ritual
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: combat
+              attacker: 'Espejo-Pirámide Tzactli#3'
+              defender: 'Wütrüpang Resistente#4'
+              damage_to_defender: 3
+              damage_to_attacker: 4
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions:
+        - action: ignicion_sacrifice
+          source: Salva Ritual
+          victim: 'Iniciado Xocotzin#1'
+        - action: damage
+          target: 'Lhüpang del Río#2'
+          amount: 2
+          source: Salva Ritual
+        - action: kulen_trigger
+          ship: 'Lhüpang del Río#2'
+          new_strength: 3
+        - action: damage
+          target: 'Wütrüpang Resistente#4'
+          amount: 2
+          source: Salva Ritual
+        - action: kulen_trigger
+          ship: 'Wütrüpang Resistente#4'
+          new_strength: 4
+        - action: ship_destroyed
+          ship: 'Wütrüpang Resistente#4'
+        - action: ship_destroyed
+          ship: 'Espejo-Pirámide Tzactli#3'
+      end_state:
+        a:
+          hp: 18
+          hand: 6
+          board:
+            - Lhüpang del Río (3/2)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 18
+          hand: 4
+          board: []
+          pozo_astral: 4
+          disolucion: 0
+          deck: 22
+    - turn: 4
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Cuchilla Lhüf
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Ñgepang del Sur
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#2'
+              damage: 3
+              opponent_hp_remaining: 15
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 6
+          board:
+            - Lhüpang del Río (3/2)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 15
+          hand: 4
+          board: []
+          pozo_astral: 4
+          disolucion: 0
+          deck: 22
+    - turn: 5
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Cuchilla del Quinto Sol
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: Espejo-Pirámide Tzactli
+              cost: 3
+            - action: play
+              card: Piloto de Obsidiana
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 6
+          board:
+            - Lhüpang del Río (3/2)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 15
+          hand: 3
+          board:
+            - Espejo-Pirámide Tzactli (3/3)
+            - Piloto de Obsidiana (2/2)
+          pozo_astral: 4
+          disolucion: 0
+          deck: 21
+    - turn: 5
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Trono de Lhülkan
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Raíz Ancestral
+              cost: 5
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#2'
+              damage: 3
+              opponent_hp_remaining: 12
+            - action: attack_homeworld
+              attacker: 'Ñgepang del Sur#5'
+              damage: 5
+              opponent_hp_remaining: 7
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 6
+          board:
+            - Lhüpang del Río (3/2)
+            - Ñgepang del Sur (5/7)
+            - Raíz Ancestral (4/6)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 20
+        b:
+          hp: 7
+          hand: 3
+          board:
+            - Espejo-Pirámide Tzactli (3/3)
+            - Piloto de Obsidiana (2/2)
+          pozo_astral: 4
+          disolucion: 0
+          deck: 21
+    - turn: 6
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 6
+          drew: Hangar Eterno
+          hand_size: 4
+        despliegue:
+          actions:
+            - action: play
+              card: Salva Ritual
+              cost: 4
+            - action: play
+              card: Plumaje Encendido
+              cost: 1
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions:
+        - action: ignicion_sacrifice
+          source: Salva Ritual
+          victim: 'Piloto de Obsidiana#7'
+        - action: damage
+          target: 'Lhüpang del Río#2'
+          amount: 2
+          source: Salva Ritual
+        - action: ship_destroyed
+          ship: 'Lhüpang del Río#2'
+        - action: damage
+          target: 'Ñgepang del Sur#5'
+          amount: 2
+          source: Salva Ritual
+        - action: kulen_trigger
+          ship: 'Ñgepang del Sur#5'
+          new_strength: 6
+        - action: damage
+          target: 'Raíz Ancestral#8'
+          amount: 2
+          source: Salva Ritual
+        - action: kulen_trigger
+          ship: 'Raíz Ancestral#8'
+          new_strength: 5
+        - action: ignicion_sacrifice
+          source: Plumaje Encendido
+          victim: 'Espejo-Pirámide Tzactli#6'
+        - action: event
+          card: Plumaje Encendido
+          effect: hangar 2 dmg
+      end_state:
+        a:
+          hp: 16
+          hand: 6
+          board:
+            - Ñgepang del Sur (6/5)
+            - Raíz Ancestral (5/4)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 20
+        b:
+          hp: 7
+          hand: 2
+          board: []
+          pozo_astral: 8
+          disolucion: 0
+          deck: 20
+    - turn: 6
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 6
+          drew: Susurro del Bosque
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Trono de Lhülkan
+              cost: 4
+            - action: play
+              card: Explorador del Brote
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Ñgepang del Sur#5'
+              damage: 6
+              opponent_hp_remaining: 1
+            - action: attack_homeworld
+              attacker: 'Raíz Ancestral#8'
+              damage: 5
+              opponent_hp_remaining: 0
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 16
+          hand: 5
+          board:
+            - Ñgepang del Sur (6/5)
+            - Raíz Ancestral (5/4)
+            - Trono de Lhülkan (0/0)
+            - Explorador del Brote (2/3)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 19
+        b:
+          hp: 0
+          hand: 2
+          board: []
+          pozo_astral: 8
+          disolucion: 0
+          deck: 20
+  result:
+    winner: a
+    condition: mundo_natal_destroyed
+    final_turn: 6
+  analysis:
+    firma_activations:
+      kulen: 4
+      formacion_solar: 0
+      ignicion: 3
+      refluencia: 0
+    ambiguity_flagged_count: 1
+    interpretation_notes:
+      - 'T2: Obsidiana Ardiente: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+    final_state:
+      a:
+        hp: 16
+        hand: 5
+        board:
+          - Ñgepang del Sur (6/5)
+          - Raíz Ancestral (5/4)
+          - Trono de Lhülkan (0/0)
+          - Explorador del Brote (2/3)
+        pozo_astral: 2
+        disolucion: 0
+        deck: 19
+      b:
+        hp: 0
+        hand: 2
+        board: []
+        pozo_astral: 8
+        disolucion: 0
+        deck: 20

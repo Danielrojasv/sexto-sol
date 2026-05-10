@@ -1,0 +1,447 @@
+game:
+  id: sim_99
+  seed: 99
+  date: '2026-05-10T23:57:45Z'
+  setup:
+    player_a:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/quralan/qralan-masa-pura.yaml
+      deck_name: Formación Solar Masa Pura
+      race: quralan
+      archetype: fs-masa-control
+      variant: midrange
+      goes_first: true
+      mulligan: false
+      initial_hand:
+        - "Eclipse del K'illay"
+        - Centinela Pétreo
+        - "Q'illay del Hangar Solar"
+        - "T'awa-wasi Coordinador"
+    player_b:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/zaqe/zaqe-recycling-aggro.yaml
+      deck_name: Persistencia Recycling Aggro
+      race: zaqe
+      archetype: persistencia-economica
+      variant: aggro
+      goes_first: false
+      mulligan: false
+      initial_hand:
+        - Velo Sqhanguata
+        - Cuchilla del Espejo Áureo
+        - Coraza del Lago Áureo
+        - Balsa Áurea
+        - Visión del Pozo Astral
+  turns:
+    - turn: 1
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Centinela Pétreo
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: Centinela Pétreo
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (1/1)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+    - turn: 1
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Sqhanguata Reliquia Solar
+          hand_size: 6
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (1/1)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 6
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 2
+          drew: "Espejo del K'ana"
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: "Q'illay del Hangar Solar"
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Centinela Pétreo#1'
+              damage: 2
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (2/1)
+            - "Q'illay del Hangar Solar (4/3)"
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 18
+          hand: 6
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Sqhanguata Reliquia Solar
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Balsa Áurea
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (2/1)
+            - "Q'illay del Hangar Solar (4/3)"
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 18
+          hand: 6
+          board:
+            - Balsa Áurea (3/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 3
+          drew: "T'awa-wasi Coordinador"
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: "Eclipse del K'illay"
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Centinela Pétreo#1'
+              damage: 2
+              opponent_hp_remaining: 16
+            - action: attack_homeworld
+              attacker: "Q'illay del Hangar Solar#2"
+              damage: 4
+              opponent_hp_remaining: 12
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (2/1)
+            - "Q'illay del Hangar Solar (4/3)"
+          pozo_astral: 1
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 12
+          hand: 6
+          board:
+            - Balsa Áurea (3/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Espejo Estelar Sqhaguata
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Velo Sqhanguata
+              cost: 2
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (2/1)
+            - "Q'illay del Hangar Solar (4/3)"
+          pozo_astral: 1
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 12
+          hand: 7
+          board: []
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+    - turn: 4
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Cristal del Eclipse Pétreo
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: "T'awa-wasi Coordinador"
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Centinela Pétreo#1'
+              damage: 3
+              opponent_hp_remaining: 9
+            - action: attack_homeworld
+              attacker: "Q'illay del Hangar Solar#2"
+              damage: 5
+              opponent_hp_remaining: 4
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (3/1)
+            - "Q'illay del Hangar Solar (5/3)"
+            - "T'awa-wasi Coordinador (6/4)"
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 4
+          hand: 7
+          board: []
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+    - turn: 4
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 4
+          drew: null
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Espejo Estelar Sqhaguata
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (3/1)
+            - "Q'illay del Hangar Solar (5/3)"
+            - "T'awa-wasi Coordinador (6/4)"
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 4
+          hand: 6
+          board:
+            - Espejo Estelar Sqhaguata (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 20
+    - turn: 5
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 5
+          drew: "Q'aphaq del Cristal Orbital"
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: "T'awa-wasi Coordinador"
+              cost: 4
+            - action: play
+              card: Centinela Pétreo
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Centinela Pétreo#1'
+              damage: 5
+              opponent_hp_remaining: 0
+            - action: attack_homeworld
+              attacker: "Q'illay del Hangar Solar#2"
+              damage: 7
+              opponent_hp_remaining: 0
+            - action: attack_homeworld
+              attacker: "T'awa-wasi Coordinador#4"
+              damage: 8
+              opponent_hp_remaining: 0
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 4
+          board:
+            - Centinela Pétreo (5/1)
+            - "Q'illay del Hangar Solar (7/3)"
+            - "T'awa-wasi Coordinador (8/4)"
+            - "T'awa-wasi Coordinador (8/4)"
+            - Centinela Pétreo (5/1)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 20
+        b:
+          hp: 0
+          hand: 6
+          board:
+            - Espejo Estelar Sqhaguata (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 20
+  result:
+    winner: a
+    condition: mundo_natal_destroyed
+    final_turn: 5
+  analysis:
+    firma_activations:
+      kulen: 0
+      formacion_solar: 0
+      ignicion: 0
+      refluencia: 0
+    ambiguity_flagged_count: 0
+    interpretation_notes: []
+    final_state:
+      a:
+        hp: 20
+        hand: 4
+        board:
+          - Centinela Pétreo (5/1)
+          - "Q'illay del Hangar Solar (7/3)"
+          - "T'awa-wasi Coordinador (8/4)"
+          - "T'awa-wasi Coordinador (8/4)"
+          - Centinela Pétreo (5/1)
+        pozo_astral: 1
+        disolucion: 0
+        deck: 20
+      b:
+        hp: 0
+        hand: 6
+        board:
+          - Espejo Estelar Sqhaguata (5/7)
+        pozo_astral: 1
+        disolucion: 0
+        deck: 20

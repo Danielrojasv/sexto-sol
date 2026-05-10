@@ -20,7 +20,7 @@ from simulator import (
 REPO = '/opt/sexto-sol'
 DECKS = f'{REPO}/docs/playtest/decks'
 OUT_DIR = f'{REPO}/docs/playtest/sim-validation'
-LOGS_DIR = f'{OUT_DIR}/logs'
+LOGS_DIR = f'{OUT_DIR}/sample-games'
 
 os.makedirs(LOGS_DIR, exist_ok=True)
 

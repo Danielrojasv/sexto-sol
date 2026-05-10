@@ -1,0 +1,545 @@
+game:
+  id: sim_77
+  seed: 77
+  date: '2026-05-10T23:57:45Z'
+  setup:
+    player_a:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/wuron/wuron-late-stacker.yaml
+      deck_name: Külen Late Stacker
+      race: wuron
+      archetype: kulen-stacking
+      variant: control
+      goes_first: true
+      mulligan: false
+      initial_hand:
+        - Wütrüpang Resistente
+        - Raíz Profunda
+        - Susurro del Bosque
+        - Wütrüpang Resistente
+    player_b:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/quralan/qralan-control-tutor.yaml
+      deck_name: Formación Solar Control Tutor
+      race: quralan
+      archetype: fs-masa-control
+      variant: control
+      goes_first: false
+      mulligan: false
+      initial_hand:
+        - "Templo K'ana-suyu"
+        - "Eclipse del K'illay"
+        - Cristal del Eclipse Pétreo
+        - Vigía del Sumaq-suyu
+        - Centinela Pétreo
+  turns:
+    - turn: 1
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Explorador del Brote
+          hand_size: 5
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+    - turn: 1
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Coraza del Sumaq-Wasi
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Centinela Pétreo
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board:
+            - Centinela Pétreo (1/1)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Despertar de la Raíz
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Explorador del Brote
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Explorador del Brote (2/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 5
+          board:
+            - Centinela Pétreo (1/1)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 2
+          drew: "Espejo del K'ana"
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Cristal del Eclipse Pétreo
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Centinela Pétreo#1'
+              damage: 1
+              opponent_hp_remaining: 19
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      interpretation_notes:
+        - 'Cristal del Eclipse Pétreo: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+      ambiguity_flagged: true
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Explorador del Brote (2/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 5
+          board:
+            - Centinela Pétreo (1/1)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Brotador Trülke
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Wütrüpang Resistente
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Explorador del Brote#2'
+              damage: 2
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Explorador del Brote (2/3)
+            - Wütrüpang Resistente (3/5)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 18
+          hand: 5
+          board:
+            - Centinela Pétreo (1/1)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 3
+          drew: "Coro del K'illay"
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: "Eclipse del K'illay"
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: combat
+              attacker: 'Centinela Pétreo#1'
+              defender: 'Wütrüpang Resistente#3'
+              damage_to_defender: 1
+              damage_to_attacker: 3
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions:
+        - action: kulen_trigger
+          ship: 'Wütrüpang Resistente#3'
+          new_strength: 4
+        - action: ship_destroyed
+          ship: 'Centinela Pétreo#1'
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Explorador del Brote (2/3)
+            - Wütrüpang Resistente (4/4)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 18
+          hand: 5
+          board: []
+          pozo_astral: 3
+          disolucion: 0
+          deck: 22
+    - turn: 4
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Savia Antigua
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Susurro del Bosque
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Explorador del Brote#2'
+              damage: 3
+              opponent_hp_remaining: 15
+            - action: attack_homeworld
+              attacker: 'Wütrüpang Resistente#3'
+              damage: 5
+              opponent_hp_remaining: 10
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Explorador del Brote (3/3)
+            - Wütrüpang Resistente (5/4)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 10
+          hand: 5
+          board: []
+          pozo_astral: 3
+          disolucion: 0
+          deck: 22
+    - turn: 4
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Resonancia del Sumaq-Cristal
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Coraza del Sumaq-Wasi
+              cost: 3
+            - action: play
+              card: Vigía del Sumaq-suyu
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      interpretation_notes:
+        - 'Coraza del Sumaq-Wasi: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+      ambiguity_flagged: true
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Explorador del Brote (3/3)
+            - Wütrüpang Resistente (5/4)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 10
+          hand: 4
+          board:
+            - Vigía del Sumaq-suyu (1/3)
+          pozo_astral: 4
+          disolucion: 0
+          deck: 21
+    - turn: 5
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Bosque del Eco
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Despertar de la Raíz
+              cost: 5
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: combat
+              attacker: 'Explorador del Brote#2'
+              defender: 'Vigía del Sumaq-suyu#4'
+              damage_to_defender: 4
+              damage_to_attacker: 1
+            - action: attack_homeworld
+              attacker: 'Wütrüpang Resistente#3'
+              damage: 6
+              opponent_hp_remaining: 4
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions:
+        - action: ship_destroyed
+          ship: 'Vigía del Sumaq-suyu#4'
+        - action: kulen_trigger
+          ship: 'Explorador del Brote#2'
+          new_strength: 5
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Explorador del Brote (5/2)
+            - Wütrüpang Resistente (6/4)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 4
+          hand: 4
+          board: []
+          pozo_astral: 5
+          disolucion: 0
+          deck: 21
+    - turn: 5
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Templo del Hangar Sumaq
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: "Templo K'ana-suyu"
+              cost: 5
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Explorador del Brote (5/2)
+            - Wütrüpang Resistente (6/4)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 4
+          hand: 4
+          board:
+            - "Templo K'ana-suyu (0/0)"
+          pozo_astral: 5
+          disolucion: 0
+          deck: 20
+    - turn: 6
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 6
+          drew: Susurro del Bosque
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Bosque del Eco
+              cost: 5
+            - action: play
+              card: Brotador Trülke
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Explorador del Brote#2'
+              damage: 5
+              opponent_hp_remaining: 0
+            - action: attack_homeworld
+              attacker: 'Wütrüpang Resistente#3'
+              damage: 6
+              opponent_hp_remaining: 0
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 4
+          board:
+            - Explorador del Brote (5/2)
+            - Wütrüpang Resistente (6/4)
+            - Bosque del Eco (0/0)
+            - Brotador Trülke (1/3)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 20
+        b:
+          hp: 0
+          hand: 4
+          board:
+            - "Templo K'ana-suyu (0/0)"
+          pozo_astral: 5
+          disolucion: 0
+          deck: 20
+  result:
+    winner: a
+    condition: mundo_natal_destroyed
+    final_turn: 6
+  analysis:
+    firma_activations:
+      kulen: 2
+      formacion_solar: 0
+      ignicion: 0
+      refluencia: 0
+    ambiguity_flagged_count: 2
+    interpretation_notes:
+      - 'T2: Cristal del Eclipse Pétreo: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+      - 'T4: Coraza del Sumaq-Wasi: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+    final_state:
+      a:
+        hp: 19
+        hand: 4
+        board:
+          - Explorador del Brote (5/2)
+          - Wütrüpang Resistente (6/4)
+          - Bosque del Eco (0/0)
+          - Brotador Trülke (1/3)
+        pozo_astral: 2
+        disolucion: 0
+        deck: 20
+      b:
+        hp: 0
+        hand: 4
+        board:
+          - "Templo K'ana-suyu (0/0)"
+        pozo_astral: 5
+        disolucion: 0
+        deck: 20

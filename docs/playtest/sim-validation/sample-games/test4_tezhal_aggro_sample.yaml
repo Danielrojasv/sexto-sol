@@ -1,0 +1,421 @@
+game:
+  id: sim_200
+  seed: 200
+  date: '2026-05-10T23:57:45Z'
+  setup:
+    player_a:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/tezhal/tezhal-full-aggro.yaml
+      deck_name: Kamikaze Full Aggro
+      race: tezhal
+      archetype: kamikaze-tempo
+      variant: aggro
+      goes_first: true
+      mulligan: false
+      initial_hand:
+        - Obsidiana Ardiente
+        - Ofrenda del Xocotzin
+        - Piloto de Obsidiana
+        - Piloto de Obsidiana
+    player_b:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/quralan/qralan-masa-pura.yaml
+      deck_name: Formación Solar Masa Pura
+      race: quralan
+      archetype: fs-masa-control
+      variant: midrange
+      goes_first: false
+      mulligan: false
+      initial_hand:
+        - "Coro del K'illay"
+        - "Eclipse del K'illay"
+        - "Lanza Solar K'iri"
+        - Centinela Pétreo
+        - "Q'illay del Hangar Solar"
+  turns:
+    - turn: 1
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Espejo-Pirámide Tzactli
+          hand_size: 5
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+    - turn: 1
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 1
+          drew: "Escolta T'awa-pampa"
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Centinela Pétreo
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board:
+            - Centinela Pétreo (1/1)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Espejo-Pirámide Tzactli
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Piloto de Obsidiana
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Piloto de Obsidiana (2/2)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 5
+          board:
+            - Centinela Pétreo (1/1)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Sumaq-untay Tutelar
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: "Q'illay del Hangar Solar"
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Centinela Pétreo#1'
+              damage: 2
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 5
+          board:
+            - Piloto de Obsidiana (2/2)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 5
+          board:
+            - Centinela Pétreo (2/1)
+            - "Q'illay del Hangar Solar (4/3)"
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Iniciado Xocotzin
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Espejo-Pirámide Tzactli
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Piloto de Obsidiana#2'
+              damage: 2
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 5
+          board:
+            - Piloto de Obsidiana (2/2)
+            - Espejo-Pirámide Tzactli (3/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 18
+          hand: 5
+          board:
+            - Centinela Pétreo (2/1)
+            - "Q'illay del Hangar Solar (4/3)"
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Centinela Pétreo
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: "Escolta T'awa-pampa"
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Centinela Pétreo#1'
+              damage: 3
+              opponent_hp_remaining: 15
+            - action: attack_homeworld
+              attacker: "Q'illay del Hangar Solar#3"
+              damage: 5
+              opponent_hp_remaining: 10
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 10
+          hand: 5
+          board:
+            - Piloto de Obsidiana (2/2)
+            - Espejo-Pirámide Tzactli (3/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 18
+          hand: 5
+          board:
+            - Centinela Pétreo (3/1)
+            - "Q'illay del Hangar Solar (5/3)"
+            - "Escolta T'awa-pampa (6/5)"
+          pozo_astral: 0
+          disolucion: 0
+          deck: 22
+    - turn: 4
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Salva Ritual
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Salva Ritual
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Espejo-Pirámide Tzactli#4'
+              damage: 3
+              opponent_hp_remaining: 15
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions:
+        - action: ignicion_sacrifice
+          source: Salva Ritual
+          victim: 'Piloto de Obsidiana#2'
+        - action: damage
+          target: 'Centinela Pétreo#1'
+          amount: 2
+          source: Salva Ritual
+        - action: ship_destroyed
+          ship: 'Centinela Pétreo#1'
+        - action: damage
+          target: "Q'illay del Hangar Solar#3"
+          amount: 2
+          source: Salva Ritual
+        - action: damage
+          target: "Escolta T'awa-pampa#5"
+          amount: 2
+          source: Salva Ritual
+      end_state:
+        a:
+          hp: 10
+          hand: 5
+          board:
+            - Espejo-Pirámide Tzactli (3/3)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 15
+          hand: 5
+          board:
+            - "Q'illay del Hangar Solar (4/1)"
+            - "Escolta T'awa-pampa (5/3)"
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+    - turn: 4
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 4
+          drew: "Escolta T'awa-pampa"
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: "Escolta T'awa-pampa"
+              cost: 3
+            - action: play
+              card: Centinela Pétreo
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: "Q'illay del Hangar Solar#3"
+              damage: 6
+              opponent_hp_remaining: 4
+            - action: attack_homeworld
+              attacker: "Escolta T'awa-pampa#5"
+              damage: 7
+              opponent_hp_remaining: 0
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 0
+          hand: 5
+          board:
+            - Espejo-Pirámide Tzactli (3/3)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 15
+          hand: 5
+          board:
+            - "Q'illay del Hangar Solar (6/1)"
+            - "Escolta T'awa-pampa (7/3)"
+            - "Escolta T'awa-pampa (7/5)"
+            - Centinela Pétreo (4/1)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 20
+  result:
+    winner: b
+    condition: mundo_natal_destroyed
+    final_turn: 4
+  analysis:
+    firma_activations:
+      kulen: 0
+      formacion_solar: 0
+      ignicion: 1
+      refluencia: 0
+    ambiguity_flagged_count: 0
+    interpretation_notes: []
+    final_state:
+      a:
+        hp: 0
+        hand: 5
+        board:
+          - Espejo-Pirámide Tzactli (3/3)
+        pozo_astral: 2
+        disolucion: 0
+        deck: 22
+      b:
+        hp: 15
+        hand: 5
+        board:
+          - "Q'illay del Hangar Solar (6/1)"
+          - "Escolta T'awa-pampa (7/3)"
+          - "Escolta T'awa-pampa (7/5)"
+          - Centinela Pétreo (4/1)
+        pozo_astral: 1
+        disolucion: 0
+        deck: 20

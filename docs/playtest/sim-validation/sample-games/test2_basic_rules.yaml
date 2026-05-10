@@ -1,0 +1,584 @@
+game:
+  id: sim_1
+  seed: 1
+  date: '2026-05-10T23:57:45Z'
+  setup:
+    player_a:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/wuron/wuron-aggro-stacker.yaml
+      deck_name: Külen Aggro Stacker
+      race: wuron
+      archetype: kulen-stacking
+      variant: aggro
+      goes_first: true
+      mulligan: false
+      initial_hand:
+        - Trono de Lhülkan
+        - Lhüñke Cazador
+        - Lhüpang del Río
+        - Lhüpang del Río
+    player_b:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/zaqe/zaqe-long-game-pure.yaml
+      deck_name: Persistencia Long-Game Pure
+      race: zaqe
+      archetype: persistencia-economica
+      variant: control
+      goes_first: false
+      mulligan: false
+      initial_hand:
+        - Bohzhica del Lago de Luz
+        - Visión del Pozo Astral
+        - Navegante de Sumzhua
+        - Navegante de Sumzhua
+        - Velo Sqhanguata
+  turns:
+    - turn: 1
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Ñgepang del Sur
+          hand_size: 5
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+    - turn: 1
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Visión del Pozo Astral
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Navegante de Sumzhua
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board:
+            - Navegante de Sumzhua (1/2)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Brotador Trülke
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Lhüpang del Río
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 5
+          board:
+            - Navegante de Sumzhua (1/2)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Sqhanguata Reliquia Solar
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Visión del Pozo Astral
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Navegante de Sumzhua#1'
+              damage: 1
+              opponent_hp_remaining: 19
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 6
+          board:
+            - Navegante de Sumzhua (1/2)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+    - turn: 3
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Eco del Brote
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Lhüñke Cazador
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#2'
+              damage: 2
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 18
+          hand: 6
+          board:
+            - Navegante de Sumzhua (1/2)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+    - turn: 3
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Reflujo del Lago de Luz
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Velo Sqhanguata
+              cost: 2
+            - action: play
+              card: Navegante de Sumzhua
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 18
+          hand: 6
+          board:
+            - Navegante de Sumzhua (1/2)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 20
+    - turn: 4
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Lhwentrü de las Raíces
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Ñgepang del Sur
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#2'
+              damage: 2
+              opponent_hp_remaining: 16
+            - action: attack_homeworld
+              attacker: 'Lhüñke Cazador#3'
+              damage: 4
+              opponent_hp_remaining: 12
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 19
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 12
+          hand: 6
+          board:
+            - Navegante de Sumzhua (1/2)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 20
+    - turn: 4
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Espejo Estelar Sqhaguata
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Espejo Estelar Sqhaguata
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Navegante de Sumzhua#4'
+              damage: 1
+              opponent_hp_remaining: 18
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 5
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 12
+          hand: 6
+          board:
+            - Navegante de Sumzhua (1/2)
+            - Espejo Estelar Sqhaguata (5/7)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 19
+    - turn: 5
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Explorador del Brote
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Trono de Lhülkan
+              cost: 4
+            - action: play
+              card: Brotador Trülke
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüpang del Río#2'
+              damage: 2
+              opponent_hp_remaining: 10
+            - action: attack_homeworld
+              attacker: 'Lhüñke Cazador#3'
+              damage: 4
+              opponent_hp_remaining: 6
+            - action: attack_homeworld
+              attacker: 'Ñgepang del Sur#5'
+              damage: 5
+              opponent_hp_remaining: 1
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 18
+          hand: 4
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+            - Trono de Lhülkan (0/0)
+            - Brotador Trülke (1/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 1
+          hand: 6
+          board:
+            - Navegante de Sumzhua (1/2)
+            - Espejo Estelar Sqhaguata (5/7)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 19
+    - turn: 5
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Coraza del Lago Áureo
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Bohzhica del Lago de Luz
+              cost: 5
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: combat
+              attacker: 'Navegante de Sumzhua#4'
+              defender: 'Ñgepang del Sur#5'
+              damage_to_defender: 1
+              damage_to_attacker: 5
+            - action: combat
+              attacker: 'Espejo Estelar Sqhaguata#6'
+              defender: 'Ñgepang del Sur#5'
+              damage_to_defender: 5
+              damage_to_attacker: 6
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions:
+        - action: kulen_trigger
+          ship: 'Ñgepang del Sur#5'
+          new_strength: 6
+        - action: ship_to_pozo_astral
+          ship: 'Navegante de Sumzhua#4'
+        - action: kulen_trigger
+          ship: 'Ñgepang del Sur#5'
+          new_strength: 7
+      end_state:
+        a:
+          hp: 18
+          hand: 4
+          board:
+            - Lhüpang del Río (2/4)
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (7/1)
+            - Trono de Lhülkan (0/0)
+            - Brotador Trülke (1/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 1
+          hand: 6
+          board:
+            - Espejo Estelar Sqhaguata (5/1)
+            - Bohzhica del Lago de Luz (4/6)
+          pozo_astral: 3
+          disolucion: 0
+          deck: 18
+    - turn: 6
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 6
+          drew: Aullido del Bosque
+          hand_size: 5
+        despliegue:
+          actions:
+            - action: play
+              card: Lhwentrü de las Raíces
+              cost: 6
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: combat
+              attacker: 'Lhüpang del Río#2'
+              defender: 'Bohzhica del Lago de Luz#9'
+              damage_to_defender: 2
+              damage_to_attacker: 4
+            - action: combat
+              attacker: 'Lhüñke Cazador#3'
+              defender: 'Bohzhica del Lago de Luz#9'
+              damage_to_defender: 4
+              damage_to_attacker: 4
+            - action: combat
+              attacker: 'Ñgepang del Sur#5'
+              defender: 'Espejo Estelar Sqhaguata#6'
+              damage_to_defender: 7
+              damage_to_attacker: 5
+            - action: attack_homeworld
+              attacker: 'Brotador Trülke#8'
+              damage: 1
+              opponent_hp_remaining: 0
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions:
+        - action: on_play_draw
+          card: Lhwentrü de las Raíces
+          effect: draw 1
+        - action: ship_destroyed
+          ship: 'Lhüpang del Río#2'
+        - action: ship_to_pozo_astral
+          ship: 'Bohzhica del Lago de Luz#9'
+        - action: kulen_trigger
+          ship: 'Lhüñke Cazador#3'
+          new_strength: 5
+        - action: ship_to_pozo_astral
+          ship: 'Espejo Estelar Sqhaguata#6'
+        - action: ship_destroyed
+          ship: 'Ñgepang del Sur#5'
+      end_state:
+        a:
+          hp: 18
+          hand: 5
+          board:
+            - Lhüñke Cazador (5/1)
+            - Trono de Lhülkan (0/0)
+            - Brotador Trülke (1/3)
+            - Lhwentrü de las Raíces (5/7)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 19
+        b:
+          hp: 0
+          hand: 6
+          board: []
+          pozo_astral: 5
+          disolucion: 0
+          deck: 18
+  result:
+    winner: a
+    condition: mundo_natal_destroyed
+    final_turn: 6
+  analysis:
+    firma_activations:
+      kulen: 3
+      formacion_solar: 0
+      ignicion: 0
+      refluencia: 0
+    ambiguity_flagged_count: 0
+    interpretation_notes: []
+    final_state:
+      a:
+        hp: 18
+        hand: 5
+        board:
+          - Lhüñke Cazador (5/1)
+          - Trono de Lhülkan (0/0)
+          - Brotador Trülke (1/3)
+          - Lhwentrü de las Raíces (5/7)
+        pozo_astral: 2
+        disolucion: 0
+        deck: 19
+      b:
+        hp: 0
+        hand: 6
+        board: []
+        pozo_astral: 5
+        disolucion: 0
+        deck: 18

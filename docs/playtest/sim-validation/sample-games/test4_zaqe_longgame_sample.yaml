@@ -1,0 +1,534 @@
+game:
+  id: sim_300
+  seed: 300
+  date: '2026-05-10T23:57:45Z'
+  setup:
+    player_a:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/zaqe/zaqe-long-game-pure.yaml
+      deck_name: Persistencia Long-Game Pure
+      race: zaqe
+      archetype: persistencia-economica
+      variant: control
+      goes_first: true
+      mulligan: false
+      initial_hand:
+        - Coraza del Lago Áureo
+        - Cuchilla del Espejo Áureo
+        - Sqhanguata Reliquia Solar
+        - Balsa Áurea
+    player_b:
+      deck_file: /opt/sexto-sol/docs/playtest/decks/wuron/wuron-aggro-stacker.yaml
+      deck_name: Külen Aggro Stacker
+      race: wuron
+      archetype: kulen-stacking
+      variant: aggro
+      goes_first: false
+      mulligan: false
+      initial_hand:
+        - Despertar de la Raíz
+        - Trono de Lhülkan
+        - Brote Espinado
+        - Ñgepang del Sur
+        - Lhwentrü de las Raíces
+  turns:
+    - turn: 1
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Guata Iridiscente
+          hand_size: 5
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+    - turn: 1
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 1
+          drew: Brote Espinado
+          hand_size: 6
+        despliegue:
+          actions: []
+          energy_remaining: 1
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 1
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 25
+        b:
+          hp: 20
+          hand: 6
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Cuchilla del Espejo Áureo
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Balsa Áurea
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Balsa Áurea (3/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 6
+          board: []
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+    - turn: 2
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 2
+          drew: Lhüñke Cazador
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Brote Espinado
+              cost: 2
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      interpretation_notes:
+        - 'Brote Espinado: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+      ambiguity_flagged: true
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Balsa Áurea (3/3)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 24
+        b:
+          hp: 20
+          hand: 6
+          board: []
+          pozo_astral: 1
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Guata Iridiscente
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Guata Iridiscente
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Balsa Áurea#1'
+              damage: 3
+              opponent_hp_remaining: 17
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Balsa Áurea (3/3)
+            - Guata Iridiscente (4/5)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 17
+          hand: 6
+          board: []
+          pozo_astral: 1
+          disolucion: 0
+          deck: 23
+    - turn: 3
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 3
+          drew: Aullido del Bosque
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Lhüñke Cazador
+              cost: 3
+          energy_remaining: 0
+        combate:
+          actions: []
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Balsa Áurea (3/3)
+            - Guata Iridiscente (4/5)
+          pozo_astral: 0
+          disolucion: 0
+          deck: 23
+        b:
+          hp: 17
+          hand: 6
+          board:
+            - Lhüñke Cazador (4/5)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+    - turn: 4
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Bohzhica del Lago de Luz
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Coraza del Lago Áureo
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Balsa Áurea#1'
+              damage: 3
+              opponent_hp_remaining: 14
+            - action: attack_homeworld
+              attacker: 'Guata Iridiscente#2'
+              damage: 4
+              opponent_hp_remaining: 10
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 20
+          hand: 5
+          board:
+            - Balsa Áurea (3/4)
+            - Guata Iridiscente (4/6)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 10
+          hand: 6
+          board:
+            - Lhüñke Cazador (4/5)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+    - turn: 4
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 4
+          drew: Aullido del Bosque
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Ñgepang del Sur
+              cost: 4
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Lhüñke Cazador#3'
+              damage: 4
+              opponent_hp_remaining: 16
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 16
+          hand: 5
+          board:
+            - Balsa Áurea (3/4)
+            - Guata Iridiscente (4/6)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 22
+        b:
+          hp: 10
+          hand: 6
+          board:
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+    - turn: 5
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Velo Sqhanguata
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: play
+              card: Sqhanguata Reliquia Solar
+              cost: 5
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Balsa Áurea#1'
+              damage: 3
+              opponent_hp_remaining: 7
+            - action: attack_homeworld
+              attacker: 'Guata Iridiscente#2'
+              damage: 4
+              opponent_hp_remaining: 3
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 16
+          hand: 5
+          board:
+            - Balsa Áurea (3/4)
+            - Guata Iridiscente (4/6)
+            - Sqhanguata Reliquia Solar (7/8)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 3
+          hand: 6
+          board:
+            - Lhüñke Cazador (4/5)
+            - Ñgepang del Sur (5/7)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 21
+    - turn: 5
+      active_player: b
+      phases:
+        recoleccion:
+          energy: 5
+          drew: Cuchilla Lhüf
+          hand_size: 7
+        despliegue:
+          actions:
+            - action: play
+              card: Despertar de la Raíz
+              cost: 5
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: combat
+              attacker: 'Lhüñke Cazador#3'
+              defender: 'Sqhanguata Reliquia Solar#5'
+              damage_to_defender: 5
+              damage_to_attacker: 7
+            - action: combat
+              attacker: 'Ñgepang del Sur#4'
+              defender: 'Sqhanguata Reliquia Solar#5'
+              damage_to_defender: 6
+              damage_to_attacker: 7
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions:
+        - action: ship_destroyed
+          ship: 'Lhüñke Cazador#3'
+        - action: ship_to_pozo_astral
+          ship: 'Sqhanguata Reliquia Solar#5'
+        - action: ship_destroyed
+          ship: 'Ñgepang del Sur#4'
+      end_state:
+        a:
+          hp: 16
+          hand: 5
+          board:
+            - Balsa Áurea (3/4)
+            - Guata Iridiscente (4/6)
+          pozo_astral: 2
+          disolucion: 0
+          deck: 21
+        b:
+          hp: 3
+          hand: 6
+          board: []
+          pozo_astral: 4
+          disolucion: 0
+          deck: 20
+    - turn: 6
+      active_player: a
+      phases:
+        recoleccion:
+          energy: 6
+          drew: Navegante de Sumzhua
+          hand_size: 6
+        despliegue:
+          actions:
+            - action: refluencia_revival
+              card: Sqhanguata Reliquia Solar
+              cost_paid: 5
+            - action: play
+              card: Navegante de Sumzhua
+              cost: 1
+          energy_remaining: 0
+        combate:
+          actions:
+            - action: attack_homeworld
+              attacker: 'Balsa Áurea#1'
+              damage: 3
+              opponent_hp_remaining: 0
+            - action: attack_homeworld
+              attacker: 'Guata Iridiscente#2'
+              damage: 4
+              opponent_hp_remaining: 0
+        regroup:
+          actions: []
+        eclipse:
+          actions: []
+          energy_lost: 0
+      actions: []
+      end_state:
+        a:
+          hp: 16
+          hand: 5
+          board:
+            - Balsa Áurea (3/4)
+            - Guata Iridiscente (4/6)
+            - Sqhanguata Reliquia Solar (7/8)
+            - Navegante de Sumzhua (1/2)
+          pozo_astral: 1
+          disolucion: 0
+          deck: 20
+        b:
+          hp: 0
+          hand: 6
+          board: []
+          pozo_astral: 4
+          disolucion: 0
+          deck: 20
+  result:
+    winner: a
+    condition: mundo_natal_destroyed
+    final_turn: 6
+  analysis:
+    firma_activations:
+      kulen: 0
+      formacion_solar: 0
+      ignicion: 0
+      refluencia: 1
+    ambiguity_flagged_count: 1
+    interpretation_notes:
+      - 'T2: Brote Espinado: habilidad individual no implementada en simulator v0; tratada como vanilla event sin efecto. (Phase 1 kernel resolverá)'
+    final_state:
+      a:
+        hp: 16
+        hand: 5
+        board:
+          - Balsa Áurea (3/4)
+          - Guata Iridiscente (4/6)
+          - Sqhanguata Reliquia Solar (7/8)
+          - Navegante de Sumzhua (1/2)
+        pozo_astral: 1
+        disolucion: 0
+        deck: 20
+      b:
+        hp: 0
+        hand: 6
+        board: []
+        pozo_astral: 4
+        disolucion: 0
+        deck: 20
