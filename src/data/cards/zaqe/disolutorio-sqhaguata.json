@@ -1,0 +1,26 @@
+{
+  "id": "zaqe_disolutorio_sqhaguata",
+  "name": "Disolutorio Sqhaguata",
+  "race": "zaqe",
+  "type": "tech",
+  "cost": 3,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "exile",
+        "target": {
+          "kind": "chosen_permanent",
+          "filter": { "controller": "opponent", "cardType": "relic" }
+        },
+        "fromZone": "in_play"
+      },
+      "description": "Al jugarse: exilia una Reliquia enemiga."
+    }
+  ],
+  "intentionalOffCategory": true,
+  "flavorText": "Una gota de Pozo cae sobre el cristal ajeno: el engine enemigo se vuelve luz y se va."
+}
