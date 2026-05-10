@@ -1,0 +1,41 @@
+{
+  "id": "quralan_hangar_del_sol_petreo",
+  "name": "Hangar del Sol Pétreo",
+  "race": "quralan",
+  "type": "relic",
+  "cost": 5,
+  "rarity": "rare",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "turn_start",
+        "filter": { "controller": "self" }
+      },
+      "category": "accumulative",
+      "effect": {
+        "op": "conditional",
+        "condition": {
+          "kind": "count_filter",
+          "filter": { "controller": "self", "race": "quralan" },
+          "op": "gte",
+          "value": 4
+        },
+        "thenEffect": {
+          "op": "for_each",
+          "filter": { "controller": "self", "race": "quralan" },
+          "effect": {
+            "op": "modify_strength",
+            "target": { "kind": "self" },
+            "kind": "delta",
+            "value": 1,
+            "duration": "end_of_turn"
+          }
+        }
+      },
+      "description": "Al inicio de tu turno, si controlás 4 o más naves Q'ralan, cada Q'ralan aliada gana +1 fuerza este turno."
+    }
+  ],
+  "flavorText": "El hangar de cuarzo solar canta en cada amanecer; la formación entera se afila a su luz."
+}
