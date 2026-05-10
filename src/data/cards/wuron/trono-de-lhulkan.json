@@ -1,0 +1,22 @@
+{
+  "id": "wuron_trono_de_lhulkan",
+  "name": "Trono de Lhülkan",
+  "race": "wuron",
+  "type": "relic",
+  "cost": 4,
+  "rarity": "rare",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "continuous" },
+      "category": "reactive",
+      "effect": {
+        "op": "keyword_amplifier",
+        "keyword": "kulen",
+        "deltaBonus": 1
+      },
+      "description": "Pasivo permanente: cada vez que una nave Würon tuya activa Külen, gana +2 fuerza permanente en lugar de +1."
+    }
+  ],
+  "flavorText": "Donde el viejo árbol gobierna, cada herida vale dos."
+}

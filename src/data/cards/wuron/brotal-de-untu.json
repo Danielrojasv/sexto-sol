@@ -1,0 +1,29 @@
+{
+  "id": "wuron_brotal_de_untu",
+  "name": "Brotal de Üntu",
+  "race": "wuron",
+  "type": "relic",
+  "cost": 3,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "turn_start",
+        "filter": { "controller": "self" }
+      },
+      "category": "reactive",
+      "effect": {
+        "op": "damage",
+        "target": {
+          "kind": "chosen_ship",
+          "filter": { "controller": "self", "race": "wuron" }
+        },
+        "amount": 1
+      },
+      "description": "Al inicio de tu turno: una nave Würon tuya recibe 1 daño (tú eliges cuál). Si no controlas naves Würon, el efecto se salta."
+    }
+  ],
+  "flavorText": "En el brote duele todo el día; en el dolor crece todo el bosque."
+}
