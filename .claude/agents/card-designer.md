@@ -331,4 +331,146 @@ Si una carta requiere una primitive que no existe (ej. `swap_strength_hp`):
 
 ---
 
-_Vivo. Última actualización: 2026-05-10 (v3.0 ratificado)._
+## 13. Categorización por naturaleza, NO por raza
+
+> **Antes de asignar `category` a cualquier ability, leé esta sección.** Es el error que más se repitió durante los 4 canarys del set base v3.0 (Q'ralan canary lo corrigió, Zaqe canary lo regresó).
+
+La categoría de una carta (`reactive`, `initiative`, `accumulative`, `post_combat`) se decide por la **naturaleza mecánica del efecto**, NO por la raza que la imprime. La firma de raza determina la **identidad temática** de la raza, no la categoría obligatoria de cada carta de esa raza.
+
+### Reglas operativas
+
+- Si una carta tiene un efecto cuya naturaleza coincide con la firma de su raza → categoría firma sin flag.
+- Si una carta tiene un efecto cuya naturaleza difiere de la firma de su raza → categoría correcta por naturaleza + `intentionalOffCategory: true`.
+
+### Ejemplos canónicos del set base v3.0
+
+- **AoE damage al jugar** = `initiative`, aunque la raza sea Würon (Reactive) o Zaqe (Post-combat).
+  - Eclipse del K'illay (Q'ralan, AoE damage anti-Tezhal) → `initiative` + flag.
+  - Eclipse del Pozo Astral (Zaqe, AoE damage anti-Würon) → `initiative` + flag.
+- **Search desde mazo al jugar** = `initiative`, aunque la raza sea Q'ralan (Accumulative).
+  - Despliegue del Sumaq-Wasi → `initiative` + flag.
+- **Revival desde Pozo Astral** = `post_combat`, naturalmente.
+  - Reflujo del Lago de Luz (Zaqe) → `post_combat` sin flag, coincide con firma.
+- **Pasivo `turn_start` con count_filter** = `accumulative` cuando depende del estado del tablero.
+  - Hangar del Sol Pétreo (Q'ralan) → `accumulative` sin flag.
+- **Bounce a mano + draw** = `initiative`, aunque la raza sea Zaqe (Post-combat).
+  - Velo Sqhanguata → `initiative` + flag.
+- **AoE buff inmediato al jugar** = `initiative`, aunque tenga `for_each` interno. El `for_each` es shape de iteración, no determina categoría.
+  - Coraza del Lago Áureo (Zaqe) → `initiative` + flag.
+
+### Anti-patrón a evitar
+
+> "Esta carta es de raza X, entonces su categoría debe ser la firma de X."
+
+Esto se hizo en Q'ralan y Zaqe canarys iniciales, requirió rediseño post-feedback. **Si la justificación de una categoría cita la raza en lugar de la naturaleza del efecto, es señal de que la categoría está mal asignada.**
+
+---
+
+## 14. Edades son Phase 2 dependent
+
+v3.0 actual NO tiene Edades activas (GAME-RULES sec 0: _"Sin Edades temporalmente"_). Las Edades fueron removidas del set base para validar el core; vuelven en Phase 2 ("re-introducción gradual" de mecánicas de v2 sec 14).
+
+### Regla
+
+Ninguna carta nueva puede usar primitives ni condiciones que asuman Edades activas (`in_age_gte`, `in_age`, `current_age`, etc.). Si lo necesitás, **frená y consultá** — agregar Edades a v3.0 es decisión de Phase 2, no de canary.
+
+### Para mecánicas que premian "partidas largas"
+
+Usar proxies que existan en v3.0:
+
+- **Turn count directo** (`turn >= N`).
+- **Count de zonas** (cartas en Pozo Astral, naves en Disolución, cartas descartadas, etc.).
+- **Count de eventos acumulados** (naves muertas, naves jugadas, etc.).
+
+### Recomendado para Zaqe específicamente
+
+Count del Pozo Astral. Es semánticamente equivalente a "partidas largas" (más turnos = más muertes = más Pozo Astral) Y refuerza el archetype Zaqe (Pozo Astral como recurso central).
+
+### Ejemplo de rediseño correcto
+
+- ❌ Mal: _"En Edad II robás 1, en Edad III robás 2."_
+- ✅ Bien: _"Si tenés 5+ cartas en tu Pozo Astral, robás 1. Si tenés 10+, robás 2."_
+
+### Cuando Phase 2 reintroduzca Edades
+
+Evaluar si redirigir cartas existentes que usan proxies hacia Edades reales. **No asumir que la migración es automática.**
+
+---
+
+## 15. Disolución es terminal
+
+Disolución es zona de exilio terminal. Por diseño:
+
+- Naves Zaqe que mueren por segunda vez tras Refluencia van a Disolución.
+- Cualquier carta exiliada vía efectos como `exile` (T1 Disolutorio Sqhaguata, Espejo Disolutorio Tezhal) va a Disolución.
+
+### Restricción inviolable
+
+Ninguna carta puede tener `from_zone: "disolucion"` ni equivalente. Disolución NO se referencia desde ningún `zone` filter, `search.zone`, ni cualquier op de retorno. **El engine no expone primitives para sacar cartas de Disolución.**
+
+### Justificación
+
+Si una carta puede "rescatar" de Disolución, el cap "una sola revival por nave Zaqe" se rompe y el archetype Zaqe se vuelve inevitable. Lo mismo aplica a Tezhal: Espejo Disolutorio bypassa Pozo Astral precisamente para que Refluencia no pueda funcionar; si después una carta saca de Disolución, el counter wheel Tezhal > Zaqe se rompe.
+
+### Verificación durante diseño
+
+Grep mental sobre el effect tree por la palabra "disolucion" o "disolution". Si aparece en cualquier campo que no sea `destination` / `to_zone`, es bug.
+
+---
+
+## 16. Compendio de restricciones inviolables del set base
+
+> **Referencia rápida.** Las siguientes restricciones se descubrieron durante los 4 canarys del set base v3.0 (Würon, Tezhal, Q'ralan, Zaqe). Aplican a TODAS las cartas nuevas, sin excepción, hasta que una decisión de diseño explícita las modifique.
+
+### Mecánica firma como keyword explícita
+
+- Las mecánicas firma (Külen, Formación Solar, Ignición, Refluencia) son keywords **imprimibles**, NO automáticas por raza.
+- Una nave Würon NO tiene Külen automáticamente — solo si la carta lleva la keyword.
+- Esto permite cartas no-firma que diversifican el archetype (ej: 30-40% del pool Q'ralan sin Formación Solar).
+
+### Formación Solar cuenta por raza, no por keyword
+
+- Una nave Q'ralan SIN keyword `formacion_solar` igual cuenta para los buffs de las que SÍ la tienen.
+- La condición es "raza Q'ralan", independiente de keyword.
+- Esto permite que cartas no-FS sirvan como "masa contadora" para las que sí tienen FS.
+
+### Ignición requiere sacrificio mandatory (no opcional)
+
+- Reminder canónico (sec 7.3): _"al jugar/activar, sacrificá una nave Tezhal aliada para activar el efecto descrito en la carta."_
+- El sacrificio es **obligatorio** para que el efecto resuelva.
+- Sin nave Tezhal aliada disponible, la carta no puede jugarse.
+- Target del sacrificio: aliada (controlada por vos) Y de raza Tezhal. Preserva sacrificio ritual interno.
+
+### Refluencia revival reset (stats base + HP máximo)
+
+- Reminder canónico (sec 7.4): _"al morir va al Pozo Astral; podés pagar su costo durante tu Despliegue para revivirla con stats base y HP máximo; si muere de nuevo, va a Disolución."_
+- Al revivir, todos los buffs permanentes que tenía la nave ANTES de morir se resetean.
+- HP entra al máximo, no al HP que tenía al morir.
+- Esto previene combos cross-raza rotos (ej: Q'ralan FS buffea Zaqe con +5, Zaqe muere, revive con +5 mantenido).
+
+### Counter wheel emerge mecánicamente, no por nombre
+
+- El wheel teórico (Würon → Q'ralan → Tezhal → Zaqe → Würon) NO emerge automáticamente.
+- Cada raza necesita **al menos 1 carta explícita anti-raza-counter** para que el wheel se materialice en juego.
+- Anti-counter explícito existente:
+  - Würon → Q'ralan: implícito (Külen reactive resuelve antes que FS accumulative).
+  - Q'ralan → Tezhal: E3 Eclipse del K'illay + T1 Cristal del Eclipse Pétreo.
+  - Tezhal → Zaqe: T1 Espejo Disolutorio (exilia in_play directo a Disolución).
+  - Zaqe → Würon: E2 Eclipse del Pozo Astral + T2 Coraza del Lago Áureo + T1 Disolutorio Sqhaguata indirecto.
+
+### Defensa NO neutralizadora del counter recíproco
+
+- Cuando una raza incluye herramientas defensivas contra el counter que la vence, debe ser **defensa**, no **neutralización**.
+- La raza debe seguir sintiendo la presión, no eliminarla.
+- Ejemplo OK: Q'ralan T2 Espejo del K'ana da Premonición + HP perm vs Würon. Premonición rompe orden de resolución pero Külen sigue gatillando.
+- Ejemplo NO OK: una carta que dijera "anula activaciones de Külen este turno" o "las naves enemigas no pueden ser sacrificadas". Esto rompe el wheel.
+
+### Otras restricciones (cross-reference)
+
+- **Categorización por naturaleza, no por raza** → ver sección 13.
+- **Edades son Phase 2 dependent** → ver sección 14.
+- **Disolución es terminal** → ver sección 15.
+
+---
+
+_Vivo. Última actualización: 2026-05-10 (v3.0 ratificado + lecciones canarys consolidadas)._
