@@ -176,7 +176,9 @@ Las cartas con más habilidades tienen stats más bajos. La habilidad es el valo
 
 ### 7.2. Q'ralan — Formación Solar (Acumulativa)
 
-> **Formación Solar** _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles)_
+> **Formación Solar** _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles. La condición es "raza Q'ralan", independiente de si las otras naves portan la keyword.)_
+
+**Aclaración (v3.0.2):** la condición de Formación Solar se evalúa por **raza**, no por **keyword**. Una nave Q'ralan que NO porta `formacion_solar` (ej. una nave nueva off-category, una weapon, o un ship con bastión puro) **sí cuenta** para activar el +1 en otra nave que sí lleva la keyword. Esto permite que el archetype Q'ralan tenga mazos diversificados: cartas no-FS aportan al conteo de masa sin escalar ellas mismas.
 
 ### 7.3. Tezhal — Ignición (Iniciativa)
 
@@ -199,17 +201,17 @@ En ambos casos el target del sacrificio está fijado por la firma: `controller: 
 
 ## 8. Glosario completo de keywords (Set 1 con reminder text)
 
-| Keyword             | Reminder text                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Bastión**         | _(debe ser atacada antes que otras unidades en su zona)_                                               |
-| **Embate**          | _(puede atacar el turno que entra al juego)_                                                           |
-| **Desgarro**        | _(el daño excedente pasa al objetivo siguiente)_                                                       |
-| **Vuelo**           | _(solo puede ser bloqueada por unidades con Vuelo o Bastión)_                                          |
-| **Premonición**     | _(resuelve antes que cualquier categoría de mecánica)_                                                 |
-| **Külen**           | _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_                                |
-| **Formación Solar** | _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles)_                                  |
-| **Ignición**        | _(al jugar/activar, sacrifica una nave Tezhal aliada para activar el efecto)_                          |
-| **Refluencia**      | _(al morir, va al Pozo Astral; puedes revivirla pagando su costo; si muere de nuevo, va a Disolución)_ |
+| Keyword             | Reminder text                                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Bastión**         | _(debe ser atacada antes que otras unidades en su zona)_                                                   |
+| **Embate**          | _(puede atacar el turno que entra al juego)_                                                               |
+| **Desgarro**        | _(el daño excedente pasa al objetivo siguiente)_                                                           |
+| **Vuelo**           | _(solo puede ser bloqueada por unidades con Vuelo o Bastión)_                                              |
+| **Premonición**     | _(resuelve antes que cualquier categoría de mecánica)_                                                     |
+| **Külen**           | _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_                                    |
+| **Formación Solar** | _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles. Se cuenta por raza, no por keyword.)_ |
+| **Ignición**        | _(al jugar/activar, sacrifica una nave Tezhal aliada para activar el efecto)_                              |
+| **Refluencia**      | _(al morir, va al Pozo Astral; puedes revivirla pagando su costo; si muere de nuevo, va a Disolución)_     |
 
 ---
 
