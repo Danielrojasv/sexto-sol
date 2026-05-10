@@ -1,0 +1,51 @@
+{
+  "id": "tezhal_cantico_tlapetl",
+  "name": "Cántico Tlapetl",
+  "race": "tezhal",
+  "type": "event",
+  "cost": 5,
+  "rarity": "rare",
+  "keywords": ["ignicion"],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "sacrifice",
+            "target": {
+              "kind": "chosen_ship",
+              "filter": { "controller": "self", "race": "tezhal" }
+            }
+          },
+          {
+            "op": "for_each",
+            "filter": { "controller": "self", "race": "tezhal" },
+            "effect": {
+              "op": "sequence",
+              "effects": [
+                {
+                  "op": "modify_strength",
+                  "target": { "kind": "self" },
+                  "kind": "delta",
+                  "value": 2,
+                  "duration": "end_of_turn"
+                },
+                {
+                  "op": "grant_keyword",
+                  "target": { "kind": "self" },
+                  "keyword": "embate",
+                  "duration": "end_of_turn"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "description": "Ignición: cada otra nave Tezhal aliada gana +2 fuerza y Embate este turno."
+    }
+  ],
+  "flavorText": "Cuando una nave canta su última órbita, todo el sector la corea."
+}
