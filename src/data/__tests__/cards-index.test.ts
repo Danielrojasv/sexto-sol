@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { ALL_CARDS, cardById, cardsByRace } from '../cards'
 
 describe('ALL_CARDS', () => {
-  it('contains the 66 cards of the canary set (post-Qralan expansion)', () => {
-    expect(ALL_CARDS.length).toBe(66)
+  it('contains the 74 cards of the canary set (post-Zaqe expansion — set base completo)', () => {
+    expect(ALL_CARDS.length).toBe(74)
   })
 
   it('groups by race correctly', () => {
@@ -14,7 +14,7 @@ describe('ALL_CARDS', () => {
     expect(counts.quralan).toBe(19)
     expect(counts.wuron).toBe(19)
     expect(counts.tezhal).toBe(18)
-    expect(counts.zaqe).toBe(10)
+    expect(counts.zaqe).toBe(18)
   })
 
   it('is sorted by race then cost then name', () => {
