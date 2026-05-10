@@ -1,6 +1,6 @@
 {
-  "id": "quralan_inka_untay_tutelar",
-  "name": "Inka-untay Tutelar",
+  "id": "quralan_sumaq_untay_tutelar",
+  "name": "Sumaq-untay Tutelar",
   "race": "quralan",
   "type": "ship",
   "cost": 6,
@@ -24,7 +24,7 @@
         "count": 1,
         "destination": "hand"
       },
-      "description": "Al desplegar: buscas 1 nave Q'ralan en tu mazo y la sumás a tu mano."
+      "description": "Al desplegar: buscas 1 nave Q'ralan en tu mazo y la sumas a tu mano."
     }
   ],
   "flavorText": "La nave-templo tutelar coordina sectores enteros: bajo su sombra, ningún escuadrón se pierde.",
