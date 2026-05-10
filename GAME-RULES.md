@@ -195,23 +195,25 @@ En ambos casos el target del sacrificio está fijado por la firma: `controller: 
 
 ### 7.4. Zaqe — Refluencia (Post-combate)
 
-> **Refluencia** _(al morir va al Pozo Astral; puedes pagar su costo durante tu Despliegue para revivirla; si muere de nuevo, va a Disolución)_
+> **Refluencia** _(al morir va al Pozo Astral; puedes pagar su costo durante tu Despliegue para revivirla con stats base y HP máximo; si muere de nuevo, va a Disolución)_
+
+**Aclaración (v3.0.3):** una nave Zaqe revivida vía Refluencia entra al campo **con sus stats base** (todos los buffs permanentes que tenía antes de morir se resetean — coherente con la "transmutación en el lago de luz" del lore + previene combos cross-raza como Q'ralan Formación Solar otorgando +N fuerza persistente entre vidas) **y con HP máximo** (la nave se renueva — evita tracking de HP entre vidas + coherente con lore).
 
 ---
 
 ## 8. Glosario completo de keywords (Set 1 con reminder text)
 
-| Keyword             | Reminder text                                                                                              |
-| ------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Bastión**         | _(debe ser atacada antes que otras unidades en su zona)_                                                   |
-| **Embate**          | _(puede atacar el turno que entra al juego)_                                                               |
-| **Desgarro**        | _(el daño excedente pasa al objetivo siguiente)_                                                           |
-| **Vuelo**           | _(solo puede ser bloqueada por unidades con Vuelo o Bastión)_                                              |
-| **Premonición**     | _(resuelve antes que cualquier categoría de mecánica)_                                                     |
-| **Külen**           | _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_                                    |
-| **Formación Solar** | _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles. Se cuenta por raza, no por keyword.)_ |
-| **Ignición**        | _(al jugar/activar, sacrifica una nave Tezhal aliada para activar el efecto)_                              |
-| **Refluencia**      | _(al morir, va al Pozo Astral; puedes revivirla pagando su costo; si muere de nuevo, va a Disolución)_     |
+| Keyword             | Reminder text                                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Bastión**         | _(debe ser atacada antes que otras unidades en su zona)_                                                                          |
+| **Embate**          | _(puede atacar el turno que entra al juego)_                                                                                      |
+| **Desgarro**        | _(el daño excedente pasa al objetivo siguiente)_                                                                                  |
+| **Vuelo**           | _(solo puede ser bloqueada por unidades con Vuelo o Bastión)_                                                                     |
+| **Premonición**     | _(resuelve antes que cualquier categoría de mecánica)_                                                                            |
+| **Külen**           | _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_                                                           |
+| **Formación Solar** | _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles. Se cuenta por raza, no por keyword.)_                        |
+| **Ignición**        | _(al jugar/activar, sacrifica una nave Tezhal aliada para activar el efecto)_                                                     |
+| **Refluencia**      | _(al morir, va al Pozo Astral; puedes revivirla pagando su costo con stats base y HP máximo; si muere de nuevo, va a Disolución)_ |
 
 ---
 
