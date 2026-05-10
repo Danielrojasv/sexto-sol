@@ -562,3 +562,65 @@ describe.skip("interpreter — v3.0.1 primitives (TODO Phase 1)", () => {
   })
 })
 
+// ---------------------------------------------------------------------------
+// v3.0.3 — DSL extensions (schema-only). Engine impl pending Phase 1 kernel.
+// ---------------------------------------------------------------------------
+
+describe.skip("interpreter — v3.0.3 primitives (TODO Phase 1)", () => {
+  // TODO Phase 1 kernel: implementar y des-skippear estos tests.
+  // Cada test corresponde a un primitive nuevo agregado en spec.ts v3.0.3
+  // para el canary Zaqe. Mientras se .skip, los efectos son no-ops o stubs
+  // documentados con TODO en interpreter.ts.
+
+  it("search zone pozo_astral lee del state field pozoAstral separado", () => {
+    // TODO: state.players[*].pozoAstral debe existir como Card[] separado
+    // de graveyard. Ships zaqe destruidas se mueven ahí; otras cartas y
+    // tech expirados van a graveyard. search.zone='pozo_astral' lee de
+    // pozoAstral; legacy 'graveyard' sigue leyendo de graveyard.
+    expect(true).toBe(false)
+  })
+
+  it("cost_modifier registra descuento sobre keyword target con clamp minCost", () => {
+    // TODO: al desplegar relic con cost_modifier, registrar
+    // state.costModifiers[keyword] = { delta, minCost }. Al calcular costo
+    // de pagar Refluencia, aplicar Math.max(minCost, baseCost + delta).
+    // Limpiar al destruir la fuente. Test: relic con delta -1, minCost 1.
+    // Revival de Navegante (1c) sigue costando 1 (clamp). Revival de Balsa
+    // Áurea (2c) cuesta 1.
+    expect(true).toBe(false)
+  })
+
+  it("chosen_permanent resuelve a relic/tech en juego (no fleet)", () => {
+    // TODO: resolveTargets case 'chosen_permanent' debe buscar en
+    // state.players[*].relicsInPlay (zona nueva separada de fleet). T1
+    // Disolutorio Sqhaguata exilia una Reliquia enemiga elegida.
+    expect(true).toBe(false)
+  })
+
+  it("count_filter zone pozo_astral cuenta cartas en Pozo Astral del player", () => {
+    // TODO: evaluateCondition case 'count_filter' debe respetar zone+player
+    // opcionales (default in_play). Cuando zone !== in_play, contar cartas
+    // en la zona target del player, ignorando filter.controller.
+    // E4 Visión del Pozo Astral / R1 Reloj del Pozo Áureo dependen de esto.
+    expect(true).toBe(false)
+  })
+
+  it("Refluencia revival reset stats base + HP máximo (per GAME-RULES sec 7.4)", () => {
+    // TODO: PAY_REFLUENCIA handler nuevo en reducer debe:
+    //   1. Descontar costo (modulado por costModifiers["refluencia"] con clamp).
+    //   2. Crear ShipInstance fresca con stats base de Card (no las modificadas).
+    //   3. Setear hp = maxHp.
+    //   4. Mover de pozoAstral -> fleet.
+    //   5. Marcar revivedOnce=true.
+    // Si revivedOnce=true al volver a morir -> mover a disolucion (terminal).
+    expect(true).toBe(false)
+  })
+
+  it("Disolución es zona terminal — no search ops pueden referenciarla", () => {
+    // TODO: validador runtime debe rechazar search.zone='disolucion' (ya
+    // schema-bloqueado pero defensivo en runtime). Disolución solo recibe
+    // cartas, nunca las saca. Restricción inviolable Zaqe canary.
+    expect(true).toBe(false)
+  })
+})
+
