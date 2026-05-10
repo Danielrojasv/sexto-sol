@@ -72,7 +72,13 @@ const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
       op: z.literal('search'),
       owner: z.enum(['self', 'opponent']),
       zone: z.enum(['deck', 'graveyard']),
-      filter: z.object({ cardType: CARD_TYPE.optional(), race: RACE.optional() }),
+      // v3.0.2: filter extendido con costLte/costGte (mismos campos que ShipFilter).
+      filter: z.object({
+        cardType: CARD_TYPE.optional(),
+        race: RACE.optional(),
+        costLte: z.number().optional(),
+        costGte: z.number().optional(),
+      }),
       count: z.number(),
       destination: z.enum(['hand', 'play']),
     }),

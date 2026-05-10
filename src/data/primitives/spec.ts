@@ -140,7 +140,14 @@ export type Effect =
       op: 'search'
       owner: PlayerSelector
       zone: 'deck' | 'graveyard'
-      filter: { cardType?: CardType; race?: Race }
+      /**
+       * v3.0.2: filter extendido con `costLte`/`costGte` (mismos campos que ShipFilter).
+       * Permite restringir el resultado del search por rango de costo. Ej: "buscá una
+       * nave Tezhal de costo ≤ 1 y ponla en juego" (Hangar Eterno relic).
+       * Engine impl: TODO Phase 1 kernel — el reducer del search debe aplicar el filtro
+       * sobre el deck/graveyard.
+       */
+      filter: { cardType?: CardType; race?: Race; costLte?: number; costGte?: number }
       count: number
       destination: 'hand' | 'play'
     }
