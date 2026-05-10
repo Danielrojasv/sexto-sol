@@ -107,7 +107,7 @@ Si la carta debe estar **por debajo** o **por encima** de la curva por motivos n
 | Raza        | Categoría firma | Keyword firma     | Reminder text                                                                                                                 |
 | ----------- | --------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Würon**   | reactive        | `kulen`           | _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_                                                       |
-| **Tezhal**  | initiative      | `ignicion`        | _(podés sacrificar una nave Tezhal aliada para activar el efecto descrito en la carta)_                                       |
+| **Tezhal**  | initiative      | `ignicion`        | _(al jugar/activar, sacrificá una nave Tezhal aliada para activar el efecto descrito en la carta)_                            |
 | **Q'ralan** | accumulative    | `formacion_solar` | _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles)_                                                         |
 | **Zaqe**    | post_combat     | `refluencia`      | _(al morir va al Pozo Astral; podés pagar su costo durante tu Despliegue para revivirla; si muere de nuevo, va a Disolución)_ |
 
@@ -134,7 +134,7 @@ El validator emite warning si una carta es off-category sin el flag — eso es *
 | `premonition`               | _(resuelve antes que cualquier categoría de mecánica)_ — máx 1-2 por mazo                            |
 | `kulen` (Würon)             | _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_                              |
 | `formacion_solar` (Q'ralan) | _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles)_                                |
-| `ignicion` (Tezhal)         | _(podés sacrificar una nave Tezhal aliada para activar el efecto)_                                   |
+| `ignicion` (Tezhal)         | _(al jugar/activar, sacrificá una nave Tezhal aliada para activar el efecto)_                        |
 | `refluencia` (Zaqe)         | _(al morir va al Pozo Astral; podés revivirla pagando su costo; si muere de nuevo, va a Disolución)_ |
 
 ---

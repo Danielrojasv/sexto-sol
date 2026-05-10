@@ -180,9 +180,16 @@ Las cartas con más habilidades tienen stats más bajos. La habilidad es el valo
 
 ### 7.3. Tezhal — Ignición (Iniciativa)
 
-> **Ignición** _(puedes sacrificar una nave Tezhal aliada para activar el efecto descrito en la carta)_
+> **Ignición** _(al jugar/activar, sacrifica una nave Tezhal aliada para activar el efecto descrito en la carta)_
 
 El efecto específico varía por carta. Ejemplo: "Ignición: haz 3 daño a una nave enemiga."
+
+El refraseo (v3.0.2) normaliza dos formas de invocar Ignición:
+
+- **Activado**: cartas con trigger `activated` que sacrifican como parte de la activación voluntaria (ej. Piloto de Obsidiana). El sacrificio es opcional — el jugador elige cuándo activar.
+- **Al jugar**: cartas con trigger `on_play` (eventos / tech) cuyo efecto incluye `sacrifice` mandatory dentro del effect tree (ej. Plumaje Encendido). El sacrificio se resuelve al pagar la carta.
+
+En ambos casos el target del sacrificio está fijado por la firma: `controller: 'self'`, `race: 'tezhal'`. La keyword `ignicion` marca ambos patrones.
 
 ### 7.4. Zaqe — Refluencia (Post-combate)
 
@@ -201,7 +208,7 @@ El efecto específico varía por carta. Ejemplo: "Ignición: haz 3 daño a una n
 | **Premonición**     | _(resuelve antes que cualquier categoría de mecánica)_                                                 |
 | **Külen**           | _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_                                |
 | **Formación Solar** | _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles)_                                  |
-| **Ignición**        | _(puedes sacrificar una nave Tezhal aliada para activar el efecto)_                                    |
+| **Ignición**        | _(al jugar/activar, sacrifica una nave Tezhal aliada para activar el efecto)_                          |
 | **Refluencia**      | _(al morir, va al Pozo Astral; puedes revivirla pagando su costo; si muere de nuevo, va a Disolución)_ |
 
 ---
