@@ -453,3 +453,167 @@ describe('renderAbility — v3.0.1 primitives', () => {
     expect(txt).toMatch(/Kulen.*\+1/)
   })
 })
+
+describe('renderAbility — v3.0.3 primitives', () => {
+  it('renders search en zone pozo_astral con destination play', () => {
+    const txt = renderEffect({
+      op: 'search',
+      owner: 'self',
+      zone: 'pozo_astral',
+      filter: { race: 'zaqe' },
+      count: 2,
+      destination: 'play',
+    })
+    expect(txt).toContain('el Pozo Astral')
+    expect(txt).toContain('y la pone en juego')
+  })
+
+  it('renders search en zone graveyard legacy', () => {
+    const txt = renderEffect({
+      op: 'search',
+      owner: 'self',
+      zone: 'graveyard',
+      filter: { race: 'zaqe' },
+      count: 1,
+      destination: 'hand',
+    })
+    expect(txt).toContain('el cementerio')
+  })
+
+  it('renders cost_modifier con delta negativo', () => {
+    const txt = renderEffect({
+      op: 'cost_modifier',
+      target: { keyword: 'refluencia' },
+      delta: -1,
+      minCost: 1,
+    })
+    expect(txt).toContain('Refluencia')
+    expect(txt).toContain('1 energía menos')
+    expect(txt).toContain('mínimo 1')
+  })
+
+  it('renders cost_modifier con delta positivo', () => {
+    const txt = renderEffect({
+      op: 'cost_modifier',
+      target: { keyword: 'ignicion' },
+      delta: 1,
+      minCost: 1,
+    })
+    expect(txt).toContain('1 energía más')
+  })
+
+  it('renders chosen_permanent sin filter', () => {
+    const txt = renderEffect({
+      op: 'exile',
+      target: { kind: 'chosen_permanent' },
+      fromZone: 'in_play',
+    })
+    expect(txt).toContain('una carta permanente a elección')
+  })
+
+  it('renders chosen_permanent con controller=opponent + cardType=relic', () => {
+    const txt = renderEffect({
+      op: 'exile',
+      target: {
+        kind: 'chosen_permanent',
+        filter: { controller: 'opponent', cardType: 'relic' },
+      },
+      fromZone: 'in_play',
+    })
+    expect(txt).toContain('enemiga')
+    expect(txt).toContain('relic')
+  })
+
+  it('renders chosen_permanent con filter pero controller any', () => {
+    const txt = renderEffect({
+      op: 'exile',
+      target: {
+        kind: 'chosen_permanent',
+        filter: { controller: 'any' },
+      },
+      fromZone: 'in_play',
+    })
+    expect(txt).toContain('una carta permanente a elección')
+  })
+
+  it('renders count_filter con zone pozo_astral + player self', () => {
+    const txt = renderEffect({
+      op: 'conditional',
+      condition: {
+        kind: 'count_filter',
+        filter: { race: 'zaqe' },
+        op: 'gte',
+        value: 3,
+        zone: 'pozo_astral',
+        player: 'self',
+      },
+      thenEffect: { op: 'noop' },
+    })
+    expect(txt).toContain('cartas')
+    expect(txt).toContain('el Pozo Astral')
+    expect(txt).toContain('propio')
+  })
+
+  it('renders count_filter con zone disolucion', () => {
+    const txt = renderEffect({
+      op: 'conditional',
+      condition: {
+        kind: 'count_filter',
+        filter: {},
+        op: 'lte',
+        value: 0,
+        zone: 'disolucion',
+        player: 'opponent',
+      },
+      thenEffect: { op: 'noop' },
+    })
+    expect(txt).toContain('Disolución')
+    expect(txt).toContain('del oponente')
+  })
+
+  it('renders count_filter con zone hand y deck', () => {
+    const handTxt = renderEffect({
+      op: 'conditional',
+      condition: {
+        kind: 'count_filter',
+        filter: {},
+        op: 'gte',
+        value: 5,
+        zone: 'hand',
+        player: 'self',
+      },
+      thenEffect: { op: 'noop' },
+    })
+    expect(handTxt).toContain('la mano')
+
+    const deckTxt = renderEffect({
+      op: 'conditional',
+      condition: {
+        kind: 'count_filter',
+        filter: {},
+        op: 'gte',
+        value: 10,
+        zone: 'deck',
+        player: 'self',
+      },
+      thenEffect: { op: 'noop' },
+    })
+    expect(deckTxt).toContain('el mazo')
+  })
+
+  it('count_filter sin zone (in_play default) usa la rama legacy', () => {
+    const txt = renderEffect({
+      op: 'conditional',
+      condition: {
+        kind: 'count_filter',
+        filter: { controller: 'self', race: 'zaqe' },
+        op: 'gte',
+        value: 2,
+      },
+      thenEffect: { op: 'noop' },
+    })
+    // Sin zone, usa "hay ≥ N naves..."
+    expect(txt).toContain('naves')
+    expect(txt).not.toContain('Pozo Astral')
+  })
+})
