@@ -1,0 +1,48 @@
+{
+  "id": "zaqe_vision_pozo_astral",
+  "name": "Visión del Pozo Astral",
+  "race": "zaqe",
+  "type": "event",
+  "cost": 2,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          { "op": "draw", "player": "self", "n": 1 },
+          {
+            "op": "conditional",
+            "condition": {
+              "kind": "count_filter",
+              "filter": { "race": "zaqe" },
+              "op": "gte",
+              "value": 3,
+              "zone": "pozo_astral",
+              "player": "self"
+            },
+            "thenEffect": { "op": "draw", "player": "self", "n": 1 }
+          },
+          {
+            "op": "conditional",
+            "condition": {
+              "kind": "count_filter",
+              "filter": { "race": "zaqe" },
+              "op": "gte",
+              "value": 6,
+              "zone": "pozo_astral",
+              "player": "self"
+            },
+            "thenEffect": { "op": "draw", "player": "self", "n": 1 }
+          }
+        ]
+      },
+      "description": "Al jugarse: robás 1 carta. Si tenés 3+ cartas en tu Pozo Astral, robás 1 más. Si tenés 6+, robás otra adicional."
+    }
+  ],
+  "intentionalOffCategory": true,
+  "flavorText": "El espejo del Pozo se aclara conforme las balsas se hunden: tres miradas para el lago colmado."
+}
