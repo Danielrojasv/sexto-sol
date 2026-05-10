@@ -15,7 +15,7 @@
       "effect": {
         "op": "search",
         "owner": "self",
-        "zone": "graveyard",
+        "zone": "pozo_astral",
         "filter": {
           "race": "zaqe"
         },
