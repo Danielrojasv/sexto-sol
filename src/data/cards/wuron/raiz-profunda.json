@@ -1,0 +1,42 @@
+{
+  "id": "wuron_raiz_profunda",
+  "name": "Raíz Profunda",
+  "race": "wuron",
+  "type": "tech",
+  "cost": 2,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "reactive",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "modify_hp",
+            "target": {
+              "kind": "chosen_ship",
+              "filter": { "controller": "self", "race": "wuron" }
+            },
+            "kind": "set_to_max",
+            "value": 0,
+            "duration": "permanent"
+          },
+          {
+            "op": "modify_strength",
+            "target": {
+              "kind": "chosen_ship",
+              "filter": { "controller": "self", "race": "wuron" }
+            },
+            "kind": "delta",
+            "value": 1,
+            "duration": "permanent"
+          }
+        ]
+      },
+      "description": "Al jugarse: una nave Würon tuya regenera al máximo de HP y gana +1 fuerza permanente."
+    }
+  ],
+  "flavorText": "La raíz no se cura: vuelve a empezar."
+}
