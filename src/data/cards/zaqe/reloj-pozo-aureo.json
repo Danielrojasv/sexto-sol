@@ -1,0 +1,62 @@
+{
+  "id": "zaqe_reloj_pozo_aureo",
+  "name": "Reloj del Pozo Áureo",
+  "race": "zaqe",
+  "type": "relic",
+  "cost": 5,
+  "rarity": "rare",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "turn_start",
+        "filter": { "controller": "self" }
+      },
+      "category": "post_combat",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "conditional",
+            "condition": {
+              "kind": "count_filter",
+              "filter": { "race": "zaqe" },
+              "op": "gte",
+              "value": 5,
+              "zone": "pozo_astral",
+              "player": "self"
+            },
+            "thenEffect": { "op": "draw", "player": "self", "n": 1 }
+          },
+          {
+            "op": "conditional",
+            "condition": {
+              "kind": "count_filter",
+              "filter": { "race": "zaqe" },
+              "op": "gte",
+              "value": 10,
+              "zone": "pozo_astral",
+              "player": "self"
+            },
+            "thenEffect": {
+              "op": "sequence",
+              "effects": [
+                { "op": "draw", "player": "self", "n": 1 },
+                {
+                  "op": "modify_hp",
+                  "target": { "kind": "homeworld", "player": "self" },
+                  "kind": "delta",
+                  "value": 2,
+                  "duration": "permanent"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "description": "Al inicio de tu turno: si tenés 5+ cartas en tu Pozo Astral, robás 1 carta. Si tenés 10+, además ganás 2 hp en tu mundo natal y robás 1 más."
+    }
+  ],
+  "flavorText": "El reloj del Pozo se acelera con cada balsa hundida: el lago lleno cuida hasta el casco natal."
+}
