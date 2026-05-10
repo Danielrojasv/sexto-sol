@@ -6,8 +6,8 @@
   "cost": 1,
   "rarity": "common",
   "strength": 1,
-  "hp": 2,
-  "keywords": [],
+  "hp": 1,
+  "keywords": ["ignicion"],
   "abilities": [
     {
       "trigger": {

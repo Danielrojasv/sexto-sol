@@ -5,9 +5,9 @@
   "type": "ship",
   "cost": 4,
   "rarity": "rare",
-  "strength": 5,
+  "strength": 4,
   "hp": 4,
-  "keywords": [],
+  "keywords": ["ignicion"],
   "abilities": [
     {
       "trigger": {

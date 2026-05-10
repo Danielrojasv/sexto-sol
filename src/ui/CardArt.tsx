@@ -13,18 +13,24 @@ const ROWS = 3
 
 interface CardArtProps {
   card: Card
-  /** Ancho del slot en px. Alto se computa con ratio 5:7 portrait. */
-  width?: number
   className?: string
 }
 
-export function CardArt({ card, width = 200, className = '' }: CardArtProps) {
-  const height = (width * 7) / 5
+/**
+ * Renderiza el arte de una carta como div con background-image apuntando al
+ * sprite sheet de su raza (/art/<race>.jpg) y background-position mapeado por
+ * `card.artSlot`. El componente toma 100% del ancho de su container y usa
+ * aspect-ratio 2:3 (matchea las celdas reales del sprite ~970×1085 / 4×3).
+ *
+ * Para tamaño explícito, envolvelo en un container con width fijo:
+ *   <div style={{ width: 240 }}><CardArt card={c} /></div>
+ */
+export function CardArt({ card, className = '' }: CardArtProps) {
   if (!card.artSlot) {
     return (
       <div
-        className={`flex items-center justify-center bg-slate-900 text-slate-500 text-xs ${className}`}
-        style={{ width: `${width}px`, height: `${height}px` }}
+        className={`flex items-center justify-center bg-slate-900 text-slate-500 text-xs w-full ${className}`}
+        style={{ aspectRatio: '2 / 3' }}
       >
         sin arte
       </div>
@@ -35,10 +41,9 @@ export function CardArt({ card, width = 200, className = '' }: CardArtProps) {
   const yPct = (row / (ROWS - 1)) * 100
   return (
     <div
-      className={className}
+      className={`w-full ${className}`}
       style={{
-        width: `${width}px`,
-        height: `${height}px`,
+        aspectRatio: '2 / 3',
         backgroundImage: `url(/art/${card.race}.jpg)`,
         backgroundSize: `${COLS * 100}% ${ROWS * 100}%`,
         backgroundPosition: `${xPct}% ${yPct}%`,

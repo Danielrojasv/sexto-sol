@@ -5,32 +5,10 @@
   "type": "ship",
   "cost": 3,
   "rarity": "common",
-  "strength": 3,
-  "hp": 4,
-  "keywords": [],
-  "abilities": [
-    {
-      "trigger": {
-        "kind": "on_event",
-        "event": "ship_damaged",
-        "filter": {
-          "shipFilter": {
-            "controller": "self"
-          }
-        }
-      },
-      "category": "reactive",
-      "effect": {
-        "op": "modify_strength",
-        "target": {
-          "kind": "self"
-        },
-        "kind": "delta",
-        "value": 1,
-        "duration": "permanent"
-      }
-    }
-  ],
+  "strength": 4,
+  "hp": 5,
+  "keywords": ["kulen"],
+  "abilities": [],
   "flavorText": "El cazador no apunta: deja que la presa lo encuentre, y entonces se vuelve raíz.",
   "artSlot": {
     "row": 0,

@@ -5,32 +5,10 @@
   "type": "ship",
   "cost": 4,
   "rarity": "common",
-  "strength": 4,
-  "hp": 5,
-  "keywords": [],
-  "abilities": [
-    {
-      "trigger": {
-        "kind": "on_event",
-        "event": "ship_damaged",
-        "filter": {
-          "shipFilter": {
-            "controller": "self"
-          }
-        }
-      },
-      "category": "reactive",
-      "effect": {
-        "op": "modify_strength",
-        "target": {
-          "kind": "self"
-        },
-        "kind": "delta",
-        "value": 1,
-        "duration": "permanent"
-      }
-    }
-  ],
+  "strength": 5,
+  "hp": 7,
+  "keywords": ["kulen"],
+  "abilities": [],
   "flavorText": "Donde el bosque termina y el cielo empieza, su grito hace temblar a las dos cosas.",
   "artSlot": {
     "row": 1,

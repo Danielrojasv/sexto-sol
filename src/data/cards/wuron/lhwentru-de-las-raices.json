@@ -5,8 +5,8 @@
   "type": "ship",
   "cost": 6,
   "rarity": "legendary",
-  "strength": 7,
-  "hp": 10,
+  "strength": 5,
+  "hp": 7,
   "keywords": ["bastion"],
   "abilities": [
     {
@@ -19,7 +19,7 @@
         "player": "self",
         "n": 1
       },
-      "description": "Luz: al entrar en juego, robás 1 carta."
+      "description": "Al desplegar: robas 1 carta."
     },
     {
       "trigger": {
@@ -48,7 +48,7 @@
           "duration": "permanent"
         }
       },
-      "description": "Sombra (Külen): cuando una de tus naves recibe daño, todas tus naves Würon ganan +1 fuerza permanente."
+      "description": "Cuando una de tus naves recibe daño, todas tus naves Würon ganan +1 fuerza permanente."
     }
   ],
   "flavorText": "El árbol más viejo del sur recuerda cada herida del bosque, y las devuelve hechas savia.",
