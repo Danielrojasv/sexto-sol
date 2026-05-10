@@ -51,7 +51,8 @@ const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
     z.object({
       op: z.literal('exile'),
       target: TargetSchema,
-      fromZone: z.enum(['in_play', 'graveyard', 'hand', 'deck']).optional(),
+      // v3.0.3: pozo_astral agregado como canónico (graveyard legacy alias).
+      fromZone: z.enum(['in_play', 'pozo_astral', 'graveyard', 'hand', 'deck']).optional(),
     }),
     z.object({ op: z.literal('bounce_to_hand'), target: TargetSchema }),
     z.object({
@@ -71,7 +72,8 @@ const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
     z.object({
       op: z.literal('search'),
       owner: z.enum(['self', 'opponent']),
-      zone: z.enum(['deck', 'graveyard']),
+      // v3.0.3: pozo_astral agregado como canónico (graveyard legacy alias).
+      zone: z.enum(['deck', 'pozo_astral', 'graveyard']),
       // v3.0.2: filter extendido con costLte/costGte (mismos campos que ShipFilter).
       filter: z.object({
         cardType: CARD_TYPE.optional(),
@@ -134,6 +136,13 @@ const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
       keyword: z.string(),
       deltaBonus: z.number(),
     }),
+    // v3.0.3
+    z.object({
+      op: z.literal('cost_modifier'),
+      target: z.object({ keyword: z.string() }),
+      delta: z.number(),
+      minCost: z.number(),
+    }),
   ]),
 )
 
@@ -149,6 +158,11 @@ const ShipFilterSchema: z.ZodType<ShipFilter> = z.object({
   wasDamagedThisTurn: z.boolean().optional(),
 })
 
+const PermanentFilterSchema = z.object({
+  controller: z.enum(['self', 'opponent', 'any']).optional(),
+  cardType: CARD_TYPE.optional(),
+})
+
 const TargetSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('self') }),
   z.object({ kind: z.literal('controller') }),
@@ -159,6 +173,8 @@ const TargetSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('homeworld'), player: z.enum(['self', 'opponent']) }),
   // v3.0.1
   z.object({ kind: z.literal('attacker') }),
+  // v3.0.3
+  z.object({ kind: z.literal('chosen_permanent'), filter: PermanentFilterSchema.optional() }),
 ])
 
 const ConditionSchema = z.discriminatedUnion('kind', [
@@ -173,6 +189,9 @@ const ConditionSchema = z.discriminatedUnion('kind', [
     filter: ShipFilterSchema,
     op: z.enum(['gte', 'lte', 'eq']),
     value: z.number(),
+    // v3.0.3: zone/player opcionales para contar cartas en zonas distintas a fleet.
+    zone: z.enum(['in_play', 'pozo_astral', 'disolucion', 'hand', 'deck']).optional(),
+    player: z.enum(['self', 'opponent']).optional(),
   }),
   z.object({ kind: z.literal('self_has_keyword'), keyword: z.string() }),
   z.object({ kind: z.literal('controller_energy_gte'), value: z.number() }),

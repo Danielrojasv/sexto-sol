@@ -115,6 +115,15 @@ function executeEffectAt(
       // executeKeywordTrigger() (todavía no escrito). Por ahora noop — el JSON
       // valida y la carta renderiza correctamente, pero el efecto no se aplica.
       return { state, emit: [] }
+    case 'cost_modifier':
+      // TODO Phase 1 kernel (v3.0.3): cost_modifier registra un descuento sobre
+      // el costo de pagar una keyword target (típicamente `refluencia`) con clamp
+      // `minCost`. Implementación: registrar `{ delta, minCost }` en
+      // `state.costModifiers[effect.target.keyword]` al desplegar la fuente; limpiar
+      // al destruirla. Al calcular el costo de revival en `PAY_REFLUENCIA`, aplicar
+      // `Math.max(minCost, baseCost + delta)`. Por ahora noop — JSON valida y
+      // renderiza correctamente, pero el costo no se modifica.
+      return { state, emit: [] }
   }
 }
 
@@ -243,6 +252,13 @@ function resolveShipTargets(
       // que disparó esta ability. Requiere que EffectContext incluya `attackerShipId`
       // cuando el trigger es ship_attacked. Por ahora retorna vacío — la carta
       // valida y renderiza ("la nave atacante") pero el efecto no apunta a nadie.
+      return []
+    case 'chosen_permanent':
+      // TODO Phase 1 kernel (v3.0.3): resolver target permanente (relic/tech en
+      // juego). Requiere que GameState exponga `state.players[*].relicsInPlay` y
+      // `state.players[*].techInPlay` (zonas separadas de fleet). Por ahora retorna
+      // vacío — la carta valida, renderiza ("una carta permanente a elección"),
+      // pero no resuelve targets. T1 Disolutorio Sqhaguata espera esta impl.
       return []
   }
 }
