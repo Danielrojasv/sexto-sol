@@ -6,8 +6,8 @@
   "cost": 5,
   "rarity": "rare",
   "strength": 5,
-  "hp": 7,
-  "keywords": [],
+  "hp": 5,
+  "keywords": ["formacion_solar"],
   "abilities": [
     {
       "trigger": {
@@ -29,7 +29,8 @@
           "value": 1,
           "duration": "permanent"
         }
-      }
+      },
+      "description": "Mientras esté en juego, gana +1 HP permanente por cada otra nave Q'ralan que controles (Formación Solar de blindaje)."
     }
   ],
   "flavorText": "Su crisol funde el resplandor del astro: cuanto mayor la flota, más grueso el blindaje.",

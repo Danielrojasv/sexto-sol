@@ -5,31 +5,33 @@
   "type": "ship",
   "cost": 1,
   "rarity": "rare",
-  "strength": 2,
-  "hp": 4,
-  "keywords": [],
+  "strength": 1,
+  "hp": 1,
+  "keywords": ["formacion_solar"],
   "abilities": [
     {
       "trigger": {
-        "kind": "continuous"
+        "kind": "on_play"
       },
       "category": "accumulative",
       "effect": {
-        "op": "for_each",
-        "filter": {
-          "controller": "self",
-          "race": "quralan"
-        },
-        "effect": {
-          "op": "modify_strength",
-          "target": {
-            "kind": "self"
+        "op": "conditional",
+        "condition": {
+          "kind": "count_filter",
+          "filter": {
+            "controller": "self",
+            "race": "quralan"
           },
-          "kind": "delta",
-          "value": 1,
-          "duration": "permanent"
+          "op": "gte",
+          "value": 2
+        },
+        "thenEffect": {
+          "op": "draw",
+          "player": "self",
+          "n": 1
         }
-      }
+      },
+      "description": "Al desplegar: si controlas 2 o más naves Q'ralan, robas 1 carta."
     }
   ],
   "flavorText": "En formación somos una sola luz.",

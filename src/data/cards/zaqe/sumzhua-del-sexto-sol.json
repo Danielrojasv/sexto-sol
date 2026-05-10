@@ -5,9 +5,9 @@
   "type": "ship",
   "cost": 6,
   "rarity": "legendary",
-  "strength": 7,
-  "hp": 7,
-  "keywords": [],
+  "strength": 6,
+  "hp": 6,
+  "keywords": ["refluencia"],
   "abilities": [
     {
       "trigger": {
@@ -15,22 +15,11 @@
       },
       "category": "post_combat",
       "effect": {
-        "op": "sequence",
-        "effects": [
-          {
-            "op": "shuffle_to_deck",
-            "target": {
-              "kind": "self"
-            },
-            "owner": "self"
-          },
-          {
-            "op": "draw",
-            "player": "self",
-            "n": 1
-          }
-        ]
-      }
+        "op": "draw",
+        "player": "self",
+        "n": 1
+      },
+      "description": "Al morir, robas 1 carta."
     }
   ],
   "flavorText": "Nave-balsa colosal: si la anomalía estelar la rompe, del lago emerge una orden nueva.",

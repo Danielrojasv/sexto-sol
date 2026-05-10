@@ -5,33 +5,10 @@
   "type": "ship",
   "cost": 2,
   "rarity": "common",
-  "strength": 2,
+  "strength": 3,
   "hp": 3,
-  "keywords": [],
-  "abilities": [
-    {
-      "trigger": {
-        "kind": "continuous"
-      },
-      "category": "accumulative",
-      "effect": {
-        "op": "for_each",
-        "filter": {
-          "controller": "self",
-          "race": "quralan"
-        },
-        "effect": {
-          "op": "modify_strength",
-          "target": {
-            "kind": "self"
-          },
-          "kind": "delta",
-          "value": 1,
-          "duration": "permanent"
-        }
-      }
-    }
-  ],
+  "keywords": ["formacion_solar"],
+  "abilities": [],
   "flavorText": "Despega del hangar dorado y la formación entera arde con un mismo cristal.",
   "artSlot": {
     "row": 0,

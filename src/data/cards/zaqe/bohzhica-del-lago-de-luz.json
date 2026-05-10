@@ -5,24 +5,10 @@
   "type": "ship",
   "cost": 5,
   "rarity": "rare",
-  "strength": 5,
-  "hp": 7,
-  "keywords": ["bastion"],
-  "abilities": [
-    {
-      "trigger": {
-        "kind": "on_destroy"
-      },
-      "category": "post_combat",
-      "effect": {
-        "op": "shuffle_to_deck",
-        "target": {
-          "kind": "self"
-        },
-        "owner": "self"
-      }
-    }
-  ],
+  "strength": 4,
+  "hp": 6,
+  "keywords": ["bastion", "refluencia"],
+  "abilities": [],
   "flavorText": "Balsa-buque de vanguardia: hundida en el lago de luz, su casco se transmuta para el próximo ciclo.",
   "artSlot": {
     "row": 1,

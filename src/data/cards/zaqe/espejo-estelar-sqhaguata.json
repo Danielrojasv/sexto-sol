@@ -5,24 +5,10 @@
   "type": "ship",
   "cost": 4,
   "rarity": "common",
-  "strength": 4,
-  "hp": 5,
-  "keywords": [],
-  "abilities": [
-    {
-      "trigger": {
-        "kind": "on_destroy"
-      },
-      "category": "post_combat",
-      "effect": {
-        "op": "shuffle_to_deck",
-        "target": {
-          "kind": "self"
-        },
-        "owner": "self"
-      }
-    }
-  ],
+  "strength": 5,
+  "hp": 7,
+  "keywords": ["refluencia"],
+  "abilities": [],
   "flavorText": "Nave-balsa de casco-espejo: refleja la batalla del cielo y se hunde en el lago para volver.",
   "artSlot": {
     "row": 1,

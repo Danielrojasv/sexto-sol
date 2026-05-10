@@ -4,6 +4,7 @@
 import { ALL_CARDS, cardsByRace } from '@/data/cards'
 import type { Card, Race } from '@/engine/types'
 import { renderAbility } from '@/data/abilityRenderer'
+import { getKeywordInfo } from '@/data/keywords'
 import { CardArt } from './CardArt'
 
 const RACES: readonly { id: Race; label: string; subtitle: string }[] = [
@@ -21,14 +22,14 @@ const RARITY_COLOR: Record<Card['rarity'], string> = {
 
 function CardTile({ card }: { card: Card }) {
   return (
-    <div className="bg-slate-900/60 rounded-lg overflow-hidden border border-slate-800 hover:border-slate-600 transition-colors">
-      <CardArt card={card} width={220} className="rounded-t-lg" />
-      <div className="p-3 space-y-2">
+    <div className="bg-slate-900/60 rounded-lg overflow-hidden border border-slate-800 hover:border-slate-600 transition-colors w-full max-w-[220px] mx-auto">
+      <CardArt card={card} className="rounded-t-lg" />
+      <div className="p-3 space-y-2 text-[13px]">
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className={`font-semibold text-sm leading-tight ${RARITY_COLOR[card.rarity]}`}>
+          <h3 className={`font-semibold leading-tight ${RARITY_COLOR[card.rarity]}`}>
             {card.name}
           </h3>
-          <span className="text-xs text-slate-500 shrink-0 font-mono">
+          <span className="text-[11px] text-slate-500 shrink-0 font-mono">
             {card.cost}c
             {card.strength !== undefined && card.hp !== undefined && (
               <>
@@ -38,17 +39,28 @@ function CardTile({ card }: { card: Card }) {
             )}
           </span>
         </div>
-        <p className="text-xs text-slate-400 uppercase tracking-wide">
+        <p className="text-[10px] text-slate-400 uppercase tracking-wide">
           {card.type}
-          {card.keywords.length > 0 && ` · ${card.keywords.join(', ')}`}
+          {card.keywords.length > 0 &&
+            ` · ${card.keywords.map((k) => getKeywordInfo(k).label).join(', ')}`}
         </p>
+        {card.keywords.map((k) => {
+          const info = getKeywordInfo(k)
+          if (!info.reminder) return null
+          return (
+            <p key={`kw-${k}`} className="text-[11px] text-slate-400 leading-snug">
+              <span className="font-semibold text-slate-200">{info.label}</span>{' '}
+              <span className="italic">({info.reminder})</span>
+            </p>
+          )
+        })}
         {card.abilities.map((ab, i) => (
-          <p key={i} className="text-xs text-slate-300 leading-snug">
+          <p key={i} className="text-[11px] text-slate-300 leading-snug">
             {renderAbility(ab)}
           </p>
         ))}
         {card.flavorText && (
-          <p className="text-xs text-slate-500 italic leading-snug border-t border-slate-800 pt-2">
+          <p className="text-[11px] text-slate-500 italic leading-snug border-t border-slate-800 pt-2">
             “{card.flavorText}”
           </p>
         )}
@@ -79,7 +91,10 @@ export function CardCatalog() {
                   {cards.length} cartas
                 </p>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div
+                className="grid gap-6 justify-items-start"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}
+              >
                 {cards.map((card) => (
                   <CardTile key={card.id} card={card} />
                 ))}

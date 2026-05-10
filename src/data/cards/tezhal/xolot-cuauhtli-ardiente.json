@@ -5,9 +5,9 @@
   "type": "ship",
   "cost": 6,
   "rarity": "legendary",
-  "strength": 8,
-  "hp": 7,
-  "keywords": [],
+  "strength": 6,
+  "hp": 6,
+  "keywords": ["ignicion"],
   "abilities": [
     {
       "trigger": {
@@ -24,7 +24,7 @@
         },
         "amount": 3
       },
-      "description": "Luz: al desplegar, marca una nave enemiga con plumaje de obsidiana y le hace 3 de daño."
+      "description": "Al desplegar: haz 3 daño a una nave enemiga."
     },
     {
       "trigger": {
@@ -57,7 +57,7 @@
           }
         ]
       },
-      "description": "Sombra (Ignición): ofrenda otra nave del escuadrón; el Xolot lanza una andanada ritual de 5 de daño y robás 1 carta."
+      "description": "Ignición: haz 5 daño a una nave enemiga y robas 1 carta."
     }
   ],
   "flavorText": "Casco labrado en pirámide-espejo: cada nave ofrendada en órbita carga sus cañones rituales.",
