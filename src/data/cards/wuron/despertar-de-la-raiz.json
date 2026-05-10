@@ -1,0 +1,28 @@
+{
+  "id": "wuron_despertar_de_la_raiz",
+  "name": "Despertar de la Raíz",
+  "race": "wuron",
+  "type": "tech",
+  "cost": 5,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "reactive",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "wuron" },
+        "effect": {
+          "op": "modify_strength",
+          "target": { "kind": "self" },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      },
+      "description": "Al jugarse: cada una de tus naves Würon en juego gana +1 fuerza permanente."
+    }
+  ],
+  "flavorText": "El bosque que se ha dolido entero, también se levanta entero."
+}
