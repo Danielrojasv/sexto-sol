@@ -29,6 +29,7 @@ export const LORE_BLOCKLIST: readonly string[] = [
   'xipe-totec',
   'coatlicue',
   'tonatiuh',
+  'tonantzin', // deidad mariana sincretica viva — distinta del invento "Tonatzin"
   'coyolxauhqui',
 
   // --- Deidades inca/quechua/aymara ---
