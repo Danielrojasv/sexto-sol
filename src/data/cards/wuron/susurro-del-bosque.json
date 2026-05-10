@@ -27,7 +27,8 @@
           "value": 1,
           "duration": "permanent"
         }
-      }
+      },
+      "description": "Al jugarse: cada una de tus naves Würon gana +1 fuerza permanente por cada otra nave Würon que controles."
     }
   ],
   "flavorText": "El bosque no habla en palabras: pasa el viento, y todos los nuestros entienden a la vez.",
