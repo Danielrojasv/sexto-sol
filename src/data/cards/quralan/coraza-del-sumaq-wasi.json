@@ -1,0 +1,28 @@
+{
+  "id": "quralan_coraza_del_sumaq_wasi",
+  "name": "Coraza del Sumaq-Wasi",
+  "race": "quralan",
+  "type": "event",
+  "cost": 3,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "for_each",
+        "filter": { "controller": "self", "race": "quralan" },
+        "effect": {
+          "op": "prevent_damage",
+          "target": { "kind": "self" },
+          "amount": 2,
+          "duration": "end_of_turn"
+        }
+      },
+      "description": "Al jugarse: previene hasta 2 daño a cada nave Q'ralan aliada este turno."
+    }
+  ],
+  "flavorText": "La coraza del Sumaq-Wasi se extiende sobre los hangares: ningún disparo encuentra primer hueco.",
+  "intentionalOffCategory": true
+}
