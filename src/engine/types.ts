@@ -202,6 +202,12 @@ export type GameAction =
 export type GameEvent =
   | { type: 'SHIP_DESTROYED'; shipId: ShipInstanceId; cause: 'combat' | 'sacrifice' | 'ability' }
   | { type: 'SHIP_DAMAGED'; shipId: ShipInstanceId; amount: number; source: string }
+  /**
+   * v3.0.1: emitido cuando una nave ataca a otra (antes de aplicar el daño).
+   * `attackerId` es la nave que ataca; `defenderId` puede ser shipId o homeworld owner.
+   * Engine impl: TODO Phase 1 kernel — emisión durante combat resolver.
+   */
+  | { type: 'SHIP_ATTACKED'; attackerId: ShipInstanceId; defenderId: ShipInstanceId | PlayerId }
   | { type: 'HOMEWORLD_DAMAGED'; player: PlayerId; amount: number; source: string }
   | { type: 'CARD_DRAWN'; player: PlayerId }
   | { type: 'PLANET_ACTIVATED'; planetId: PlanetId; activatedBy: PlayerId }

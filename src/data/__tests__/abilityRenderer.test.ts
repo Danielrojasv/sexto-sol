@@ -401,3 +401,55 @@ describe('renderAbility — flujo completo', () => {
     expect(txt).toMatch(/\.$/)
   })
 })
+
+describe('renderAbility — v3.0.1 primitives', () => {
+  it('renders ship_attacked trigger', () => {
+    const txt = renderAbility(
+      ab({
+        effect: { op: 'noop' },
+        trigger: { kind: 'on_event', event: 'ship_attacked' },
+      }),
+    )
+    expect(txt).toContain('Cuando una nave es atacada')
+  })
+
+  it('renders attacker target', () => {
+    const txt = renderEffect({
+      op: 'damage',
+      target: { kind: 'attacker' },
+      amount: 2,
+    })
+    expect(txt).toContain('la nave atacante')
+  })
+
+  it('renders wasDamagedThisTurn filter', () => {
+    const txt = renderEffect({
+      op: 'modify_strength',
+      target: { kind: 'chosen_ship', filter: { controller: 'self', wasDamagedThisTurn: true } },
+      kind: 'delta',
+      value: 1,
+      duration: 'permanent',
+    })
+    expect(txt).toContain('que recibió daño este turno')
+  })
+
+  it('renders modify_hp set_to_max', () => {
+    const txt = renderEffect({
+      op: 'modify_hp',
+      target: { kind: 'self' },
+      kind: 'set_to_max',
+      value: 0,
+      duration: 'permanent',
+    })
+    expect(txt).toContain('regenera al máximo')
+  })
+
+  it('renders keyword_amplifier', () => {
+    const txt = renderEffect({
+      op: 'keyword_amplifier',
+      keyword: 'kulen',
+      deltaBonus: 1,
+    })
+    expect(txt).toMatch(/Kulen.*\+1/)
+  })
+})

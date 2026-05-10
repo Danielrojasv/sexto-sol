@@ -509,3 +509,56 @@ describe('interpreter — wired al reducer (on_play)', () => {
     expect(r.state.players.p2.homeworld.hp).toBe(15)
   })
 })
+
+// ---------------------------------------------------------------------------
+// v3.0.1 — DSL extensions (schema-only). Engine impl pending Phase 1 kernel.
+// ---------------------------------------------------------------------------
+
+describe.skip("interpreter — v3.0.1 primitives (TODO Phase 1)", () => {
+  // TODO Phase 1 kernel: implementar y des-skippear estos tests.
+  // Cada test corresponde a un primitive nuevo agregado en spec.ts v3.0.1.
+  // Mientras se .skip, los efectos en el interpreter son no-ops o stubs
+  // documentados con TODO en interpreter.ts.
+
+  it("ship_attacked event fires on combat declaration", () => {
+    // TODO: el reducer debe emitir SHIP_ATTACKED cuando DECLARE_ATTACK
+    // se procesa, antes de aplicar el daño. Validar timing relativo a
+    // SHIP_DAMAGED y SHIP_DESTROYED.
+    expect(true).toBe(false)
+  })
+
+  it("attacker target resolves to the ship that triggered ship_attacked", () => {
+    // TODO: resolveShipTargets case attacker debe leer ctx.attackerShipId
+    // (campo nuevo en EffectContext) y devolver la ShipInstance del atacante.
+    expect(true).toBe(false)
+  })
+
+  it("wasDamagedThisTurn filter matches only ships damaged this turn", () => {
+    // TODO: ShipInstance.damagedThisTurn (boolean) marca true al recibir SHIP_DAMAGED.
+    // TURN_START reset a false en el reducer. shipMatchesFilter chequea el flag.
+    expect(true).toBe(false)
+  })
+
+  it("modify_hp set_to_max restores hp to maxHp", () => {
+    // NOTA: este sí tiene impl básica desde commit 0 (maxHp ya existe).
+    // El test queda .skip por simetría con los otros 4; cuando arranque la suite
+    // de v3.0.1 desbloquearlo y verificar que la nave dañada vuelve a maxHp.
+    expect(true).toBe(false)
+  })
+
+  it("keyword_amplifier doubles Kulen delta when relic is in play", () => {
+    // TODO: registry de keyword_amplifiers activos por controlador. Cuando una
+    // keyword dispara modify_strength en una nave del controlador, sumar
+    // amplifier.deltaBonus al value antes de aplicar. Test: relic +1 amplifier
+    // hace que Kulen +1 se vuelva +2 perm.
+    expect(true).toBe(false)
+  })
+
+  it("self-damage triggers Kulen (per Q4 in canary proposal)", () => {
+    // TODO: Kulen no debe filtrar por source — cualquier daño que la nave
+    // recibe (autoinfligido por Brotal de Üntu, Aullido del Bosque) gatilla
+    // el +1 fuerza permanente, siempre que sobreviva.
+    expect(true).toBe(false)
+  })
+})
+

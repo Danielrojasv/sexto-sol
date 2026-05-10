@@ -234,4 +234,32 @@ Composable: `controller`, `race`, `cardType`, `keywordsAny`, `keywordsAll`, `cos
 
 ---
 
-_Vivo. Última actualización: 2026-05-09 (Phase D shipped)._
+---
+
+## v3.0.1 — DSL extensions (schema-only, engine impl pending Phase 1 kernel)
+
+Agregadas para soportar el canary Würon (eventos / reliquias / tecnologías). Schema, renderer y validator aceptan estos shapes desde commit 0 ("feat(dsl): primitives v3.0.1"). El interpreter las stub-ea con TODOs explícitos hasta Phase 1.
+
+| Primitive                                          | Tipo                        | Aplicación                                                            |
+| -------------------------------------------------- | --------------------------- | --------------------------------------------------------------------- |
+| `wasDamagedThisTurn?: boolean`                     | `ShipFilter` flag           | Filtra naves que recibieron daño durante el turno actual.             |
+| `'ship_attacked'`                                  | `TriggerEvent`              | Trigger que se dispara cuando una nave ataca a otra (antes del daño). |
+| `{ kind: 'attacker' }`                             | `Target`                    | Resuelve a la nave atacante del evento `ship_attacked`.               |
+| `{ op: 'keyword_amplifier'; keyword; deltaBonus }` | `Effect`                    | Aumenta el delta de stats de una keyword (ej: Külen +1 → +2).         |
+| `'set_to_max'`                                     | `modify_hp.kind` enum value | Restaura HP al máximo de la nave (lee `ShipInstance.maxHp`).          |
+
+**Engine TODOs** (registrar con `git log --grep="TODO Phase 1 kernel (v3.0.1)"`):
+
+- `interpreter.ts` resolveShipTargets `attacker` case → leer `ctx.attackerShipId`.
+- `interpreter.ts` shipMatchesFilter `wasDamagedThisTurn` → leer `ship.damagedThisTurn`.
+- `interpreter.ts` `keyword_amplifier` op → registry de amplifiers + intercept en keyword triggers.
+- `reducer.ts` SHIP_DAMAGED → marcar `damagedThisTurn=true` en la ship.
+- `reducer.ts` TURN_START → reset `damagedThisTurn=false` en todas las ships.
+- `reducer.ts` DECLARE_ATTACK → emitir SHIP_ATTACKED antes de aplicar daño.
+- Tests `.skip` en `src/engine/__tests__/interpreter.test.ts` → des-skip al implementar.
+
+`modify_hp set_to_max` ya tiene impl básica (lee `maxHp` que existía pre-v3.0.1); su test queda `.skip` por simetría con los otros 4 hasta que toda la suite v3.0.1 desbloquee.
+
+---
+
+_Vivo. Última actualización: 2026-05-10 (v3.0.1 schema-only)._
