@@ -262,4 +262,30 @@ Agregadas para soportar el canary Würon (eventos / reliquias / tecnologías). S
 
 ---
 
-_Vivo. Última actualización: 2026-05-10 (v3.0.1 schema-only)._
+## v3.0.3 — DSL extensions (schema-only, engine impl pending Phase 1 kernel)
+
+Agregadas para soportar el canary Zaqe (eventos / reliquias / tecnologías). Schema, renderer y validator aceptan estos shapes desde commit "feat(dsl): primitives v3.0.3". El interpreter las stub-ea con TODOs explícitos hasta Phase 1.
+
+| Primitive                                                      | Tipo                  | Aplicación                                                                                                                                              |
+| -------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'pozo_astral'`                                                | `Search.zone` enum    | Rename canónico de `'graveyard'` (per GAME-RULES v3.0 sec 0). Legacy `'graveyard'` sigue aceptado como alias.                                           |
+| `'pozo_astral'`                                                | `exile.fromZone` enum | Permite exiliar cartas desde el Pozo Astral (mover de pozo a Disolución).                                                                               |
+| `count_filter.zone` + `count_filter.player`                    | `Condition` fields    | Cuenta cartas en zonas distintas a fleet (típico: `'pozo_astral'`). Cuando `zone !== 'in_play'`, `ShipFilter.controller` se ignora a favor de `player`. |
+| `{ op: 'cost_modifier'; target: { keyword }; delta; minCost }` | `Effect`              | Modifica el costo de pagar una keyword (típico: `refluencia`). Clamp `minCost` inviolable.                                                              |
+| `{ kind: 'chosen_permanent'; filter?: PermanentFilter }`       | `Target`              | Carta no-ship (relic/tech en juego) elegida por el jugador. Extensión natural de `chosen_ship`.                                                         |
+
+**Engine TODOs** (a registrar con `git log --grep="TODO Phase 1 kernel (v3.0.3)"`):
+
+- `interpreter.ts` `searchInZone` — case `'pozo_astral'` → leer del nuevo state field (separado de cualquier `graveyard` legacy).
+- `reducer.ts` `SHIP_DESTROYED` — si race=zaqe Y keyword `refluencia` Y no fue revivida → mover a `pozoAstral`. Si ya fue revivida → mover a `disolucion` (zona terminal, sin search ops).
+- `reducer.ts` `PAY_REFLUENCIA` handler — descontar costo (modulado por `costModifiers["refluencia"]` con clamp `Math.max(modifier.minCost, cost + modifier.delta)`), reset stats base, set HP a `maxHp`, mover de `pozoAstral` → `fleet`. Marcar `revivedOnce: true`.
+- `interpreter.ts` `cost_modifier` op → registrar en `state.costModifiers` (Map por keyword → { delta, minCost }). Limpiar al destruir la fuente.
+- `interpreter.ts` `resolveTargets` — case `'chosen_permanent'` → buscar en relics/tech in-play además de fleet.
+- `interpreter.ts` `count_filter` — respetar `zone` opcional + `player` opcional (default in_play + match `filter.controller`).
+- `validator` — actualizado en mismo commit (zones, target, op, count_filter fields).
+
+**Restricción inviolable Zaqe:** las cartas no pueden referenciar `zone: 'disolucion'` ni `fromZone: 'disolucion'` con `destination` que saque cartas de ahí. Disolución es zona terminal por diseño.
+
+---
+
+_Vivo. Última actualización: 2026-05-10 (v3.0.3 schema-only)._

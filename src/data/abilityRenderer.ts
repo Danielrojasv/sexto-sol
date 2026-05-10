@@ -130,8 +130,14 @@ export function renderEffect(effect: Effect, lang: Lang = 'es'): string {
     }
     case 'search': {
       const owner = effect.owner === 'self' ? 'el controlador' : 'el oponente'
-      const zone = effect.zone === 'deck' ? 'el mazo' : 'el cementerio'
-      return `${owner} busca ${effect.count} carta${effect.count === 1 ? '' : 's'} en ${zone}`
+      const zone =
+        effect.zone === 'deck'
+          ? 'el mazo'
+          : effect.zone === 'pozo_astral'
+            ? 'el Pozo Astral'
+            : 'el cementerio'
+      const dest = effect.destination === 'play' ? ' y la pone en juego' : ''
+      return `${owner} busca ${effect.count} carta${effect.count === 1 ? '' : 's'} en ${zone}${dest}`
     }
     case 'modify_strength':
       return effect.kind === 'set'
@@ -168,6 +174,11 @@ export function renderEffect(effect: Effect, lang: Lang = 'es'): string {
       return `por cada ${renderShipFilter(effect.filter)}, ${renderEffect(effect.effect, lang)}`
     case 'keyword_amplifier':
       return `cada vez que ${capitalize(effect.keyword)} se active en una nave que controlas, su efecto se incrementa en +${effect.deltaBonus}`
+    case 'cost_modifier': {
+      const sign = effect.delta < 0 ? 'menos' : 'más'
+      const abs = Math.abs(effect.delta)
+      return `las activaciones de ${capitalize(effect.target.keyword)} cuestan ${abs} energía ${sign} (mínimo ${effect.minCost})`
+    }
   }
 }
 
@@ -191,6 +202,17 @@ function renderTarget(target: Target): string {
       return target.player === 'self' ? 'el mundo natal propio' : 'el mundo natal enemigo'
     case 'attacker':
       return 'la nave atacante'
+    case 'chosen_permanent': {
+      const f = target.filter
+      if (!f) return 'una carta permanente a elección'
+      const parts: string[] = []
+      if (f.controller && f.controller !== 'any') {
+        parts.push(f.controller === 'self' ? 'aliada' : 'enemiga')
+      }
+      if (f.cardType) parts.push(`de tipo ${f.cardType}`)
+      const tail = parts.length > 0 ? ` ${parts.join(' ')}` : ''
+      return `una carta permanente a elección${tail}`
+    }
   }
 }
 
@@ -238,6 +260,11 @@ function renderCondition(cond: Condition): string {
       return `es Edad ${romanAge(cond.age)} o posterior`
     case 'count_filter': {
       const opTxt = cond.op === 'gte' ? '≥' : cond.op === 'lte' ? '≤' : '='
+      const zone = cond.zone && cond.zone !== 'in_play' ? renderZone(cond.zone) : null
+      const player = cond.player === 'opponent' ? 'del oponente' : 'propio'
+      if (zone) {
+        return `hay ${opTxt} ${cond.value} cartas ${renderShipFilter(cond.filter)} en ${zone} ${player}`.trim()
+      }
       return `hay ${opTxt} ${cond.value} naves ${renderShipFilter(cond.filter)}`
     }
     case 'self_has_keyword':
@@ -249,4 +276,21 @@ function renderCondition(cond: Condition): string {
 
 function romanAge(age: number): string {
   return age === 1 ? 'I' : age === 2 ? 'II' : 'III'
+}
+
+function renderZone(zone: string): string {
+  switch (zone) {
+    case 'pozo_astral':
+      return 'el Pozo Astral'
+    case 'disolucion':
+      return 'Disolución'
+    case 'hand':
+      return 'la mano'
+    case 'deck':
+      return 'el mazo'
+    case 'in_play':
+      return 'el campo'
+    default:
+      return zone
+  }
 }

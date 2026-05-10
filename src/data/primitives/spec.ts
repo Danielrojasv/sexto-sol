@@ -70,7 +70,23 @@ export type Condition =
   | { kind: 'always' }
   | { kind: 'in_age'; age: Age }
   | { kind: 'in_age_gte'; age: Age }
-  | { kind: 'count_filter'; filter: ShipFilter; op: 'gte' | 'lte' | 'eq'; value: number }
+  /**
+   * Cuenta cartas que matchean `filter`, compara con `op` (gte/lte/eq) y `value`.
+   * v3.0.3: `zone` opcional (default `'in_play'`) y `player` opcional permiten contar
+   * cartas en zonas distintas a fleet — típicamente `'pozo_astral'` para gating de
+   * efectos long-game Zaqe (E4 Visión del Pozo Astral, R1 Reloj del Pozo Áureo).
+   * Cuando `zone !== 'in_play'`, el filtro `ShipFilter.controller` se ignora a favor
+   * de `player` (porque las cartas en pozo_astral pertenecen al dueño del mazo, no
+   * a quien las controla en combate). Engine impl: TODO Phase 1 kernel.
+   */
+  | {
+      kind: 'count_filter'
+      filter: ShipFilter
+      op: 'gte' | 'lte' | 'eq'
+      value: number
+      zone?: 'in_play' | 'pozo_astral' | 'disolucion' | 'hand' | 'deck'
+      player?: 'self' | 'opponent'
+    }
   | { kind: 'self_has_keyword'; keyword: string }
   | { kind: 'controller_energy_gte'; value: number }
 
@@ -92,6 +108,19 @@ export type Target =
    * Engine impl: TODO Phase 1 kernel.
    */
   | { kind: 'attacker' }
+  /**
+   * v3.0.3: una carta no-ship (relic/tech en juego) elegida por el jugador.
+   * Extensión natural de `chosen_ship` para permitir targets sobre engines/permanentes.
+   * Aplicación: anti-Reliquia tech (T1 Disolutorio Sqhaguata).
+   * Engine impl: TODO Phase 1 kernel — `resolveTargets` debe buscar en zona de relics/tech
+   * además de fleet.
+   */
+  | { kind: 'chosen_permanent'; filter?: PermanentFilter }
+
+export interface PermanentFilter {
+  controller?: 'self' | 'opponent' | 'any'
+  cardType?: CardType
+}
 
 export interface ShipFilter {
   controller?: 'self' | 'opponent' | 'any'
@@ -122,7 +151,15 @@ export type Duration = 'permanent' | 'end_of_turn' | 'end_of_age' | 'this_turn' 
 export type Effect =
   // ---- Movement ----
   | { op: 'destroy'; target: Target }
-  | { op: 'exile'; target: Target; fromZone?: 'in_play' | 'graveyard' | 'hand' | 'deck' }
+  /**
+   * v3.0.3: `fromZone` ahora acepta `'pozo_astral'` (canónico v3.0) además de
+   * `'graveyard'` (legacy alias mantenido para backward compat hasta deprecación).
+   */
+  | {
+      op: 'exile'
+      target: Target
+      fromZone?: 'in_play' | 'pozo_astral' | 'graveyard' | 'hand' | 'deck'
+    }
   | { op: 'bounce_to_hand'; target: Target }
   | { op: 'shuffle_to_deck'; target: Target; owner: 'self' | 'opponent' }
 
@@ -139,13 +176,18 @@ export type Effect =
   | {
       op: 'search'
       owner: PlayerSelector
-      zone: 'deck' | 'graveyard'
+      /**
+       * v3.0.3: `'pozo_astral'` agregada como zona canónica (rename de graveyard
+       * per GAME-RULES sec 0). `'graveyard'` se mantiene como alias legacy hasta
+       * deprecación completa (Phase 2). Nuevas cartas deben usar `'pozo_astral'`.
+       */
+      zone: 'deck' | 'pozo_astral' | 'graveyard'
       /**
        * v3.0.2: filter extendido con `costLte`/`costGte` (mismos campos que ShipFilter).
        * Permite restringir el resultado del search por rango de costo. Ej: "buscá una
        * nave Tezhal de costo ≤ 1 y ponla en juego" (Hangar Eterno relic).
        * Engine impl: TODO Phase 1 kernel — el reducer del search debe aplicar el filtro
-       * sobre el deck/graveyard.
+       * sobre el deck/pozo_astral.
        */
       filter: { cardType?: CardType; race?: Race; costLte?: number; costGte?: number }
       count: number
@@ -200,6 +242,24 @@ export type Effect =
    */
   | { op: 'keyword_amplifier'; keyword: string; deltaBonus: number }
 
+  // ---- Cost modifier (v3.0.3) ----
+  /**
+   * Sólo válido en relics con `trigger.kind === 'continuous'`.
+   * Mientras el relic esté en juego, modifica el costo de pagar la keyword target
+   * (típicamente `refluencia`) en `delta` (negativo = descuento). El costo final
+   * se clamp-ea a `minCost` (inviolable — restricción "no revival gratis" Zaqe).
+   * Ejemplo: { op: 'cost_modifier', target: { keyword: 'refluencia' }, delta: -1, minCost: 1 }
+   * — las Refluencias cuestan 1 menos pero nunca menos de 1.
+   * Engine impl: TODO Phase 1 kernel — registrar en `state.costModifiers` al desplegar,
+   * limpiar al destruir el relic, aplicar al calcular el costo de revival.
+   */
+  | {
+      op: 'cost_modifier'
+      target: { keyword: string }
+      delta: number
+      minCost: number
+    }
+
   // ---- No-op (placeholder / debug) ----
   | { op: 'noop' }
 
@@ -247,6 +307,8 @@ export const PRIMITIVE_OPS = [
   'for_each',
   // v3.0.1
   'keyword_amplifier',
+  // v3.0.3
+  'cost_modifier',
   'noop',
 ] as const
 
