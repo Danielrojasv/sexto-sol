@@ -1,0 +1,31 @@
+{
+  "id": "zaqe_velo_sqhanguata",
+  "name": "Velo Sqhanguata",
+  "race": "zaqe",
+  "type": "event",
+  "cost": 2,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "bounce_to_hand",
+            "target": {
+              "kind": "chosen_ship",
+              "filter": { "controller": "self", "race": "zaqe" }
+            }
+          },
+          { "op": "draw", "player": "self", "n": 1 }
+        ]
+      },
+      "description": "Al jugarse: una nave Zaqe aliada vuelve a tu mano. Robás 1 carta."
+    }
+  ],
+  "intentionalOffCategory": true,
+  "flavorText": "El velo Sqhanguata cubre la balsa: cuando el filo enemigo busca el casco, ya no hay nave a la vista."
+}
