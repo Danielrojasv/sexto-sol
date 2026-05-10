@@ -200,3 +200,116 @@ describe('validateCard — premonition soft cap', () => {
     expect(issues.filter((i) => i.rule === 'premonition.usage')).toHaveLength(0)
   })
 })
+
+// v3.0.1 — schema-only acceptance of new primitives. Engine impl pending Phase 1.
+describe('validateCard — v3.0.1 DSL extensions accepted', () => {
+  it('accepts ship_attacked event in trigger', () => {
+    const issues = validateCard(
+      vanilla({
+        type: 'event',
+        cost: 2,
+        strength: undefined,
+        hp: undefined,
+        abilities: [
+          {
+            trigger: { kind: 'on_event', event: 'ship_attacked' },
+            category: 'reactive',
+            effect: { op: 'damage', target: { kind: 'attacker' }, amount: 2 },
+          },
+        ],
+      }),
+    )
+    expect(issues.filter((i) => i.rule.startsWith('schema'))).toHaveLength(0)
+  })
+
+  it('accepts attacker target', () => {
+    const issues = validateCard(
+      vanilla({
+        type: 'event',
+        cost: 2,
+        strength: undefined,
+        hp: undefined,
+        abilities: [
+          {
+            trigger: { kind: 'on_play' },
+            category: 'reactive',
+            effect: { op: 'damage', target: { kind: 'attacker' }, amount: 2 },
+          },
+        ],
+      }),
+    )
+    expect(issues.filter((i) => i.rule.startsWith('schema'))).toHaveLength(0)
+  })
+
+  it('accepts wasDamagedThisTurn in ShipFilter', () => {
+    const issues = validateCard(
+      vanilla({
+        type: 'event',
+        cost: 1,
+        strength: undefined,
+        hp: undefined,
+        abilities: [
+          {
+            trigger: { kind: 'on_play' },
+            category: 'reactive',
+            effect: {
+              op: 'modify_strength',
+              target: {
+                kind: 'chosen_ship',
+                filter: { controller: 'self', wasDamagedThisTurn: true },
+              },
+              kind: 'delta',
+              value: 1,
+              duration: 'permanent',
+            },
+          },
+        ],
+      }),
+    )
+    expect(issues.filter((i) => i.rule.startsWith('schema'))).toHaveLength(0)
+  })
+
+  it('accepts modify_hp kind set_to_max', () => {
+    const issues = validateCard(
+      vanilla({
+        type: 'tech',
+        cost: 2,
+        strength: undefined,
+        hp: undefined,
+        abilities: [
+          {
+            trigger: { kind: 'on_play' },
+            category: 'reactive',
+            effect: {
+              op: 'modify_hp',
+              target: { kind: 'chosen_ship', filter: { controller: 'self' } },
+              kind: 'set_to_max',
+              value: 0,
+              duration: 'permanent',
+            },
+          },
+        ],
+      }),
+    )
+    expect(issues.filter((i) => i.rule.startsWith('schema'))).toHaveLength(0)
+  })
+
+  it('accepts keyword_amplifier effect', () => {
+    const issues = validateCard(
+      vanilla({
+        type: 'relic',
+        cost: 4,
+        strength: undefined,
+        hp: undefined,
+        abilities: [
+          {
+            trigger: { kind: 'continuous' },
+            category: 'reactive',
+            effect: { op: 'keyword_amplifier', keyword: 'kulen', deltaBonus: 1 },
+          },
+        ],
+      }),
+    )
+    expect(issues.filter((i) => i.rule.startsWith('schema'))).toHaveLength(0)
+  })
+})

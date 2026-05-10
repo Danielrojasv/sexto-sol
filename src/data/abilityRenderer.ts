@@ -51,6 +51,8 @@ function renderTriggerEvent(event: TriggerEvent): string {
       return 'Cuando recibe daño,'
     case 'ship_destroyed':
       return 'Cuando una nave es destruida,'
+    case 'ship_attacked':
+      return 'Cuando una nave es atacada,'
     case 'card_played':
       return 'Cuando se juega una carta,'
     case 'planet_activated':
@@ -136,6 +138,9 @@ export function renderEffect(effect: Effect, lang: Lang = 'es'): string {
         ? `${renderTarget(effect.target)} pasa a tener ${effect.value} de fuerza ${renderDuration(effect.duration)}`
         : `${renderTarget(effect.target)} ${effect.value >= 0 ? 'gana' : 'pierde'} ${Math.abs(effect.value)} a la fuerza ${renderDuration(effect.duration)}`
     case 'modify_hp':
+      if (effect.kind === 'set_to_max') {
+        return `${renderTarget(effect.target)} regenera al máximo de HP`
+      }
       return effect.kind === 'set'
         ? `${renderTarget(effect.target)} pasa a tener ${effect.value} HP ${renderDuration(effect.duration)}`
         : `${renderTarget(effect.target)} ${effect.value >= 0 ? 'gana' : 'pierde'} ${Math.abs(effect.value)} HP ${renderDuration(effect.duration)}`
@@ -161,6 +166,8 @@ export function renderEffect(effect: Effect, lang: Lang = 'es'): string {
     }
     case 'for_each':
       return `por cada ${renderShipFilter(effect.filter)}, ${renderEffect(effect.effect, lang)}`
+    case 'keyword_amplifier':
+      return `cada vez que ${capitalize(effect.keyword)} se active en una nave que controlas, su efecto se incrementa en +${effect.deltaBonus}`
   }
 }
 
@@ -182,6 +189,8 @@ function renderTarget(target: Target): string {
         : 'una nave al azar'
     case 'homeworld':
       return target.player === 'self' ? 'el mundo natal propio' : 'el mundo natal enemigo'
+    case 'attacker':
+      return 'la nave atacante'
   }
 }
 
@@ -198,6 +207,7 @@ function renderShipFilter(filter: ShipFilter): string {
     parts.push(`con ${filter.keywordsAll.map(capitalize).join(' y ')}`)
   if (filter.costLte !== undefined) parts.push(`de costo ≤ ${filter.costLte}`)
   if (filter.costGte !== undefined) parts.push(`de costo ≥ ${filter.costGte}`)
+  if (filter.wasDamagedThisTurn) parts.push('que recibió daño este turno')
   return parts.length > 0 ? parts.join(' ') : ''
 }
 

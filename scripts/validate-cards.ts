@@ -86,7 +86,7 @@ const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
     z.object({
       op: z.literal('modify_hp'),
       target: TargetSchema,
-      kind: z.enum(['delta', 'set']),
+      kind: z.enum(['delta', 'set', 'set_to_max']), // v3.0.1: set_to_max
       value: z.number(),
       duration: DURATION,
     }),
@@ -122,6 +122,12 @@ const EffectSchema: z.ZodType<Effect> = z.lazy(() =>
       filter: ShipFilterSchema,
       effect: EffectSchema,
     }),
+    // v3.0.1
+    z.object({
+      op: z.literal('keyword_amplifier'),
+      keyword: z.string(),
+      deltaBonus: z.number(),
+    }),
   ]),
 )
 
@@ -133,6 +139,8 @@ const ShipFilterSchema: z.ZodType<ShipFilter> = z.object({
   keywordsAll: z.array(z.string()).optional(),
   costLte: z.number().optional(),
   costGte: z.number().optional(),
+  // v3.0.1
+  wasDamagedThisTurn: z.boolean().optional(),
 })
 
 const TargetSchema = z.discriminatedUnion('kind', [
@@ -143,6 +151,8 @@ const TargetSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('chosen_ship'), filter: ShipFilterSchema.optional() }),
   z.object({ kind: z.literal('random_ship'), filter: ShipFilterSchema.optional() }),
   z.object({ kind: z.literal('homeworld'), player: z.enum(['self', 'opponent']) }),
+  // v3.0.1
+  z.object({ kind: z.literal('attacker') }),
 ])
 
 const ConditionSchema = z.discriminatedUnion('kind', [
@@ -170,6 +180,7 @@ const TriggerSchema = z.discriminatedUnion('kind', [
     event: z.enum([
       'ship_damaged',
       'ship_destroyed',
+      'ship_attacked', // v3.0.1
       'card_played',
       'planet_activated',
       'phase_start',

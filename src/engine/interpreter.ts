@@ -107,6 +107,14 @@ function executeEffectAt(
       return execConditional(effect, state, ctx, depth)
     case 'for_each':
       return execForEach(effect, state, ctx, depth)
+    case 'keyword_amplifier':
+      // TODO Phase 1 kernel (v3.0.1): keyword_amplifier requiere hook en sistema
+      // de keywords del interpretador. Cuando una keyword `effect.keyword` dispara
+      // delta de stats en una nave del controlador del relic, sumar `effect.deltaBonus`
+      // al delta. Implementación: registro de amplifiers activos + intercept en
+      // executeKeywordTrigger() (todavía no escrito). Por ahora noop — el JSON
+      // valida y la carta renderiza correctamente, pero el efecto no se aplica.
+      return { state, emit: [] }
   }
 }
 
@@ -150,6 +158,14 @@ function shipMatchesFilter(
   if (filter.costGte !== undefined) {
     const card = cardLookup(ship.cardId)
     if (!card || card.cost < filter.costGte) return false
+  }
+  if (filter.wasDamagedThisTurn) {
+    // TODO Phase 1 kernel (v3.0.1): chequear ship.damagedThisTurn (campo aún no existe).
+    // Requiere extender ShipInstance con `damagedThisTurn: boolean` + reset al
+    // emitir evento TURN_START en el reducer. Por ahora, conservadoramente,
+    // permitimos pasar (no filtra) — el JSON valida y renderiza correctamente.
+    // Esto se vuelve un filtro real cuando llegue el campo.
+    return true
   }
   return true
 }
@@ -222,6 +238,12 @@ function resolveShipTargets(
       }
       return result
     }
+    case 'attacker':
+      // TODO Phase 1 kernel (v3.0.1): resolver al atacante del evento ship_attacked
+      // que disparó esta ability. Requiere que EffectContext incluya `attackerShipId`
+      // cuando el trigger es ship_attacked. Por ahora retorna vacío — la carta
+      // valida y renderiza ("la nave atacante") pero el efecto no apunta a nadie.
+      return []
   }
 }
 
@@ -581,8 +603,15 @@ function execModifyHp(
   for (const ship of ships) {
     const found = findShip(next, ship.instanceId)
     if (!found) continue
-    const newHp =
-      effect.kind === 'set' ? effect.value : Math.max(0, found.ship.hp + effect.value)
+    let newHp: number
+    if (effect.kind === 'set_to_max') {
+      // v3.0.1: regenera al máximo de HP de la nave (ShipInstance.maxHp ya existe).
+      newHp = found.ship.maxHp
+    } else if (effect.kind === 'set') {
+      newHp = effect.value
+    } else {
+      newHp = Math.max(0, found.ship.hp + effect.value)
+    }
     next = replaceShipInState(next, found.owner, ship.instanceId, { ...found.ship, hp: newHp })
   }
   return { state: next, emit: [] }

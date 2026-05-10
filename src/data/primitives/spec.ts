@@ -31,6 +31,7 @@ export type Trigger =
 export type TriggerEvent =
   | 'ship_damaged'
   | 'ship_destroyed'
+  | 'ship_attacked'
   | 'card_played'
   | 'planet_activated'
   | 'phase_start'
@@ -85,6 +86,12 @@ export type Target =
   | { kind: 'chosen_ship'; filter?: ShipFilter }
   | { kind: 'random_ship'; filter?: ShipFilter }
   | { kind: 'homeworld'; player: 'self' | 'opponent' }
+  /**
+   * v3.0.1: la nave que disparó el evento `ship_attacked` (el atacante).
+   * Sólo válido dentro de abilities con `trigger.kind === 'on_event'` y `event === 'ship_attacked'`.
+   * Engine impl: TODO Phase 1 kernel.
+   */
+  | { kind: 'attacker' }
 
 export interface ShipFilter {
   controller?: 'self' | 'opponent' | 'any'
@@ -94,6 +101,12 @@ export interface ShipFilter {
   keywordsAll?: readonly string[]
   costLte?: number
   costGte?: number
+  /**
+   * v3.0.1: si true, sólo matchea naves que recibieron daño durante el turno actual.
+   * Resetea con TURN_START. Engine impl: TODO Phase 1 kernel — requiere
+   * `damagedThisTurn: boolean` en ShipInstance + reset en reducer.
+   */
+  wasDamagedThisTurn?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +153,17 @@ export type Effect =
       value: number
       duration: Duration
     }
-  | { op: 'modify_hp'; target: Target; kind: 'delta' | 'set'; value: number; duration: Duration }
+  | {
+      op: 'modify_hp'
+      target: Target
+      /**
+       * v3.0.1: `set_to_max` restaura HP al máximo de la nave (uses ShipInstance.maxHp).
+       * Engine impl: TODO Phase 1 kernel.
+       */
+      kind: 'delta' | 'set' | 'set_to_max'
+      value: number
+      duration: Duration
+    }
   | { op: 'grant_keyword'; target: Target; keyword: string; duration: Duration }
   | { op: 'remove_ability'; target: Target; duration: Duration }
 
@@ -157,6 +180,18 @@ export type Effect =
   | { op: 'sequence'; effects: readonly Effect[] }
   | { op: 'conditional'; condition: Condition; thenEffect: Effect; elseEffect?: Effect }
   | { op: 'for_each'; filter: ShipFilter; effect: Effect }
+
+  // ---- Keyword amplification (v3.0.1) ----
+  /**
+   * Sólo válido en relics con `trigger.kind === 'continuous'`.
+   * Mientras el relic esté en juego, cada vez que `keyword` se dispare en una nave
+   * controlada por el dueño del relic, su delta de stats se incrementa en `deltaBonus`.
+   * Ejemplo: { op: 'keyword_amplifier', keyword: 'kulen', deltaBonus: 1 } convierte
+   * Külen +1 fuerza en Külen +2 fuerza permanente.
+   * Engine impl: TODO Phase 1 kernel — requiere hook en el sistema de keywords del
+   * interpretador.
+   */
+  | { op: 'keyword_amplifier'; keyword: string; deltaBonus: number }
 
   // ---- No-op (placeholder / debug) ----
   | { op: 'noop' }
@@ -203,6 +238,8 @@ export const PRIMITIVE_OPS = [
   'sequence',
   'conditional',
   'for_each',
+  // v3.0.1
+  'keyword_amplifier',
   'noop',
 ] as const
 
