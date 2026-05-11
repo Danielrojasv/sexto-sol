@@ -41,10 +41,10 @@ describe('renderAbility — triggers', () => {
     const txt = renderAbility(
       ab({
         effect: { op: 'noop' },
-        trigger: { kind: 'activated', window: 'vigilia', cost: { energy: 2 } },
+        trigger: { kind: 'activated', window: 'eclipse', cost: { energy: 2 } },
       }),
     )
-    expect(txt).toContain('Vigilia')
+    expect(txt).toContain('Eclipse')
     expect(txt).toContain('2 energía')
   })
 
@@ -221,15 +221,7 @@ describe('renderEffect — conditions (vía conditional)', () => {
     ).toContain('si siempre')
   })
 
-  it('in_age_gte', () => {
-    expect(
-      renderEffect({
-        op: 'conditional',
-        condition: { kind: 'in_age_gte', age: 2 },
-        thenEffect: { op: 'noop' },
-      }),
-    ).toContain('II o posterior')
-  })
+  // v3.0: condiciones in_age/in_age_gte eliminadas (Edades removidas del core).
 
   it('count_filter gte', () => {
     expect(
@@ -359,11 +351,11 @@ describe('renderEffect — composition', () => {
     expect(
       renderEffect({
         op: 'conditional',
-        condition: { kind: 'in_age', age: 3 },
+        condition: { kind: 'always' },
         thenEffect: { op: 'damage_homeworld', player: 'opponent', amount: 5 },
         elseEffect: { op: 'draw', player: 'self', n: 1 },
       }),
-    ).toContain('si es Edad III')
+    ).toContain('si siempre')
   })
 
   it('for_each menciona "por cada"', () => {

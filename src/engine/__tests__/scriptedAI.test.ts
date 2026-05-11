@@ -265,7 +265,7 @@ describe('scriptedAI — decideAction', () => {
     }
   })
 
-  it('en combate Edad III ataca homeworld si lethal posible', () => {
+  it('en combate ataca homeworld si lethal posible (v3.0: sin restricción de Edad)', () => {
     const big: Card = {
       id: 'big',
       name: 'Big',
@@ -273,7 +273,7 @@ describe('scriptedAI — decideAction', () => {
       race: 'wuron',
       cost: 0,
       rarity: 'common',
-      keywords: [],
+      keywords: ['embate'], // sin mareo de invocación
       abilities: [],
       strength: 25,
       hp: 5,
@@ -284,8 +284,6 @@ describe('scriptedAI — decideAction', () => {
     while (!(s.activePlayer === 'p1' && s.phase === 'combate')) {
       s = apply(s, { type: 'END_PHASE' }).state
     }
-    // Forzar Edad III
-    s = { ...s, age: 3 }
     const action = decideAction(s, 'p1')
     expect(action.type).toBe('DECLARE_ATTACK')
     if (action.type === 'DECLARE_ATTACK') {
@@ -343,39 +341,15 @@ describe('scriptedAI — decideAction', () => {
     }
   })
 
-  it('en combate sin fleet enemigo + Edad < 3 retorna END_PHASE', () => {
-    const att: Card = {
-      id: 'att',
-      name: 'Atacante',
-      type: 'ship',
-      race: 'wuron',
-      cost: 0,
-      rarity: 'common',
-      keywords: [],
-      abilities: [],
-      strength: 3,
-      hp: 5,
-    }
-    let s = fresh({ p1Deck: [att, ...deck(30)] })
-    s = apply(s, { type: 'END_PHASE' }).state
-    s = apply(s, { type: 'PLAY_CARD', cardId: 'att' }).state
-    while (!(s.activePlayer === 'p1' && s.phase === 'combate')) {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    // p2 sin fleet, Edad I → no se puede atacar homeworld
-    const action = decideAction(s, 'p1')
-    expect(action.type).toBe('END_PHASE')
-  })
-
-  it('en eclipse/vigilia/regroup retorna END_PHASE', () => {
+  it('en eclipse/regroup retorna END_PHASE', () => {
     let s = fresh()
     s = { ...s, phase: 'regroup' as const }
     expect(decideAction(s, 'p1').type).toBe('END_PHASE')
-    s = { ...s, phase: 'vigilia' as const }
+    s = { ...s, phase: 'eclipse' as const }
     expect(decideAction(s, 'p1').type).toBe('END_PHASE')
   })
 
-  it('en combate Edad III sin fleet enemigo ataca homeworld', () => {
+  it('en combate sin fleet enemigo ataca homeworld directo (v3.0)', () => {
     const att: Card = {
       id: 'att',
       name: 'Atacante',
@@ -383,7 +357,7 @@ describe('scriptedAI — decideAction', () => {
       race: 'wuron',
       cost: 0,
       rarity: 'common',
-      keywords: [],
+      keywords: ['embate'],
       abilities: [],
       strength: 3,
       hp: 5,
@@ -394,7 +368,6 @@ describe('scriptedAI — decideAction', () => {
     while (!(s.activePlayer === 'p1' && s.phase === 'combate')) {
       s = apply(s, { type: 'END_PHASE' }).state
     }
-    s = { ...s, age: 3 }
     const action = decideAction(s, 'p1')
     expect(action.type).toBe('DECLARE_ATTACK')
     if (action.type === 'DECLARE_ATTACK') {

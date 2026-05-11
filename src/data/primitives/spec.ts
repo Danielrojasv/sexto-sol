@@ -15,7 +15,7 @@
 //
 // Phase D entrega 22 primitives (cap del rango 15-25 de la spec).
 
-import type { Age, CardType, MechanicCategory, Race } from '@/engine/types'
+import type { CardType, MechanicCategory, Race } from '@/engine/types'
 
 // ---------------------------------------------------------------------------
 // Triggers — cuándo se dispara una ability
@@ -33,11 +33,9 @@ export type TriggerEvent =
   | 'ship_destroyed'
   | 'ship_attacked'
   | 'card_played'
-  | 'planet_activated'
   | 'phase_start'
   | 'phase_end'
   | 'turn_start'
-  | 'age_changed'
   | 'homeworld_damaged'
   | 'card_drawn'
 
@@ -54,7 +52,7 @@ export type ActivationWindow =
   | 'despliegue'
   | 'combate'
   | 'regroup'
-  | 'vigilia'
+  | 'eclipse'
   | 'any_time'
 
 export interface ActivationCost {
@@ -68,8 +66,6 @@ export interface ActivationCost {
 
 export type Condition =
   | { kind: 'always' }
-  | { kind: 'in_age'; age: Age }
-  | { kind: 'in_age_gte'; age: Age }
   /**
    * Cuenta cartas que matchean `filter`, compara con `op` (gte/lte/eq) y `value`.
    * v3.0.3: `zone` opcional (default `'in_play'`) y `player` opcional permiten contar

@@ -11,7 +11,6 @@ export const tezhalStrategy: BaseRaceStrategy = {
   category: 'initiative',
   signatureKeyword: 'ignicion',
   startingDeck: [],
-  heroOptions: [],
   registerKeywords(): readonly EventHandler[] {
     return []
   },

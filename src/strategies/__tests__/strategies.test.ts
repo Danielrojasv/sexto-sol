@@ -35,10 +35,9 @@ describe('strategies — contrato Phase 1', () => {
     expect(strategyFor(race).registerPassives()).toEqual([])
   })
 
-  it.each(ALL_RACES)('%s arranca con starting deck y heroOptions vacíos (Phase 3)', (race) => {
+  it.each(ALL_RACES)('%s arranca con starting deck vacío (Phase 3 lo poblará)', (race) => {
     const s = strategyFor(race)
     expect(s.startingDeck).toEqual([])
-    expect(s.heroOptions).toEqual([])
   })
 
   it('STRATEGIES expone las 4 razas con keys exactos', () => {

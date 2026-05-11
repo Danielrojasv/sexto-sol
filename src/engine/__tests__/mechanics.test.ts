@@ -592,7 +592,7 @@ describe('mecánica firma — Refluencia (Zaqe pozoAstral + revival)', () => {
       race: 'tezhal',
       cost: 0,
       rarity: 'common',
-      keywords: [],
+      keywords: ['embate'], // ataca el turno que entra al campo
       abilities: [],
       strength: 1,
       hp: 1,

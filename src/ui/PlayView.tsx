@@ -19,7 +19,7 @@ const PHASE_LABEL: Record<string, string> = {
   despliegue: 'Despliegue',
   combate: 'Combate',
   regroup: 'Regroup',
-  vigilia: 'Vigilia',
+  eclipse: 'Eclipse',
 }
 
 const HAND_CAP = 7
@@ -40,20 +40,23 @@ function FleetCard({
   ship,
   isOwn,
   isActive,
-  selectedAttackerId,
+  selectedAttackerIds,
   state,
   onClick,
 }: {
   ship: ShipInstance
   isOwn: boolean
   isActive: boolean
-  selectedAttackerId: string | null
+  selectedAttackerIds: readonly string[]
   state: GameState
   onClick?: () => void
 }) {
   const cardDef = cardById(ship.cardId)
-  const isSelected = selectedAttackerId === ship.instanceId
-  const canAttack = isOwn && isActive
+  const isSelected = selectedAttackerIds.includes(ship.instanceId)
+  const hasSelection = selectedAttackerIds.length > 0
+  const alreadyAttacked = ship.hasAttackedThisTurn === true
+  const sickness = ship.summoningSickness === true && !ship.keywords.includes('embate')
+  const canAttack = isOwn && isActive && !alreadyAttacked && !sickness
   const effStrength = getEffectiveStrength(ship, state)
 
   if (!cardDef) {
@@ -66,23 +69,36 @@ function FleetCard({
       </div>
     )
   }
+  const highlight: 'selected' | 'valid' | 'invalid' | null = isSelected
+    ? 'selected'
+    : !isOwn && hasSelection
+      ? 'valid' // target candidate
+      : canAttack
+        ? 'valid' // selectable attacker
+        : alreadyAttacked || sickness
+          ? 'invalid'
+          : null
   return (
-    <MiniCard
-      card={cardDef}
-      compact
-      shipInstance={ship}
-      effectiveStrength={effStrength}
-      onClick={onClick}
-      highlight={
-        isSelected
-          ? 'selected'
-          : !isOwn && selectedAttackerId
-            ? 'valid' // target candidate
-            : canAttack && !selectedAttackerId
-              ? 'valid' // selectable attacker
-              : null
-      }
-    />
+    <div className="relative">
+      <MiniCard
+        card={cardDef}
+        compact
+        shipInstance={ship}
+        effectiveStrength={effStrength}
+        onClick={onClick}
+        highlight={highlight}
+      />
+      {alreadyAttacked && (
+        <div className="absolute top-1 left-1 text-[8px] font-semibold px-1 rounded bg-red-900/80 text-red-200 pointer-events-none">
+          atacó
+        </div>
+      )}
+      {sickness && !alreadyAttacked && (
+        <div className="absolute top-1 left-1 text-[8px] font-semibold px-1 rounded bg-slate-800/80 text-slate-300 pointer-events-none">
+          mareo
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -100,8 +116,9 @@ function PlayerSection({
   state: GameState
 }) {
   const dispatch = useGameStore((s) => s.dispatch)
-  const selectAttacker = useGameStore((s) => s.selectAttacker)
-  const selectedAttackerId = useGameStore((s) => s.selectedAttackerId)
+  const toggleAttacker = useGameStore((s) => s.toggleAttacker)
+  const clearAttackers = useGameStore((s) => s.clearAttackers)
+  const selectedAttackerIds = useGameStore((s) => s.selectedAttackerIds)
 
   const phase = state.phase
   const isOwn = isActive
@@ -116,23 +133,27 @@ function PlayerSection({
     if (phase !== 'combate') return
     if (state.outcome.kind !== 'in_progress') return
 
-    if (selectedAttackerId === null) {
-      // Seleccionar atacante (debe ser propio)
-      if (owner === state.activePlayer) {
-        selectAttacker(shipId)
-      }
+    // Click sobre nave propia: toggle multi-select (si puede atacar).
+    if (owner === state.activePlayer) {
+      const ship = state.players[owner].fleet.find((s) => s.instanceId === shipId)
+      if (!ship) return
+      const sickness = ship.summoningSickness && !ship.keywords.includes('embate')
+      if (ship.hasAttackedThisTurn || sickness) return
+      toggleAttacker(shipId)
       return
     }
-    // Si ya hay atacante, este click elige target (debe ser enemigo)
-    if (owner !== state.activePlayer) {
-      dispatch({
-        type: 'DECLARE_ATTACK',
-        attackerShipId: selectedAttackerId,
-        target: { kind: 'ship', ref: shipId },
-      })
-    } else if (shipId === selectedAttackerId) {
-      // Click en el mismo → deselect
-      selectAttacker(null)
+    // Click sobre nave enemiga con atacantes seleccionados → dispatch N ataques.
+    if (selectedAttackerIds.length > 0) {
+      // Dispatchear secuencialmente: cada uno actualiza state via store, así
+      // el segundo dispatch ve el state post-primer-ataque.
+      for (const atkId of selectedAttackerIds) {
+        dispatch({
+          type: 'DECLARE_ATTACK',
+          attackerShipId: atkId,
+          target: { kind: 'ship', ref: shipId },
+        })
+      }
+      clearAttackers()
     }
   }
 
@@ -160,20 +181,23 @@ function PlayerSection({
           HP {pState.homeworld.hp}/{pState.homeworld.maxHp}
         </span>
         <HPBar current={pState.homeworld.hp} max={pState.homeworld.maxHp} />
-        {/* Attack homeworld button — solo en combate, atacante seleccionado, oponente */}
-        {phase === 'combate' && selectedAttackerId !== null && !isActive && (
+        {/* Attack homeworld button — combate, ≥1 atacante seleccionado, oponente */}
+        {phase === 'combate' && selectedAttackerIds.length > 0 && !isActive && (
           <button
             type="button"
             onClick={() => {
-              dispatch({
-                type: 'DECLARE_ATTACK',
-                attackerShipId: selectedAttackerId,
-                target: { kind: 'homeworld', ref: player },
-              })
+              for (const atkId of selectedAttackerIds) {
+                dispatch({
+                  type: 'DECLARE_ATTACK',
+                  attackerShipId: atkId,
+                  target: { kind: 'homeworld', ref: player },
+                })
+              }
+              clearAttackers()
             }}
             className="ml-2 px-2 py-1 text-[10px] rounded bg-red-700 hover:bg-red-600 text-white shrink-0"
           >
-            ⚔ Atacar mundo natal
+            ⚔ Atacar natal ({selectedAttackerIds.length})
           </button>
         )}
       </div>
@@ -190,7 +214,7 @@ function PlayerSection({
                 ship={ship}
                 isOwn={player === state.activePlayer}
                 isActive={phase === 'combate'}
-                selectedAttackerId={selectedAttackerId}
+                selectedAttackerIds={selectedAttackerIds}
                 state={state}
                 onClick={() => handleFleetShipClick(ship.instanceId, player)}
               />
@@ -221,30 +245,16 @@ function PlayerSection({
         </div>
       </div>
 
-      {pState.hero && (
-        <div className="mt-2 text-[10px] text-slate-500">
-          Héroe: {pState.hero.defId}
-          {pState.hero.inHomeworld ? ' (en mundo natal)' : ' (en flota)'}
-          {pState.hero.reactivationCooldown > 0 &&
-            ` · cooldown ${pState.hero.reactivationCooldown}t`}
-        </div>
-      )}
     </section>
   )
 }
 
 function ActionBar({ state }: { state: GameState }) {
   const dispatch = useGameStore((s) => s.dispatch)
-  const selectedAttackerId = useGameStore((s) => s.selectedAttackerId)
-  const selectAttacker = useGameStore((s) => s.selectAttacker)
+  const selectedAttackerIds = useGameStore((s) => s.selectedAttackerIds)
+  const clearAttackers = useGameStore((s) => s.clearAttackers)
 
   const phaseLabel = PHASE_LABEL[state.phase] ?? state.phase
-  const ageRoman = state.age === 1 ? 'I' : state.age === 2 ? 'II' : 'III'
-  const canDeployHero =
-    state.age >= 2 &&
-    state.phase === 'despliegue' &&
-    !!state.players[state.activePlayer].hero?.inHomeworld &&
-    state.players[state.activePlayer].hero?.reactivationCooldown === 0
 
   return (
     <div className="bg-slate-900 border-t border-slate-800 px-3 sm:px-4 py-2 flex items-center justify-between gap-2 flex-wrap text-[11px] text-slate-400">
@@ -253,29 +263,22 @@ function ActionBar({ state }: { state: GameState }) {
           Turno <span className="text-slate-200 font-mono">{state.turn}</span>
         </span>
         <span>
-          Edad <span className="text-amber-400 font-mono">{ageRoman}</span>
-        </span>
-        <span>
           Fase <span className="text-slate-200 font-mono">{phaseLabel}</span>
         </span>
+        {selectedAttackerIds.length > 0 && (
+          <span className="text-amber-300">
+            {selectedAttackerIds.length} nave{selectedAttackerIds.length > 1 ? 's' : ''} seleccionada{selectedAttackerIds.length > 1 ? 's' : ''} — elegí target
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        {selectedAttackerId !== null && (
+        {selectedAttackerIds.length > 0 && (
           <button
             type="button"
-            onClick={() => selectAttacker(null)}
+            onClick={() => clearAttackers()}
             className="px-2 py-1 text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-200"
           >
-            Cancelar ataque
-          </button>
-        )}
-        {canDeployHero && (
-          <button
-            type="button"
-            onClick={() => dispatch({ type: 'DEPLOY_HERO' })}
-            className="px-2 py-1 text-[11px] rounded bg-purple-700 hover:bg-purple-600 text-white"
-          >
-            Desplegar héroe
+            Cancelar selección
           </button>
         )}
         <button
@@ -294,49 +297,6 @@ function ActionBar({ state }: { state: GameState }) {
         </button>
       </div>
     </div>
-  )
-}
-
-function PlanetButton({
-  planet,
-  state,
-}: {
-  planet: GameState['sector']['planets'][number]
-  state: GameState
-}) {
-  const dispatch = useGameStore((s) => s.dispatch)
-  const ps = state.players[state.activePlayer]
-  const canActivate = !planet.exhausted && ps.energy >= 1 && state.outcome.kind === 'in_progress'
-  return (
-    <button
-      type="button"
-      onClick={canActivate ? () => dispatch({ type: 'ACTIVATE_PLANET', planetId: planet.id }) : undefined}
-      disabled={!canActivate}
-      className={`flex-1 max-w-[180px] aspect-square rounded-full border-2 transition-colors flex flex-col items-center justify-center text-center p-3 ${
-        planet.exhausted
-          ? 'border-slate-700 bg-slate-900/60 opacity-60 cursor-not-allowed'
-          : canActivate
-            ? 'border-amber-700 bg-amber-950/40 hover:border-amber-500 hover:scale-105 cursor-pointer ring-2 ring-amber-500/30'
-            : 'border-amber-900/50 bg-amber-950/20 cursor-not-allowed'
-      }`}
-    >
-      <div className="text-[9px] uppercase text-slate-500">{planet.id}</div>
-      <div className="text-xs font-semibold mt-1 leading-tight">{planet.gift.name}</div>
-      <div className="text-[9px] text-slate-500 mt-1.5 line-clamp-2 leading-tight">
-        {planet.gift.description}
-      </div>
-      {planet.exhausted ? (
-        <div className="text-[9px] uppercase tracking-wider text-amber-400 mt-1.5">Agotado</div>
-      ) : canActivate ? (
-        <div className="text-[10px] font-bold tracking-wide text-amber-300 mt-1.5">
-          Activar +1 ⚡
-        </div>
-      ) : (
-        <div className="text-[9px] uppercase tracking-wider text-slate-600 mt-1.5">
-          Necesitás 1 ⚡
-        </div>
-      )}
-    </button>
   )
 }
 
@@ -421,10 +381,12 @@ export function PlayView() {
         state={state}
       />
 
-      <section className="flex-1 flex items-center justify-center p-3 sm:p-6 gap-3 sm:gap-6 bg-slate-950">
-        {state.sector.planets.map((p) => (
-          <PlanetButton key={p.id} planet={p} state={state} />
-        ))}
+      {/* v3.0: planetas neutrales eliminados. Espacio central libre por ahora;
+          Phase 2+ podría reintroducir territorio o sólo dejar arte central. */}
+      <section className="flex-1 flex items-center justify-center p-3 sm:p-6 bg-slate-950">
+        <div className="text-[11px] uppercase tracking-wider text-slate-700">
+          Sexto Sol · Set 1
+        </div>
       </section>
 
       <PlayerSection

@@ -55,16 +55,12 @@ function renderTriggerEvent(event: TriggerEvent): string {
       return 'Cuando una nave es atacada,'
     case 'card_played':
       return 'Cuando se juega una carta,'
-    case 'planet_activated':
-      return 'Cuando se activa un planeta,'
     case 'phase_start':
       return 'Al inicio de una fase,'
     case 'phase_end':
       return 'Al final de una fase,'
     case 'turn_start':
       return 'Al inicio del turno,'
-    case 'age_changed':
-      return 'Cuando cambia la Edad,'
     case 'homeworld_damaged':
       return 'Cuando un mundo natal recibe daño,'
     case 'card_drawn':
@@ -254,10 +250,6 @@ function renderCondition(cond: Condition): string {
   switch (cond.kind) {
     case 'always':
       return 'siempre'
-    case 'in_age':
-      return `es Edad ${romanAge(cond.age)}`
-    case 'in_age_gte':
-      return `es Edad ${romanAge(cond.age)} o posterior`
     case 'count_filter': {
       const opTxt = cond.op === 'gte' ? '≥' : cond.op === 'lte' ? '≤' : '='
       const zone = cond.zone && cond.zone !== 'in_play' ? renderZone(cond.zone) : null
@@ -272,10 +264,6 @@ function renderCondition(cond: Condition): string {
     case 'controller_energy_gte':
       return `el controlador tiene ≥ ${cond.value} energía`
   }
-}
-
-function romanAge(age: number): string {
-  return age === 1 ? 'I' : age === 2 ? 'II' : 'III'
 }
 
 function renderZone(zone: string): string {

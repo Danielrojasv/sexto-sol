@@ -36,7 +36,7 @@ export function decideAction(state: GameState, player: PlayerId): GameAction {
       return decideCombat(state, player)
     case 'regroup':
       return { type: 'END_PHASE' }
-    case 'vigilia':
+    case 'eclipse':
       return { type: 'END_PHASE' }
     default:
       return { type: 'END_PHASE' }
@@ -128,7 +128,12 @@ function decideCombat(state: GameState, player: PlayerId): GameAction {
   const enemy = state.players[enemyId]
   // Naves que pueden atacar (todas las del player en combate; mareo de
   // invocación no se trackea por turno aún — Phase 3+).
-  const attackers = ps.fleet.filter((sh) => !sh.isHero || sh.controller === player)
+  // Filtra naves que pueden atacar: del player, sin mareo de invocación, sin
+  // haber atacado este turno.
+  const attackers = ps.fleet.filter(
+    (sh) =>
+      sh.controller === player && !sh.summoningSickness && !sh.hasAttackedThisTurn,
+  )
   if (attackers.length === 0) return { type: 'END_PHASE' }
 
   // Si hay Bastión enemigo, debe atacarse primero.
@@ -146,8 +151,8 @@ function decideCombat(state: GameState, player: PlayerId): GameAction {
   }
 
   // Lethal: si suma de fuerzas efectivas ≥ HP del homeworld enemigo, atacar
-  // homeworld. Edad III requerida para damage_homeworld (regla §5).
-  if (state.age >= 3) {
+  // homeworld. v3.0: damage_homeworld permitido siempre (Edades eliminadas).
+  {
     const totalForce = attackers.reduce((sum, sh) => sum + getEffectiveStrength(sh, state), 0)
     if (totalForce >= enemy.homeworld.hp) {
       const strongest = pickStrongestAttacker(state, attackers)
@@ -161,8 +166,7 @@ function decideCombat(state: GameState, player: PlayerId): GameAction {
     }
   }
 
-  // Default: atacar la amenaza más grande enemiga si existe; si no, homeworld
-  // (solo Edad III). En Edad I/II sin targets, END_PHASE.
+  // Default: atacar la amenaza más grande enemiga si existe; si no, homeworld.
   if (enemy.fleet.length > 0) {
     const biggestThreat = enemy.fleet.reduce((max, sh) => {
       const sStr = getEffectiveStrength(sh, state)
@@ -179,7 +183,7 @@ function decideCombat(state: GameState, player: PlayerId): GameAction {
     }
   }
 
-  if (state.age >= 3 && attackers.length > 0) {
+  if (attackers.length > 0) {
     const strongest = pickStrongestAttacker(state, attackers)
     if (strongest) {
       return {

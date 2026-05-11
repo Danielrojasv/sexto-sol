@@ -1,33 +1,23 @@
-// Factory para construir el GameState inicial de una partida.
+// Factory para construir el GameState inicial de una partida — GAME-RULES v3.0.
 //
-// Setup canónico (GAME-RULES v2.0 §1 + §3):
+// Setup canónico (sec 1):
 //   - Mundos natales HP 20.
 //   - p1 hand 4, p2 hand 5 (+1 compensación segundo jugador).
-//   - 3 planetas neutrales con Don revelado.
-//   - Edad I, fase Recolección.
-//   - Después del setup, se aplica el primer TURN_START a p1: se le acredita
-//     1 energía (mundo natal +1) y roba 1 carta.
+//   - Energía inicial: turno 1 → 1 (cap creciente +1/turno hasta 10).
+//   - Fase Recolección, p1 activePlayer.
+//   - Después del setup, primer TURN_START aplicado a p1: energía=1, roba 1 carta.
+//   - Sin planetas neutrales (eliminados en v3.0).
+//   - Sin Edades (eliminadas en v3.0).
+//   - Sin héroes pasivos (eliminados en v3.0; legendarias son naves normales).
 
 import { createRng } from './rng'
-import type {
-  Age,
-  Card,
-  GameState,
-  HeroDefinition,
-  HeroInstance,
-  PlanetGift,
-  PlanetState,
-  PlayerState,
-  Race,
-  TurnPhase,
-} from './types'
+import type { Card, GameState, PlayerState, Race, TurnPhase } from './types'
 
 const HOMEWORLD_HP = 20
 const STARTING_HAND_SIZE = 4
 const SECOND_PLAYER_BONUS_CARD = 1
-const HOMEWORLD_ENERGY_INCOME = 1
+const TURN_1_ENERGY = 1
 const PHASE_RECOLECCION: TurnPhase = 'recoleccion'
-const AGE_DESPERTAR: Age = 1
 
 export interface NewGameSetup {
   seed: number
@@ -36,47 +26,12 @@ export interface NewGameSetup {
   /** Mazo del jugador 1. Si se omite, se asume mazo vacío (test/playtest). */
   p1Deck?: readonly Card[]
   p2Deck?: readonly Card[]
-  p1Hero?: HeroDefinition
-  p2Hero?: HeroDefinition
-  /** 3 Dones revelados al setup. Si se omite, se crean placeholders. */
-  planetGifts?: readonly PlanetGift[]
-}
-
-function placeholderGifts(): readonly PlanetGift[] {
-  return [
-    { id: 'gift_archive', name: 'Don del Archivo', description: 'Robá 2 cartas.' },
-    { id: 'gift_core', name: 'Don del Núcleo', description: '+5 HP máximo a tu mundo natal.' },
-    { id: 'gift_forge', name: 'Don de la Forja', description: 'Buscá una Tecnología en tu mazo.' },
-  ]
-}
-
-function buildPlanets(gifts: readonly PlanetGift[]): readonly PlanetState[] {
-  return gifts.map(
-    (gift, i): PlanetState => ({
-      id: `planet_${i + 1}`,
-      name: `Planeta ${i + 1}`,
-      gift,
-      exhausted: false,
-      exhaustedBy: null,
-    }),
-  )
-}
-
-function makeHero(def: HeroDefinition | undefined): HeroInstance | null {
-  if (!def) return null
-  return {
-    defId: def.id,
-    inHomeworld: true,
-    damageTaken: 0,
-    reactivationCooldown: 0,
-    powersUsedThisTurn: 0,
-  }
 }
 
 /**
  * Saca las primeras `count` cartas del mazo y las deja en mano. Devuelve hand y
  * el mazo restante. Si el mazo es más chico, llena con un placeholder consistente
- * para mantener el shape estructural de los tests (Phase 1 no tenía card data real).
+ * para mantener el shape estructural de los tests.
  */
 function drawSetupHand(
   deck: readonly Card[],
@@ -86,7 +41,6 @@ function drawSetupHand(
   if (deck.length >= count) {
     return { hand: deck.slice(0, count), deck: deck.slice(count) }
   }
-  // Mazo insuficiente: placeholders para llegar al count (compatible con tests Phase 1).
   const placeholders: Card[] = Array.from({ length: count - deck.length }, () => ({
     id: 'placeholder',
     name: 'Placeholder',
@@ -104,13 +58,11 @@ function emptyPlayer(
   race: Race,
   handSize: number,
   deck: readonly Card[],
-  hero: HeroInstance | null,
 ): PlayerState {
   const drawn = drawSetupHand(deck, handSize, race)
   return {
     race,
     homeworld: { hp: HOMEWORLD_HP, maxHp: HOMEWORLD_HP },
-    hero,
     hand: drawn.hand,
     deck: drawn.deck,
     graveyard: [],
@@ -124,8 +76,8 @@ function emptyPlayer(
 }
 
 /**
- * Aplica el primer TURN_START a p1: acredita energía base (mundo natal +1)
- * y le hace robar 1 carta. Si el mazo está vacío al robar → outcome decking_out.
+ * Aplica el primer TURN_START a p1: acredita energía base (turno 1 = 1) y
+ * le hace robar 1 carta. Si el mazo está vacío al robar → outcome decking_out.
  *
  * Esta función vive acá (no en reducer.ts) para evitar dependencia circular y
  * para reflejar que el "estado inicial canónico" YA tiene el primer turn-start
@@ -133,7 +85,6 @@ function emptyPlayer(
  */
 function applyFirstTurnStart(state: GameState): GameState {
   const p1 = state.players.p1
-  // Si el mazo está vacío, decking out instantáneo. (Caso degenerado: mazo vacío al inicio.)
   if (p1.deck.length === 0) {
     return {
       ...state,
@@ -150,40 +101,30 @@ function applyFirstTurnStart(state: GameState): GameState {
         ...p1,
         hand: newHand,
         deck: p1.deck.slice(1),
-        energy: HOMEWORLD_ENERGY_INCOME,
+        energy: TURN_1_ENERGY,
       },
     },
   }
 }
 
 /**
- * Construye un GameState inicial canónico:
- *   - Setup: HP 20, manos 4/5, 3 planetas con Don, Edad I, phase Recolección.
+ * Construye un GameState inicial canónico v3.0:
+ *   - HP 20, manos 4/5, sin planetas, sin Edad, sin hero.
+ *   - Fase Recolección, p1 activePlayer.
  *   - Primer TURN_START aplicado a p1 (energía 1, +1 carta robada).
  *
  * Mismo seed → mismo state (determinismo).
  */
 export function createInitialState(setup: NewGameSetup): GameState {
   const rng = createRng(setup.seed)
-  const gifts =
-    setup.planetGifts && setup.planetGifts.length > 0 ? setup.planetGifts : placeholderGifts()
 
-  const p1 = emptyPlayer(
-    setup.p1Race,
-    STARTING_HAND_SIZE,
-    setup.p1Deck ?? [],
-    makeHero(setup.p1Hero),
-  )
+  const p1 = emptyPlayer(setup.p1Race, STARTING_HAND_SIZE, setup.p1Deck ?? [])
   const p2 = emptyPlayer(
     setup.p2Race,
     STARTING_HAND_SIZE + SECOND_PLAYER_BONUS_CARD,
     setup.p2Deck ?? [],
-    makeHero(setup.p2Hero),
   )
 
-  // cardRegistry: indexa todas las cartas de ambos decks por id para que el
-  // intérprete y el event bus puedan resolver `cardId → Card` de naves en fleet
-  // (cuya card def ya salió de hand al jugarse). Read-only post-setup.
   const cardRegistry: Record<string, Card> = {}
   for (const c of setup.p1Deck ?? []) cardRegistry[c.id] = c
   for (const c of setup.p2Deck ?? []) cardRegistry[c.id] = c
@@ -192,11 +133,9 @@ export function createInitialState(setup: NewGameSetup): GameState {
     seed: setup.seed,
     rng: rng.snapshot(),
     turn: 1,
-    age: AGE_DESPERTAR,
     activePlayer: 'p1',
     phase: PHASE_RECOLECCION,
     players: { p1, p2 },
-    sector: { planets: buildPlanets(gifts) },
     pendingEvents: [],
     log: [],
     outcome: { kind: 'in_progress' },

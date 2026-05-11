@@ -11,7 +11,6 @@ export const wuronStrategy: BaseRaceStrategy = {
   category: 'reactive',
   signatureKeyword: 'kulen',
   startingDeck: [],
-  heroOptions: [],
   registerKeywords(): readonly EventHandler[] {
     return []
   },

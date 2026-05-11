@@ -93,15 +93,8 @@ describe('interpreter — primitives', () => {
     expect(r.emit.some((e) => e.type === 'SHIP_DESTROYED')).toBe(true)
   })
 
-  it('damage_homeworld no efectivo en Edad I', () => {
-    const s = fresh() // Edad I
-    const r = executeEffect({ op: 'damage_homeworld', player: 'opponent', amount: 5 }, s, ctxP1())
-    expect(r.state).toBe(s)
-    expect(r.emit).toEqual([])
-  })
-
-  it('damage_homeworld funciona en Edad III', () => {
-    const s: GameState = { ...fresh(), age: 3 }
+  it('damage_homeworld permitido siempre (v3.0: sin restricción de Edad)', () => {
+    const s = fresh()
     const r = executeEffect({ op: 'damage_homeworld', player: 'opponent', amount: 5 }, s, ctxP1())
     expect(r.state.players.p2.homeworld.hp).toBe(15)
     expect(r.emit).toContainEqual({
@@ -339,7 +332,7 @@ describe('interpreter — primitives', () => {
     const r = executeEffect(
       {
         op: 'conditional',
-        condition: { kind: 'in_age', age: 1 },
+        condition: { kind: 'always' },
         thenEffect: {
           op: 'modify_strength',
           target: { kind: 'self' },
@@ -360,7 +353,7 @@ describe('interpreter — primitives', () => {
     const r = executeEffect(
       {
         op: 'conditional',
-        condition: { kind: 'in_age', age: 3 },
+        condition: { kind: 'self_has_keyword', keyword: 'nonexistent' },
         thenEffect: { op: 'noop' },
         elseEffect: {
           op: 'modify_strength',

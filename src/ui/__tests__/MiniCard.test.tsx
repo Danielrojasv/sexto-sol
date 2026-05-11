@@ -49,20 +49,20 @@ describe('MiniCard', () => {
 
   it('uses compact width when compact=true', () => {
     const { container } = render(<MiniCard card={ship} compact />)
-    const btn = container.querySelector('button')
-    expect(btn?.getAttribute('style')).toContain('90px')
+    const wrapper = container.firstElementChild as HTMLElement | null
+    expect(wrapper?.getAttribute('style')).toContain('90px')
   })
 
   it('fires onClick when clickable', () => {
     const onClick = vi.fn()
     render(<MiniCard card={ship} onClick={onClick} />)
-    fireEvent.click(screen.getByRole('button'))
+    fireEvent.click(screen.getByRole('button', { name: ship.name }))
     expect(onClick).toHaveBeenCalledOnce()
   })
 
   it('disables button when no onClick given', () => {
     render(<MiniCard card={ship} />)
-    expect(screen.getByRole('button')).toBeDisabled()
+    expect(screen.getByRole('button', { name: ship.name })).toBeDisabled()
   })
 
   it('shows ship instance stats and damage marker', () => {
@@ -85,7 +85,7 @@ describe('MiniCard', () => {
     const { container } = render(
       <MiniCard card={ship} highlight="selected" onClick={() => {}} />,
     )
-    const btn = container.querySelector('button')
-    expect(btn?.className).toContain('ring-amber-400')
+    const wrapper = container.firstElementChild as HTMLElement | null
+    expect(wrapper?.className).toContain('ring-amber-400')
   })
 })

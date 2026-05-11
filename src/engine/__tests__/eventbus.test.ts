@@ -229,16 +229,14 @@ function freshGame(over?: Partial<NewGameSetup>): GameState {
 }
 
 describe('eventBus bridge — mapping de trigger events', () => {
-  it('mapea todos los TriggerEvent del DSL a constantes engine', () => {
+  it('mapea todos los TriggerEvent del DSL a constantes engine (v3.0)', () => {
     expect(TRIGGER_EVENT_TO_GAME_TYPE.ship_damaged).toBe('SHIP_DAMAGED')
     expect(TRIGGER_EVENT_TO_GAME_TYPE.ship_destroyed).toBe('SHIP_DESTROYED')
     expect(TRIGGER_EVENT_TO_GAME_TYPE.ship_attacked).toBe('SHIP_ATTACKED')
     expect(TRIGGER_EVENT_TO_GAME_TYPE.card_played).toBe('CARD_PLAYED')
-    expect(TRIGGER_EVENT_TO_GAME_TYPE.planet_activated).toBe('PLANET_ACTIVATED')
     expect(TRIGGER_EVENT_TO_GAME_TYPE.phase_start).toBe('PHASE_START')
     expect(TRIGGER_EVENT_TO_GAME_TYPE.phase_end).toBe('PHASE_END')
     expect(TRIGGER_EVENT_TO_GAME_TYPE.turn_start).toBe('TURN_START')
-    expect(TRIGGER_EVENT_TO_GAME_TYPE.age_changed).toBe('AGE_CHANGED')
     expect(TRIGGER_EVENT_TO_GAME_TYPE.homeworld_damaged).toBe('HOMEWORLD_DAMAGED')
     expect(TRIGGER_EVENT_TO_GAME_TYPE.card_drawn).toBe('CARD_DRAWN')
   })
@@ -514,7 +512,7 @@ describe('reducer integration — SHIP_ATTACKED se emite en DECLARE_ATTACK', () 
       cost: 0,
       rarity: 'common',
       abilities: [],
-      keywords: [],
+      keywords: ['embate'], // sin mareo de invocación
       strength: 3,
       hp: 5,
     }

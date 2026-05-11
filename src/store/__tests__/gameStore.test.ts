@@ -13,7 +13,7 @@ function resetStore() {
     view: 'home',
     state: null,
     lastEvents: [],
-    selectedAttackerId: null,
+    selectedAttackerIds: [],
     privacyShield: false,
   })
 }
@@ -29,7 +29,7 @@ describe('gameStore', () => {
       expect(s.view).toBe('home')
       expect(s.state).toBeNull()
       expect(s.lastEvents).toEqual([])
-      expect(s.selectedAttackerId).toBeNull()
+      expect(s.selectedAttackerIds[0] ?? null).toBeNull()
       expect(s.privacyShield).toBe(false)
     })
   })
@@ -63,10 +63,10 @@ describe('gameStore', () => {
     })
 
     it('resets transient UI state on new game', () => {
-      useGameStore.setState({ selectedAttackerId: 'old', privacyShield: true })
+      useGameStore.setState({ selectedAttackerIds: ['old'], privacyShield: true })
       useGameStore.getState().startGame('quralan', 'zaqe')
       const s = useGameStore.getState()
-      expect(s.selectedAttackerId).toBeNull()
+      expect(s.selectedAttackerIds[0] ?? null).toBeNull()
       expect(s.privacyShield).toBe(false)
     })
   })
@@ -132,9 +132,9 @@ describe('gameStore', () => {
   describe('selectAttacker', () => {
     it('sets and clears the attacker', () => {
       useGameStore.getState().selectAttacker('ship-123')
-      expect(useGameStore.getState().selectedAttackerId).toBe('ship-123')
+      expect(useGameStore.getState().selectedAttackerIds[0] ?? null).toBe('ship-123')
       useGameStore.getState().selectAttacker(null)
-      expect(useGameStore.getState().selectedAttackerId).toBeNull()
+      expect(useGameStore.getState().selectedAttackerIds[0] ?? null).toBeNull()
     })
   })
 

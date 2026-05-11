@@ -319,10 +319,6 @@ function evaluateCondition(cond: Condition, state: GameState, ctx: EffectContext
   switch (cond.kind) {
     case 'always':
       return true
-    case 'in_age':
-      return state.age === cond.age
-    case 'in_age_gte':
-      return state.age >= cond.age
     case 'count_filter': {
       const lookup = buildCardLookup(state)
       let count = 0
@@ -402,8 +398,7 @@ function execDamageHomeworld(
   state: GameState,
   ctx: EffectContext,
 ): ExecResult {
-  // Regla §5: daño directo al homeworld solo es válido en Edad III.
-  if (state.age < 3) return { state, emit: [] }
+  // v3.0: damage_homeworld permitido siempre (Edades eliminadas).
   const player = resolvePlayer(effect.player, ctx)
   const ps = state.players[player]
   const newHp = Math.max(0, ps.homeworld.hp - effect.amount)

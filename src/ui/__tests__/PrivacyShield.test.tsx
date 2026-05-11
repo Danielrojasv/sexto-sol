@@ -8,7 +8,7 @@ function reset() {
     view: 'home',
     state: null,
     lastEvents: [],
-    selectedAttackerId: null,
+    selectedAttackerIds: [],
     privacyShield: false,
   })
 }

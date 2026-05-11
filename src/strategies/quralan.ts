@@ -11,7 +11,6 @@ export const quralanStrategy: BaseRaceStrategy = {
   category: 'accumulative',
   signatureKeyword: 'formacion_solar',
   startingDeck: [],
-  heroOptions: [],
   registerKeywords(): readonly EventHandler[] {
     return []
   },
