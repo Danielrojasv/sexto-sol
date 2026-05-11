@@ -173,12 +173,10 @@ function shipMatchesFilter(
     if (!card || card.cost < filter.costGte) return false
   }
   if (filter.wasDamagedThisTurn) {
-    // TODO Phase 1 kernel (v3.0.1): chequear ship.damagedThisTurn (campo aún no existe).
-    // Requiere extender ShipInstance con `damagedThisTurn: boolean` + reset al
-    // emitir evento TURN_START en el reducer. Por ahora, conservadoramente,
-    // permitimos pasar (no filtra) — el JSON valida y renderiza correctamente.
-    // Esto se vuelve un filtro real cuando llegue el campo.
-    return true
+    // v3.0.1: ShipInstance.damagedThisTurn se setea en applyDamageToShip y se
+    // resetea en TURN_START (ver reducer). El filtro matchea solo naves con
+    // damagedThisTurn === true.
+    if (!ship.damagedThisTurn) return false
   }
   return true
 }
@@ -251,20 +249,57 @@ function resolveShipTargets(
       }
       return result
     }
-    case 'attacker':
-      // TODO Phase 1 kernel (v3.0.1): resolver al atacante del evento ship_attacked
-      // que disparó esta ability. Requiere que EffectContext incluya `attackerShipId`
-      // cuando el trigger es ship_attacked. Por ahora retorna vacío — la carta
-      // valida y renderiza ("la nave atacante") pero el efecto no apunta a nadie.
-      return []
-    case 'chosen_permanent':
-      // TODO Phase 1 kernel (v3.0.3): resolver target permanente (relic/tech en
-      // juego). Requiere que GameState exponga `state.players[*].relicsInPlay` y
-      // `state.players[*].techInPlay` (zonas separadas de fleet). Por ahora retorna
-      // vacío — la carta valida, renderiza ("una carta permanente a elección"),
-      // pero no resuelve targets. T1 Disolutorio Sqhaguata espera esta impl.
-      return []
+    case 'attacker': {
+      // v3.0.1: resuelve al atacante del evento `ship_attacked` que disparó
+      // esta ability. EffectContext.attackerShipId se setea desde el bus.
+      if (!ctx.attackerShipId) return []
+      const found = findShip(state, ctx.attackerShipId)
+      return found ? [found.ship] : []
+    }
+    case 'chosen_permanent': {
+      // v3.0.3: resuelve a una carta permanente (relic/tech) elegida via
+      // ctx.chosenTargets. Busca en relicsInPlay y techInPlay de ambos
+      // players, filtrando por controller/cardType del PermanentFilter.
+      if (!ctx.chosenTargets || ctx.chosenTargets.length === 0) return []
+      const result: ShipInstance[] = []
+      for (const id of ctx.chosenTargets) {
+        const found = findPermanentById(state, id)
+        if (!found) continue
+        if (target.filter) {
+          const card = state.cardRegistry[found.ship.cardId]
+          if (target.filter.controller && target.filter.controller !== 'any') {
+            const want =
+              target.filter.controller === 'self'
+                ? ctx.controller
+                : opponentOf(ctx.controller)
+            if (found.ship.controller !== want) continue
+          }
+          if (target.filter.cardType && card && card.type !== target.filter.cardType) {
+            continue
+          }
+        }
+        result.push(found.ship)
+      }
+      return result
+    }
   }
+}
+
+/**
+ * Lookup en zonas relicsInPlay y techInPlay de ambos players. Usado por
+ * el target `chosen_permanent`.
+ */
+function findPermanentById(
+  state: GameState,
+  id: ShipInstanceId,
+): { ship: ShipInstance; owner: PlayerId } | null {
+  for (const owner of ['p1', 'p2'] as const) {
+    const inRelics = state.players[owner].relicsInPlay.find((s) => s.instanceId === id)
+    if (inRelics) return { ship: inRelics, owner }
+    const inTech = state.players[owner].techInPlay.find((s) => s.instanceId === id)
+    if (inTech) return { ship: inTech, owner }
+  }
+  return null
 }
 
 function replaceShipInState(

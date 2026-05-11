@@ -1,7 +1,7 @@
-// Home — selector de razas + start game.
+// Home — selector de modo + razas + start game.
 
 import { useState } from 'react'
-import { useGameStore, TOTAL_CARDS } from '@/store/gameStore'
+import { useGameStore, TOTAL_CARDS, type GameMode } from '@/store/gameStore'
 import { cardsByRace } from '@/data/cards'
 import type { Race } from '@/engine/types'
 
@@ -66,7 +66,43 @@ function RacePicker({
   )
 }
 
+function ModeToggle({
+  value,
+  onChange,
+}: {
+  value: GameMode
+  onChange: (m: GameMode) => void
+}) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-sm uppercase tracking-wider text-slate-400">Modo</h3>
+      <div className="grid grid-cols-2 gap-2">
+        {(
+          [
+            { id: 'vs-ai' as const, label: 'vs IA', subtitle: 'Jugá contra una IA scripted' },
+            { id: 'hot-seat' as const, label: 'Hot-seat', subtitle: 'Dos humanos, mismo dispositivo' },
+          ] satisfies { id: GameMode; label: string; subtitle: string }[]
+        ).map((m) => {
+          const active = value === m.id
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => onChange(m.id)}
+              className={`text-left rounded-lg p-3 transition-colors bg-slate-900 border ${active ? 'border-white' : 'border-slate-800 hover:border-slate-600'}`}
+            >
+              <div className="font-semibold">{m.label}</div>
+              <div className="text-xs text-slate-300 opacity-80">{m.subtitle}</div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function HomeView() {
+  const [mode, setMode] = useState<GameMode>('vs-ai')
   const [p1, setP1] = useState<Race | null>(null)
   const [p2, setP2] = useState<Race | null>(null)
   const startGame = useGameStore((s) => s.startGame)
@@ -79,13 +115,17 @@ export function HomeView() {
       <header className="max-w-3xl mx-auto mb-12">
         <h1 className="text-4xl font-semibold tracking-tight">Sexto Sol</h1>
         <p className="mt-2 text-slate-400">
-          Hot-seat 1v1 · {TOTAL_CARDS} cartas en el set base · 4 razas
+          {TOTAL_CARDS} cartas en el set base · 4 razas
         </p>
       </header>
 
+      <div className="max-w-3xl mx-auto mb-8">
+        <ModeToggle value={mode} onChange={setMode} />
+      </div>
+
       <div className="max-w-3xl mx-auto grid sm:grid-cols-2 gap-8">
-        <RacePicker label="Jugador 1" value={p1} onChange={setP1} />
-        <RacePicker label="Jugador 2" value={p2} onChange={setP2} />
+        <RacePicker label={mode === 'vs-ai' ? 'Tu raza' : 'Jugador 1'} value={p1} onChange={setP1} />
+        <RacePicker label={mode === 'vs-ai' ? 'Raza IA' : 'Jugador 2'} value={p2} onChange={setP2} />
       </div>
 
       <div className="max-w-3xl mx-auto mt-10 flex items-center justify-between gap-4">
@@ -100,7 +140,7 @@ export function HomeView() {
         <button
           type="button"
           disabled={!ready}
-          onClick={() => p1 && p2 && startGame(p1, p2)}
+          onClick={() => p1 && p2 && startGame(p1, p2, mode)}
           className="px-6 py-3 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-slate-950 font-semibold transition-colors"
         >
           Empezar partida

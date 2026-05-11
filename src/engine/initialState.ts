@@ -202,6 +202,7 @@ export function createInitialState(setup: NewGameSetup): GameState {
     outcome: { kind: 'in_progress' },
     cardRegistry,
     costModifiers: [],
+    keywordAmplifiers: [],
   }
 
   return applyFirstTurnStart(setupState)

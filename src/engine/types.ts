@@ -189,6 +189,19 @@ export interface CostModifier {
   minCost: number
 }
 
+/** v3.0.1 Keyword amplifier registrado por relics como Trono de Lhülkan
+ *  ("cada vez que keyword X dispara delta de stats en nave del owner, sumar
+ *  deltaBonus al delta"). */
+export interface KeywordAmplifier {
+  source: ShipInstanceId
+  /** Player cuyas naves se ven afectadas (típicamente el owner del relic). */
+  controller: PlayerId
+  /** Keyword amplificada (ej: 'kulen'). */
+  keyword: string
+  /** Suma extra al delta de fuerza/HP del trigger de la keyword. */
+  deltaBonus: number
+}
+
 // ---- Estado global --------------------------------------------------------
 
 export type WinReason = 'homeworld_destroyed' | 'decking_out' | 'concession'
@@ -232,6 +245,12 @@ export interface GameState {
    * calcular costo de revival (PAY_REFLUENCIA) o de jugar una carta.
    */
   costModifiers: readonly CostModifier[]
+  /**
+   * v3.0.1 Keyword amplifiers activos. Relics con `op: 'keyword_amplifier'`
+   * registran su deltaBonus acá al desplegarse. Külen y otras mecánicas firma
+   * lo consultan al calcular el delta del trigger.
+   */
+  keywordAmplifiers: readonly KeywordAmplifier[]
 }
 
 // ---- Acciones (lo que el jugador puede hacer) -----------------------------

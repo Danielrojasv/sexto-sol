@@ -65,11 +65,18 @@ export function buildKulenHandler(ship: ShipInstance): EventHandler {
 }
 
 /**
- * Delta de Külen, consultando amplifiers en juego del mismo controller.
- * Commit 2: delta fijo = 1. Commit 3 expande con registry de amplifiers.
+ * Delta de Külen base = 1, sumado de keyword amplifiers activos en juego
+ * (ej: Trono de Lhülkan deltaBonus +1 → delta total = 2). Los amplifiers
+ * deben ser del mismo controller que la nave.
  */
-export function computeKulenDelta(_state: GameState, _ship: ShipInstance): number {
-  return 1
+export function computeKulenDelta(state: GameState, ship: ShipInstance): number {
+  let delta = 1
+  for (const amp of state.keywordAmplifiers) {
+    if (amp.keyword !== KW_KULEN) continue
+    if (amp.controller !== ship.controller) continue
+    delta += amp.deltaBonus
+  }
+  return delta
 }
 
 function findShipInState(
