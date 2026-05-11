@@ -5,6 +5,11 @@ import { create } from 'zustand'
 import { createInitialState } from '@/engine/initialState'
 import { apply } from '@/engine/reducer'
 import { ALL_CARDS, cardsByRace } from '@/data/cards'
+import {
+  CANONICAL_DECKS,
+  REPRESENTATIVE_DECK_IDS,
+  flattenDeck,
+} from '@/data/decks/loader'
 import type { GameAction, GameEvent, GameState, PlayerId, Race } from '@/engine/types'
 import type { Card } from '@/engine/types'
 
@@ -36,11 +41,18 @@ export interface GameStore {
 }
 
 /**
- * Construye un mazo de 30 cartas para una raza:
- * toma todas las cartas de la raza y las repite x3 (limitando a 30 cartas).
- * Phase 4+ tendrá deck-builder real; este es un auto-deck para playtest.
+ * Devuelve el mazo canónico representativo de la raza para el MVP UI.
+ * Los 12 mazos completos están en CANONICAL_DECKS (loadCanonicalDecks);
+ * REPRESENTATIVE_DECK_IDS define cuál se expone en la UI (1 por raza).
+ *
+ * Fallback: si por algún motivo el mazo canónico no se encuentra (ej:
+ * YAML inválido), arma un autoDeck con la pool de la raza repetida x3.
  */
-function autoDeck(race: Race): Card[] {
+function deckFor(race: Race): Card[] {
+  const id = REPRESENTATIVE_DECK_IDS[race]
+  const canonical = CANONICAL_DECKS.find((d) => d.id === id)
+  if (canonical) return flattenDeck(canonical)
+  // Fallback de emergencia (no esperado en runtime normal).
   const pool = cardsByRace(race)
   if (pool.length === 0) return []
   const repeated: Card[] = []
@@ -73,8 +85,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       seed,
       p1Race,
       p2Race,
-      p1Deck: autoDeck(p1Race),
-      p2Deck: autoDeck(p2Race),
+      p1Deck: deckFor(p1Race),
+      p2Deck: deckFor(p2Race),
     })
     set({
       state: initialState,
