@@ -35,6 +35,9 @@ export default defineConfig({
         'src/strategies/base.ts',
         // App.tsx es placeholder UI; se cubrirá cuando llegue Phase 4.
         'src/App.tsx',
+        // scripts/ es tooling CLI (validate-cards, validators offline) — no
+        // runtime de la app. Excluido del coverage threshold del engine.
+        'scripts/**',
         'vite.config.ts',
         'eslint.config.js',
       ],
