@@ -64,13 +64,12 @@ describe('initialState — setup canónico', () => {
       p1Deck: sampleDeck(20),
       p2Deck: sampleDeck(20),
     })
-    expect(s.age).toBe(1)
     expect(s.phase).toBe('recoleccion')
     expect(s.turn).toBe(1)
     expect(s.activePlayer).toBe('p1')
   })
 
-  it('3 planetas neutrales con Don revelado', () => {
+  it('zonas de jugador inicializadas vacías (v3.0: sin planetas)', () => {
     const s = createInitialState({
       seed: 1,
       p1Race: 'wuron',
@@ -78,41 +77,11 @@ describe('initialState — setup canónico', () => {
       p1Deck: sampleDeck(20),
       p2Deck: sampleDeck(20),
     })
-    expect(s.sector.planets).toHaveLength(3)
-    for (const p of s.sector.planets) {
-      expect(p.exhausted).toBe(false)
-      expect(p.exhaustedBy).toBeNull()
-      expect(p.gift.id).toBeTruthy()
-      expect(p.gift.name).toBeTruthy()
-    }
-  })
-
-  it('Dones placeholder vienen pre-poblados si no se proveen', () => {
-    const s = createInitialState({
-      seed: 1,
-      p1Race: 'wuron',
-      p2Race: 'tezhal',
-      p1Deck: sampleDeck(20),
-      p2Deck: sampleDeck(20),
-    })
-    const giftIds = s.sector.planets.map((p) => p.gift.id)
-    expect(giftIds).toEqual(['gift_archive', 'gift_core', 'gift_forge'])
-  })
-
-  it('Dones custom se respetan', () => {
-    const s = createInitialState({
-      seed: 1,
-      p1Race: 'wuron',
-      p2Race: 'tezhal',
-      p1Deck: sampleDeck(20),
-      p2Deck: sampleDeck(20),
-      planetGifts: [
-        { id: 'a', name: 'A', description: 'x' },
-        { id: 'b', name: 'B', description: 'y' },
-        { id: 'c', name: 'C', description: 'z' },
-      ],
-    })
-    expect(s.sector.planets.map((p) => p.gift.id)).toEqual(['a', 'b', 'c'])
+    expect(s.players.p1.pozoAstral).toEqual([])
+    expect(s.players.p1.disolucion).toEqual([])
+    expect(s.players.p1.relicsInPlay).toEqual([])
+    expect(s.players.p1.techInPlay).toEqual([])
+    expect(s.players.p2.pozoAstral).toEqual([])
   })
 
   it('outcome arranca in_progress con deck nonempty', () => {
@@ -160,26 +129,6 @@ describe('initialState — setup canónico', () => {
     expect(a).toEqual(b)
   })
 
-  it('héroe inicial vive en mundo natal', () => {
-    const s = createInitialState({
-      seed: 1,
-      p1Race: 'wuron',
-      p2Race: 'tezhal',
-      p1Deck: sampleDeck(20),
-      p2Deck: sampleDeck(20),
-      p1Hero: {
-        id: 'hero1',
-        name: 'Héroe 1',
-        race: 'wuron',
-        passives: [],
-        activePowers: ['power-1'],
-        combatStrength: 3,
-        combatHp: 5,
-      },
-    })
-    expect(s.players.p1.hero).not.toBeNull()
-    expect(s.players.p1.hero?.inHomeworld).toBe(true)
-    expect(s.players.p1.hero?.reactivationCooldown).toBe(0)
-    expect(s.players.p2.hero).toBeNull()
-  })
+  // v3.0: héroes pasivos en mundo natal eliminados. Las legendarias son
+  // naves normales (rarity='legendary') en el deck.
 })

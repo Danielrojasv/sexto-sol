@@ -23,8 +23,10 @@ export interface GameStore {
   state: GameState | null
   /** Eventos emitidos por el último dispatch — para feedback visual transient. */
   lastEvents: readonly GameEvent[]
-  /** UI: nave seleccionada como atacante (durante combate). */
-  selectedAttackerId: string | null
+  /** UI: naves seleccionadas como atacantes (multi-select) durante combate.
+   *  Cada nave en la lista atacará al target elegido. Una nave sólo puede
+   *  atacar 1 vez por turno (enforce en reducer via hasAttackedThisTurn). */
+  selectedAttackerIds: readonly string[]
   /** UI: pantalla de privacidad activa entre turnos en hot-seat (NO en vs IA). */
   privacyShield: boolean
   /** Modo de la partida actual. Persiste hasta que se inicie otra. */
@@ -36,7 +38,12 @@ export interface GameStore {
   /** Inicia partida con modo. En vs-ai, p2 es la IA por convención. */
   startGame(p1Race: Race, p2Race: Race, mode?: GameMode): void
   dispatch(action: GameAction): void
+  /** Compat: setear/resetear el primer atacante (single-select API). */
   selectAttacker(id: string | null): void
+  /** Multi-select: toggle de una nave atacante. */
+  toggleAttacker(id: string): void
+  /** Limpia toda la selección de atacantes. */
+  clearAttackers(): void
   acknowledgePrivacy(): void
 }
 
@@ -70,7 +77,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   view: 'home',
   state: null,
   lastEvents: [],
-  selectedAttackerId: null,
+  selectedAttackerIds: [],
   privacyShield: false,
   mode: 'hot-seat',
   aiPlayer: null,
@@ -92,7 +99,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state: initialState,
       view: initialState.outcome.kind === 'in_progress' ? 'play' : 'gameover',
       lastEvents: [],
-      selectedAttackerId: null,
+      selectedAttackerIds: [],
       privacyShield: false,
       mode,
       aiPlayer: mode === 'vs-ai' ? 'p2' : null,
@@ -111,13 +118,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
       state: result.state,
       lastEvents: result.events,
       view,
-      selectedAttackerId: null,
       privacyShield: mode === 'hot-seat' && turnChanged,
+      // Si cambia el turno o la fase, limpiar la selección.
+      ...(turnChanged || result.state.phase !== state.phase
+        ? { selectedAttackerIds: [] }
+        : {}),
     })
   },
 
   selectAttacker(id) {
-    set({ selectedAttackerId: id })
+    set({ selectedAttackerIds: id === null ? [] : [id] })
+  },
+
+  toggleAttacker(id) {
+    const current = get().selectedAttackerIds
+    if (current.includes(id)) {
+      set({ selectedAttackerIds: current.filter((x) => x !== id) })
+    } else {
+      set({ selectedAttackerIds: [...current, id] })
+    }
+  },
+
+  clearAttackers() {
+    set({ selectedAttackerIds: [] })
   },
 
   acknowledgePrivacy() {

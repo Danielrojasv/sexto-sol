@@ -37,11 +37,9 @@ export const TRIGGER_EVENT_TO_GAME_TYPE: Readonly<Record<TriggerEvent, GameEvent
   ship_destroyed: 'SHIP_DESTROYED',
   ship_attacked: 'SHIP_ATTACKED',
   card_played: 'CARD_PLAYED',
-  planet_activated: 'PLANET_ACTIVATED',
   phase_start: 'PHASE_START',
   phase_end: 'PHASE_END',
   turn_start: 'TURN_START',
-  age_changed: 'AGE_CHANGED',
   homeworld_damaged: 'HOMEWORLD_DAMAGED',
   card_drawn: 'CARD_DRAWN',
 }

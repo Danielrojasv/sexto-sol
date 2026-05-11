@@ -131,10 +131,12 @@ describe('invariantes — turno y edad', () => {
             p1Deck: deck(60, p1Race),
             p2Deck: deck(60, p2Race),
           })
+          // v3.0: Edades eliminadas. Validamos en su lugar que el turno
+          // nunca decrece.
           let s = init
           for (const a of actions) {
             const next = apply(s, a).state
-            if (next.age < s.age) return false
+            if (next.turn < s.turn) return false
             s = next
           }
           return true

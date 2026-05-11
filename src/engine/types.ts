@@ -1,7 +1,16 @@
-// Tipos del engine de Sexto Sol. Aliados a GAME-RULES.md v2.0 + ARCHITECTURE.md.
+// Tipos del engine de Sexto Sol — alineado a GAME-RULES.md v3.0.
+//
+// Cambios respecto a v2.0 (ver GAME-RULES sec 0):
+//   - Sin Edades (Age type removido).
+//   - Sin planetas neutrales (SectorState/PlanetState removidos).
+//   - Sin héroes pasivos en mundo natal (HeroInstance/HeroDefinition removidos).
+//     Las legendarias son Naves normales (rarity='legendary', max 1 copia).
+//   - Phase 'vigilia' renombrada a 'eclipse'.
+//   - Energía automática: +1/turno hasta cap 10, reset al cap cada turno.
+//   - Cementerio → Pozo Astral (rename, ya cubierto en v3.0.3).
 //
 // Determinismo total: todo el state pasa por un reducer puro `(state, action) => newState`.
-// Sin mutación in-place. Sin LLM en el motor de reglas.
+// Sin mutación in-place. Sin LLM en el motor de reglas. Sin browser deps en engine.
 
 import type { RngState } from './rng'
 // Re-export Ability del catálogo de primitives. Card.abilities lo usa.
@@ -25,17 +34,11 @@ export type Race = 'quralan' | 'wuron' | 'tezhal' | 'zaqe'
  */
 export type MechanicCategory = 'reactive' | 'initiative' | 'accumulative' | 'post_combat'
 
-/** Edad I "El Despertar", II "Las Estrellas Recuerdan", III "El Sexto Sol". */
-export type Age = 1 | 2 | 3
-
-/** Las 5 fases del turno. Recolección → Despliegue → Combate → Regroup → Vigilia. */
-export type TurnPhase = 'recoleccion' | 'despliegue' | 'combate' | 'regroup' | 'vigilia'
+/** Las 5 fases del turno (v3.0). Recolección → Despliegue → Combate → Regroup → Eclipse. */
+export type TurnPhase = 'recoleccion' | 'despliegue' | 'combate' | 'regroup' | 'eclipse'
 
 /** Identificador opaco de una nave instanciada en el campo. */
 export type ShipInstanceId = string
-
-/** Identificador opaco de un planeta neutral del sector estelar. */
-export type PlanetId = string
 
 // ---- Cartas y unidades ----------------------------------------------------
 
@@ -82,10 +85,8 @@ export interface ShipInstance {
   hp: number
   /** Daño acumulado desde que entró al campo. Usado por Külen. */
   damageTaken: number
-  /** Keywords activos (Bastión, Desgarro, Vuelo, Premonición, Resonancia, etc.). */
+  /** Keywords activos (Bastión, Desgarro, Vuelo, Premonición, Embate, etc.). */
   keywords: readonly string[]
-  /** True si esta instancia es el héroe del jugador. Su muerte vuelve al natal. */
-  isHero?: boolean
   /** v3.0.1: true si la nave recibió daño durante el turno actual.
    *  Set true en applyDamageToShip; reset false en TURN_START.
    *  Filtro `ShipFilter.wasDamagedThisTurn` consulta este campo. */
@@ -93,59 +94,13 @@ export interface ShipInstance {
   /** v3.0.3: tracking de revival Refluencia. Si true, la próxima muerte va a
    *  Disolución terminal (no vuelve a pozoAstral). */
   revivedFromRefluencia?: boolean
-}
-
-// ---- Héroe ----------------------------------------------------------------
-
-export interface HeroDefinition {
-  id: string
-  name: string
-  race: Race
-  /** Habilidades pasivas mientras el héroe está en juego (incluye Edad I). */
-  passives: readonly string[]
-  /** Hero powers activables (1-2 por turno) en Edad I. */
-  activePowers: readonly string[]
-  /** Stats al desplegarse en el campo (Edad II+). */
-  combatStrength: number
-  combatHp: number
-}
-
-export interface HeroInstance {
-  defId: string
-  /** Si está en el mundo natal (Edad I siempre, II opcional, III opcional). */
-  inHomeworld: boolean
-  /** Daño acumulado mientras está desplegado. */
-  damageTaken: number
-  /** Cooldown post-muerte: turnos restantes hasta poder reactivarse. 0 = disponible. */
-  reactivationCooldown: number
-  /** Cuántos hero powers activó este turno (cap 2 en Edad I). */
-  powersUsedThisTurn: number
-}
-
-// ---- Planetas + Dones -----------------------------------------------------
-
-/**
- * Don de un planeta neutral. Activarlo cuesta 1 energía y otorga +1 esa fase,
- * además de su efecto único. El planeta queda agotado hasta el próximo turno
- * del jugador que lo activó.
- */
-export interface PlanetGift {
-  id: string
-  name: string
-  description: string
-}
-
-export interface PlanetState {
-  id: PlanetId
-  name: string
-  gift: PlanetGift
-  exhausted: boolean
-  exhaustedBy: PlayerId | null
-}
-
-export interface SectorState {
-  /** 3 planetas neutrales con Don revelado al setup. Lista expandible en sets futuros. */
-  planets: readonly PlanetState[]
+  /** v3.0 (Mareo de invocación): true cuando una nave entra al campo. Le
+   *  impide atacar el turno que entra, salvo que tenga keyword Embate. Se
+   *  resetea (false) en TURN_START del controller. */
+  summoningSickness?: boolean
+  /** v3.0: true si la nave ya atacó este turno. Una nave sólo puede atacar
+   *  una vez por turno (regla 11.1). Reset false en TURN_START del controller. */
+  hasAttackedThisTurn?: boolean
 }
 
 // ---- Estado por jugador ---------------------------------------------------
@@ -153,11 +108,10 @@ export interface SectorState {
 export interface PlayerState {
   race: Race
   homeworld: { hp: number; maxHp: number }
-  hero: HeroInstance | null
   hand: readonly Card[]
   deck: readonly Card[]
   graveyard: readonly Card[]
-  /** Energía gastable este turno (no acumula entre turnos). */
+  /** Energía gastable este turno. Reset al cap creciente en TURN_START. */
   energy: number
   fleet: readonly ShipInstance[]
   /** v3.0.3 Refluencia: naves Zaqe con keyword `refluencia` que murieron y
@@ -218,11 +172,9 @@ export interface GameState {
   /** Estado actual del PRNG. Avanza con cada operación aleatoria. */
   rng: RngState
   turn: number
-  age: Age
   activePlayer: PlayerId
   phase: TurnPhase
   players: { p1: PlayerState; p2: PlayerState }
-  sector: SectorState
   pendingEvents: readonly GameEvent[]
   log: readonly GameAction[]
   outcome: GameOutcome
@@ -264,9 +216,6 @@ export interface AttackTarget {
 export type GameAction =
   | { type: 'PLAY_CARD'; cardId: string; targets?: readonly string[] }
   | { type: 'DECLARE_ATTACK'; attackerShipId: ShipInstanceId; target: AttackTarget }
-  | { type: 'ACTIVATE_PLANET'; planetId: PlanetId }
-  | { type: 'ACTIVATE_HERO_POWER'; abilityId: string }
-  | { type: 'DEPLOY_HERO' }
   | { type: 'ACTIVATE_ABILITY'; sourceId: string; abilityId: string }
   | {
       /** v3.0.3 Tezhal Initiative: activa una carta con keyword `ignicion`
@@ -295,17 +244,12 @@ export type GameEvent =
   /**
    * v3.0.1: emitido cuando una nave ataca a otra (antes de aplicar el daño).
    * `attackerId` es la nave que ataca; `defenderId` puede ser shipId o homeworld owner.
-   * Engine impl: TODO Phase 1 kernel — emisión durante combat resolver.
    */
   | { type: 'SHIP_ATTACKED'; attackerId: ShipInstanceId; defenderId: ShipInstanceId | PlayerId }
   | { type: 'HOMEWORLD_DAMAGED'; player: PlayerId; amount: number; source: string }
   | { type: 'CARD_DRAWN'; player: PlayerId }
-  | { type: 'PLANET_ACTIVATED'; planetId: PlanetId; activatedBy: PlayerId }
   | { type: 'PHASE_START'; phase: TurnPhase; player: PlayerId }
   | { type: 'PHASE_END'; phase: TurnPhase; player: PlayerId }
   | { type: 'TURN_START'; turn: number; player: PlayerId }
-  | { type: 'AGE_CHANGED'; from: Age; to: Age }
   | { type: 'CARD_PLAYED'; cardId: string; player: PlayerId }
-  | { type: 'HERO_DEPLOYED'; player: PlayerId }
-  | { type: 'HERO_RETURNED'; player: PlayerId }
   | { type: 'GAME_OVER'; outcome: Exclude<GameOutcome, { kind: 'in_progress' }> }

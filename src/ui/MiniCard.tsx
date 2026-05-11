@@ -1,7 +1,10 @@
 // MiniCard — versión compacta de la carta para mano y fleet.
 // Más chica que CardTile del catálogo. Optimizada para densidad.
 
+import { useState } from 'react'
 import type { Card, ShipInstance } from '@/engine/types'
+import { getKeywordInfo } from '@/data/keywords'
+import { renderAbility } from '@/data/abilityRenderer'
 import { CardArt } from './CardArt'
 
 interface MiniCardProps {
@@ -41,6 +44,7 @@ export function MiniCard({
 }: MiniCardProps) {
   const width = compact ? 90 : 120
   const ringClass = highlight ? HIGHLIGHT_BORDER[highlight] : ''
+  const [detailOpen, setDetailOpen] = useState(false)
 
   if (faceDown) {
     return (
@@ -52,49 +56,159 @@ export function MiniCard({
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!onClick}
-      className={`flex-shrink-0 rounded overflow-hidden bg-slate-900 border border-slate-700 hover:border-slate-500 transition-colors text-left ${onClick ? 'cursor-pointer' : 'cursor-default'} ${ringClass} ${className}`}
+    <div
+      className={`flex-shrink-0 relative rounded overflow-hidden bg-slate-900 border border-slate-700 hover:border-slate-500 transition-colors text-left ${ringClass} ${className}`}
       style={{ width: `${width}px` }}
     >
-      <CardArt card={card} />
-      <div className="p-1.5 space-y-0.5">
-        <div className="flex items-center justify-between gap-1">
-          <h4 className="text-[10px] font-semibold leading-tight truncate flex-1">{card.name}</h4>
-          <span className="text-[9px] font-mono text-slate-400 shrink-0">
-            {card.cost}c
-          </span>
-        </div>
-        {card.type === 'ship' && card.strength !== undefined && card.hp !== undefined && (
-          <div className="text-[9px] font-mono text-slate-300">
-            {shipInstance ? (
-              <>
-                {effectiveStrength !== undefined && effectiveStrength !== shipInstance.strength ? (
-                  <span>
-                    <span className="text-amber-300">{effectiveStrength}</span>
-                    <span className="text-slate-500"> ({shipInstance.strength})</span>
+      <button
+        type="button"
+        aria-label={card.name}
+        onClick={onClick}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setDetailOpen(true)
+        }}
+        disabled={!onClick}
+        className={`block w-full text-left ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
+      >
+        <CardArt card={card} />
+        <div className="p-1.5 space-y-0.5">
+          <div className="flex items-center justify-between gap-1">
+            <h4 className="text-[10px] font-semibold leading-tight truncate flex-1">
+              {card.name}
+            </h4>
+            <span className="text-[9px] font-mono text-slate-400 shrink-0">{card.cost}c</span>
+          </div>
+          {card.type === 'ship' && card.strength !== undefined && card.hp !== undefined && (
+            <div className="text-[9px] font-mono text-slate-300">
+              {shipInstance ? (
+                <>
+                  {effectiveStrength !== undefined &&
+                  effectiveStrength !== shipInstance.strength ? (
+                    <span>
+                      <span className="text-amber-300">{effectiveStrength}</span>
+                      <span className="text-slate-500"> ({shipInstance.strength})</span>
+                    </span>
+                  ) : (
+                    <>{effectiveStrength ?? shipInstance.strength}</>
+                  )}
+                  /{shipInstance.hp}
+                  {shipInstance.hp < (shipInstance.maxHp ?? card.hp) && (
+                    <span className="text-red-400 ml-1">·dmg</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  {card.strength}/{card.hp}
+                </>
+              )}
+            </div>
+          )}
+          {card.type !== 'ship' && (
+            <div className="text-[9px] uppercase text-slate-500">{card.type}</div>
+          )}
+          {card.keywords.length > 0 && (
+            <div className="flex flex-wrap gap-0.5">
+              {card.keywords.map((kw) => {
+                const info = getKeywordInfo(kw)
+                return (
+                  <span
+                    key={kw}
+                    title={info.reminder}
+                    className="text-[8px] px-1 py-px rounded bg-slate-800 text-amber-200 leading-tight"
+                  >
+                    {info.label}
                   </span>
-                ) : (
-                  <>{effectiveStrength ?? shipInstance.strength}</>
-                )}
-                /{shipInstance.hp}
-                {shipInstance.hp < (shipInstance.maxHp ?? card.hp) && (
-                  <span className="text-red-400 ml-1">·dmg</span>
-                )}
-              </>
-            ) : (
-              <>
-                {card.strength}/{card.hp}
-              </>
-            )}
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </button>
+      <button
+        type="button"
+        aria-label={`Info de ${card.name}`}
+        onClick={() => setDetailOpen(true)}
+        className="absolute top-1 right-1 px-1.5 py-0.5 text-[8px] rounded bg-slate-800/80 backdrop-blur hover:bg-slate-700 text-slate-300 hover:text-amber-300 leading-none"
+      >
+        ⓘ
+      </button>
+      {detailOpen && <CardDetailModal card={card} onClose={() => setDetailOpen(false)} />}
+    </div>
+  )
+}
+
+function CardDetailModal({ card, onClose }: { card: Card; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-900 border border-slate-700 rounded-lg max-w-sm w-full p-4 space-y-3 text-slate-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h3 className="text-base font-semibold">{card.name}</h3>
+            <div className="text-[10px] uppercase text-slate-400 tracking-wider">
+              {card.race} · {card.type} · {card.rarity}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-100 text-xs"
+          >
+            cerrar
+          </button>
+        </div>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-slate-300">
+            Costo <span className="text-amber-300 font-mono">{card.cost}</span>
+          </span>
+          {card.strength !== undefined && card.hp !== undefined && (
+            <span className="text-slate-300">
+              Stats <span className="font-mono">{card.strength}/{card.hp}</span>
+            </span>
+          )}
+        </div>
+        {card.keywords.length > 0 && (
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase text-slate-500 tracking-wider">Keywords</div>
+            <ul className="space-y-1">
+              {card.keywords.map((kw) => {
+                const info = getKeywordInfo(kw)
+                return (
+                  <li key={kw} className="text-xs">
+                    <span className="font-semibold text-amber-200">{info.label}</span>
+                    {info.reminder && (
+                      <span className="text-slate-400"> — {info.reminder}</span>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
           </div>
         )}
-        {card.type !== 'ship' && (
-          <div className="text-[9px] uppercase text-slate-500">{card.type}</div>
+        {card.abilities.length > 0 && (
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase text-slate-500 tracking-wider">Habilidad</div>
+            <ul className="space-y-1">
+              {card.abilities.map((ab, i) => (
+                <li key={i} className="text-xs text-slate-200 leading-snug">
+                  {ab.description ?? renderAbility(ab)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {card.flavorText && (
+          <p className="text-[11px] italic text-slate-400 border-l-2 border-slate-700 pl-2">
+            {card.flavorText}
+          </p>
         )}
       </div>
-    </button>
+    </div>
   )
 }

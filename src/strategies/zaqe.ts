@@ -11,7 +11,6 @@ export const zaqeStrategy: BaseRaceStrategy = {
   category: 'post_combat',
   signatureKeyword: 'refluencia',
   startingDeck: [],
-  heroOptions: [],
   registerKeywords(): readonly EventHandler[] {
     return []
   },
