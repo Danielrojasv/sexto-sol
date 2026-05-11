@@ -177,6 +177,19 @@ export interface GameState {
   pendingEvents: readonly GameEvent[]
   log: readonly GameAction[]
   outcome: GameOutcome
+  /**
+   * Catálogo inmutable de definiciones de cartas en la partida — todas las cards
+   * que pueden aparecer (ambos decks iniciales). Indexado por cardId.
+   *
+   * Razón: cuando una nave se juega y sale de hand, su definición ya no está
+   * referenciable desde players.hand/deck/graveyard. El intérprete y el event
+   * bus necesitan resolver `Ship.cardId → Card` para ejecutar abilities sobre
+   * naves en fleet. cardRegistry es ese mapeo persistente.
+   *
+   * 100% JSON-serializable (Record plain). Read-only desde el reducer (sólo
+   * createInitialState lo construye).
+   */
+  cardRegistry: Readonly<Record<string, Card>>
 }
 
 // ---- Acciones (lo que el jugador puede hacer) -----------------------------

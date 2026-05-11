@@ -9,6 +9,7 @@
 // DEPLOY_HERO, ACTIVATE_HERO_POWER (skeleton), mano cap 7, win conditions.
 
 import { createRng } from './rng'
+import { processEventWithCascade } from './eventBus'
 import { executeEffect } from './interpreter'
 import type {
   Age,
@@ -444,11 +445,26 @@ function handleDeclareAttack(
   let next = appendLog(state, { type: 'DECLARE_ATTACK', attackerShipId, target })
   const events: GameEvent[] = []
 
+  // v3.0.1: emit SHIP_ATTACKED al inicio del combate (antes de aplicar daño).
+  // Permite que abilities reactivas con target `attacker` se disparen.
+  const defenderRef: ShipInstanceId | PlayerId =
+    target.kind === 'ship' ? (target.ref as ShipInstanceId) : defenderId
+  const attackedEvent: GameEvent = {
+    type: 'SHIP_ATTACKED',
+    attackerId: attackerShipId,
+    defenderId: defenderRef,
+  }
+  events.push(attackedEvent)
+  next = processEventWithCascade(next, attackedEvent, events)
+
   if (target.kind === 'homeworld') {
     if (target.ref !== defenderId) return { state, events: [] }
     const dmg = damageHomeworld(next, defenderId, attacker.strength, attackerShipId)
     next = dmg.state
-    for (const e of dmg.events) events.push(e)
+    for (const e of dmg.events) {
+      events.push(e)
+      next = processEventWithCascade(next, e, events)
+    }
   } else {
     // ship vs ship simultáneo
     const defInfo = findShipById(next, target.ref as ShipInstanceId)
@@ -458,18 +474,24 @@ function handleDeclareAttack(
     const defResult = applyDamageToShip(defender, attacker.strength)
     next = replaceShip(next, attackerInfo.ownerId, attacker.instanceId, atkResult.ship)
     next = replaceShip(next, defInfo.ownerId, defender.instanceId, defResult.ship)
-    events.push({
+
+    const defDamagedEvent: GameEvent = {
       type: 'SHIP_DAMAGED',
       shipId: defender.instanceId,
       amount: attacker.strength,
       source: attackerShipId,
-    })
-    events.push({
+    }
+    events.push(defDamagedEvent)
+    next = processEventWithCascade(next, defDamagedEvent, events)
+
+    const atkDamagedEvent: GameEvent = {
       type: 'SHIP_DAMAGED',
       shipId: attacker.instanceId,
       amount: defender.strength,
       source: defender.instanceId,
-    })
+    }
+    events.push(atkDamagedEvent)
+    next = processEventWithCascade(next, atkDamagedEvent, events)
 
     // Desgarro: si atacante tiene Desgarro y mata al defensor con exceso, pasa al natal.
     if (defResult.destroyed && attacker.keywords.includes(KW_DESGARRO)) {
@@ -477,7 +499,10 @@ function handleDeclareAttack(
       if (excess > 0) {
         const dmg = damageHomeworld(next, defenderId, excess, attackerShipId)
         next = dmg.state
-        for (const e of dmg.events) events.push(e)
+        for (const e of dmg.events) {
+          events.push(e)
+          next = processEventWithCascade(next, e, events)
+        }
       }
     }
 
@@ -486,12 +511,18 @@ function handleDeclareAttack(
     if (atkResult.destroyed) {
       const k = killShip(next, attackerInfo.ownerId, atkResult.ship)
       next = k.state
-      for (const e of k.events) events.push(e)
+      for (const e of k.events) {
+        events.push(e)
+        next = processEventWithCascade(next, e, events)
+      }
     }
     if (defResult.destroyed) {
       const k = killShip(next, defInfo.ownerId, defResult.ship)
       next = k.state
-      for (const e of k.events) events.push(e)
+      for (const e of k.events) {
+        events.push(e)
+        next = processEventWithCascade(next, e, events)
+      }
     }
   }
 

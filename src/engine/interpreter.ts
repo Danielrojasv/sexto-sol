@@ -35,6 +35,10 @@ export interface EffectContext {
   sourceCardId: string
   /** Targets elegidos por el jugador para este efecto, si la primitive los requería. */
   chosenTargets?: readonly ShipInstanceId[]
+  /** Atacante del evento `SHIP_ATTACKED` cuando este context se construye desde un
+   *  handler reactivo disparado por ese evento. Permite que `target.kind === 'attacker'`
+   *  resuelva al atacante. Engine impl plena en Commit 3 (Phase 1 kernel). */
+  attackerShipId?: ShipInstanceId
 }
 
 export interface ExecResult {
