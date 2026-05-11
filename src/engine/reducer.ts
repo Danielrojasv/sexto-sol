@@ -412,12 +412,31 @@ function handlePlayCard(state: GameState, cardId: string): ReducerResult {
   if (idx < 0) return { state, events: [] }
   const card = ps.hand[idx]
   if (!card) return { state, events: [] }
-  if (card.type !== 'ship') return { state, events: [] } // Phase 3+ implementa otros tipos.
   if (card.cost > ps.energy) return { state, events: [] }
-  if (card.strength === undefined || card.hp === undefined) return { state, events: [] }
 
-  // Derivamos un instanceId determinista del rng del state. Esto avanza la rng
-  // y guardamos el snapshot resultante en el nuevo state, manteniendo replay-ability.
+  // Ships: requieren strength/hp + entran al fleet.
+  if (card.type === 'ship') {
+    if (card.strength === undefined || card.hp === undefined) return { state, events: [] }
+    return playShipCard(state, ps, card, idx, player)
+  }
+  // v3.0.3: Relics y tech "permanentes" entran a relicsInPlay/techInPlay.
+  // Abilities con trigger continuous y effect keyword_amplifier/cost_modifier
+  // se registran en state al jugar (cleanup al destruir en Phase 3+).
+  if (card.type === 'relic' || card.type === 'tech') {
+    return playPermanentCard(state, ps, card, idx, player)
+  }
+  // event (Phase 3+): one-shot, ejecuta on_play y descarta.
+  return { state, events: [] }
+}
+
+function playShipCard(
+  state: GameState,
+  ps: PlayerState,
+  card: Card,
+  idx: number,
+  player: PlayerId,
+): ReducerResult {
+  if (card.strength === undefined || card.hp === undefined) return { state, events: [] }
   const rng = createRng(state.seed, state.rng)
   const instanceId = `ship_${rng.nextId()}`
   const ship: ShipInstance = {
@@ -430,7 +449,6 @@ function handlePlayCard(state: GameState, cardId: string): ReducerResult {
     damageTaken: 0,
     keywords: card.keywords,
   }
-
   let next = setPlayer(state, player, {
     ...ps,
     hand: [...ps.hand.slice(0, idx), ...ps.hand.slice(idx + 1)],
@@ -438,9 +456,7 @@ function handlePlayCard(state: GameState, cardId: string): ReducerResult {
     energy: ps.energy - card.cost,
   })
   next = { ...next, rng: rng.snapshot() }
-  const events: GameEvent[] = [{ type: 'CARD_PLAYED', cardId, player }]
-
-  // Ejecutar abilities con trigger 'on_play' a través del interpreter.
+  const events: GameEvent[] = [{ type: 'CARD_PLAYED', cardId: card.id, player }]
   for (const ability of card.abilities) {
     if (ability.trigger.kind !== 'on_play') continue
     const result = executeEffect(ability.effect, next, {
@@ -451,9 +467,99 @@ function handlePlayCard(state: GameState, cardId: string): ReducerResult {
     next = result.state
     for (const e of result.emit) events.push(e)
   }
-
   return {
-    state: appendLog(next, { type: 'PLAY_CARD', cardId }),
+    state: appendLog(next, { type: 'PLAY_CARD', cardId: card.id }),
+    events,
+  }
+}
+
+/**
+ * v3.0.3: jugar una relic o tech "permanente". Entra a relicsInPlay/techInPlay
+ * del owner. Abilities con trigger continuous + effect keyword_amplifier o
+ * cost_modifier se registran al jugarlo en state.keywordAmplifiers /
+ * state.costModifiers respectivamente.
+ */
+function playPermanentCard(
+  state: GameState,
+  ps: PlayerState,
+  card: Card,
+  idx: number,
+  player: PlayerId,
+): ReducerResult {
+  const rng = createRng(state.seed, state.rng)
+  const instanceId = `${card.type}_${rng.nextId()}`
+  // Las relics/tech NO tienen strength/hp; usamos shipInstance shape para
+  // unificar zonas. strength/hp/damageTaken son placeholders inertes.
+  const permanent: ShipInstance = {
+    instanceId,
+    cardId: card.id,
+    controller: player,
+    strength: 0,
+    maxHp: 0,
+    hp: 0,
+    damageTaken: 0,
+    keywords: card.keywords,
+  }
+  const zone = card.type === 'relic' ? 'relicsInPlay' : 'techInPlay'
+  let next: GameState = {
+    ...state,
+    rng: rng.snapshot(),
+    players: {
+      ...state.players,
+      [player]: {
+        ...ps,
+        hand: [...ps.hand.slice(0, idx), ...ps.hand.slice(idx + 1)],
+        [zone]: [...ps[zone], permanent],
+        energy: ps.energy - card.cost,
+      },
+    },
+  }
+  // Registrar continuous abilities con effect keyword_amplifier o cost_modifier.
+  for (const ability of card.abilities) {
+    if (ability.trigger.kind !== 'continuous') continue
+    if (ability.effect.op === 'keyword_amplifier') {
+      next = {
+        ...next,
+        keywordAmplifiers: [
+          ...next.keywordAmplifiers,
+          {
+            source: instanceId,
+            controller: player,
+            keyword: ability.effect.keyword,
+            deltaBonus: ability.effect.deltaBonus,
+          },
+        ],
+      }
+    } else if (ability.effect.op === 'cost_modifier') {
+      next = {
+        ...next,
+        costModifiers: [
+          ...next.costModifiers,
+          {
+            source: instanceId,
+            scope: 'refluencia',
+            target: { keyword: ability.effect.target.keyword },
+            amount: ability.effect.delta,
+            minCost: ability.effect.minCost,
+          },
+        ],
+      }
+    }
+  }
+  // Ejecutar abilities on_play también (no típico en relics, pero válido).
+  const events: GameEvent[] = [{ type: 'CARD_PLAYED', cardId: card.id, player }]
+  for (const ability of card.abilities) {
+    if (ability.trigger.kind !== 'on_play') continue
+    const result = executeEffect(ability.effect, next, {
+      controller: player,
+      selfShipId: instanceId,
+      sourceCardId: card.id,
+    })
+    next = result.state
+    for (const e of result.emit) events.push(e)
+  }
+  return {
+    state: appendLog(next, { type: 'PLAY_CARD', cardId: card.id }),
     events,
   }
 }

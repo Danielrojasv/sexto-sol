@@ -245,7 +245,9 @@ describe('reducer — PLAY_CARD (Naves)', () => {
     expect(r.state).toBe(s)
   })
 
-  it('jugar tipo no-Nave (Tecnología) es no-op en Phase 2', () => {
+  it('jugar tecnología sin abilities continuous entra a techInPlay (Phase 1 kernel)', () => {
+    // v3.0.3: relics y tech permanentes ahora se procesan vía handlePlayCard.
+    // Una tech sin abilities especiales entra a techInPlay del owner.
     const tech: Card = {
       id: 't',
       name: 'Tech',
@@ -258,9 +260,10 @@ describe('reducer — PLAY_CARD (Naves)', () => {
     }
     let s = fresh({ p1Deck: [tech, ...deck(30)] })
     s = apply(s, { type: 'END_PHASE' }).state
-    const before = s
     const r = apply(s, { type: 'PLAY_CARD', cardId: 't' })
-    expect(r.state).toBe(before)
+    expect(r.state.players.p1.techInPlay).toHaveLength(1)
+    expect(r.state.players.p1.techInPlay[0]?.cardId).toBe('t')
+    expect(r.state.players.p1.hand.find((c) => c.id === 't')).toBeUndefined()
   })
 })
 

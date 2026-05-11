@@ -1,12 +1,18 @@
 // PlayView — tablero jugable. Wire de acciones: PLAY_CARD, ACTIVATE_PLANET,
 // DECLARE_ATTACK con target picker, END_PHASE, CONCEDE, DEPLOY_HERO.
 
+import { useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { cardById } from '@/data/cards'
+import { decideAction } from '@/engine/ai/scriptedAI'
 import { getEffectiveStrength } from '@/engine/derive/strength'
 import type { GameState, PlayerId, PlayerState, ShipInstance } from '@/engine/types'
 import { MiniCard } from './MiniCard'
 import { PrivacyShield } from './PrivacyShield'
+
+/** Delay visual entre acciones IA (ms) — el usuario debe alcanzar a ver
+ *  qué hace la IA antes de la siguiente acción. */
+const AI_ACTION_DELAY_MS = 1200
 
 const PHASE_LABEL: Record<string, string> = {
   recoleccion: 'Recolección',
@@ -376,6 +382,24 @@ export function PlayView() {
   const state = useGameStore((s) => s.state)
   const setView = useGameStore((s) => s.setView)
   const privacyShield = useGameStore((s) => s.privacyShield)
+  const aiPlayer = useGameStore((s) => s.aiPlayer)
+  const dispatch = useGameStore((s) => s.dispatch)
+
+  // Trigger automático de IA: cuando es turno del AI player + partida en
+  // progreso + no hay privacy shield, dispatchear decideAction con delay
+  // visual. Re-corre con cada cambio relevante del state para encadenar
+  // acciones del turno IA hasta que END_PHASE pase el turno.
+  useEffect(() => {
+    if (!state) return
+    if (!aiPlayer) return
+    if (state.activePlayer !== aiPlayer) return
+    if (state.outcome.kind !== 'in_progress') return
+    const timer = setTimeout(() => {
+      const action = decideAction(state, aiPlayer)
+      dispatch(action)
+    }, AI_ACTION_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [state, aiPlayer, dispatch])
 
   if (!state) {
     return (
