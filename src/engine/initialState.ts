@@ -177,6 +177,13 @@ export function createInitialState(setup: NewGameSetup): GameState {
     makeHero(setup.p2Hero),
   )
 
+  // cardRegistry: indexa todas las cartas de ambos decks por id para que el
+  // intérprete y el event bus puedan resolver `cardId → Card` de naves en fleet
+  // (cuya card def ya salió de hand al jugarse). Read-only post-setup.
+  const cardRegistry: Record<string, Card> = {}
+  for (const c of setup.p1Deck ?? []) cardRegistry[c.id] = c
+  for (const c of setup.p2Deck ?? []) cardRegistry[c.id] = c
+
   const setupState: GameState = {
     seed: setup.seed,
     rng: rng.snapshot(),
@@ -189,6 +196,7 @@ export function createInitialState(setup: NewGameSetup): GameState {
     pendingEvents: [],
     log: [],
     outcome: { kind: 'in_progress' },
+    cardRegistry,
   }
 
   return applyFirstTurnStart(setupState)
