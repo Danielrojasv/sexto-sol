@@ -2,92 +2,128 @@
 
 Formato: `[status] título — nota`. Status: ` ` pending, `x` done, `~` in progress, `-` cancelled.
 
-> Para detalles técnicos, ver `ARCHITECTURE.md` Fase X. Para diseño, ver `docs/specs/design-v0.md`.
+> Para detalles técnicos, ver `ARCHITECTURE.md`. Para diseño, ver `GAME-RULES.md`. Para auditorías de los canarys del set base, ver `docs/audits/`.
 
 ---
 
 ## Fase 0 — Infraestructura ✅
 
-- [x] Crear scaffold del repo (`/opt/sexto-sol/`)
-- [x] CLAUDE.md, README.md, GAME-RULES.md, ARCHITECTURE.md, BACKLOG.md, docs/specs/\_template.md
-- [x] Spec maestra `design-v0.md` viva
-- [x] `git init` + push a repo `Danielrojasv/sexto-sol` (privado)
-- [x] `pnpm init` + Node 22 + TypeScript + Vite scaffold
-- [x] ESLint + Prettier + Vitest + fast-check
-- [x] CI básico (lint + typecheck + test + build + gitleaks)
-- [x] Pre-commit hook (husky + tsc + lint-staged + gitleaks graceful)
-- [x] SECURITY-RULES.md y PERFORMANCE-RULES.md (placeholders, vivos)
-- [ ] Coverage gate diferido a Phase 1 (cuando haya tests reales)
+- [x] Scaffold del repo (`/opt/sexto-sol/`).
+- [x] CLAUDE.md, README.md, GAME-RULES.md, ARCHITECTURE.md, BACKLOG.md, docs/specs/\_template.md.
+- [x] Spec maestra `design-v0.md` viva.
+- [x] `git init` + push a repo (público).
+- [x] `pnpm init` + Node 22 + TypeScript + Vite scaffold.
+- [x] ESLint + Prettier + Vitest + fast-check.
+- [x] CI básico (lint + typecheck + test + build + gitleaks).
+- [x] Pre-commit hook (husky + tsc + lint-staged + gitleaks graceful).
+- [x] SECURITY-RULES.md y PERFORMANCE-RULES.md (placeholders vivos).
+- [ ] Coverage gate diferido a Phase 1 (cuando engine tenga tests reales).
 
-## Fase 1 — Engine kernel
+---
 
-- [ ] Port `rng.ts` desde myl-game (splitmix32 + xoshiro128\*\*, seed conocida)
-- [ ] Definir `GameState` types (con `MechanicCategory`, `Age`, `PlanetGift`, `Hero`)
-- [ ] Reducer puro skeleton + acciones triviales (CONCEDE, END_PHASE)
-- [ ] Event bus con resolución por categoría (Reactive→Initiative→Accumulative→Post-combat) + Premonition
-- [ ] Strategy pattern base + skeleton vacío para las 4 razas (Q'ralan, Würon, Tezhal, Zaqe)
-- [ ] Property tests baseline con fast-check (invariantes)
-- [ ] Replay tests: seed + acciones producen mismo state
+## Fase 1 — Diseño del set base v3.0 ✅
 
-## Fase 2 — Mecánicas core
+Resultado: 74 cartas únicas, 4 archetypes ortogonales, criterios objetivos de nerf documentados por raza.
 
-- [ ] Despliegue de naves
-- [ ] Combate simultáneo (sin DECLARE_BLOCK; bloqueo solo via Bastión)
-- [ ] Daño residual via Desgarro
-- [ ] Energía territorial: mundo natal +1, activación de planetas neutros (gastá 1 → +1)
-- [ ] Dones de planetas (efecto único + agotamiento hasta el próximo turno del activador)
-- [ ] Transición entre Edades (turnos 5/9 globales) con costo +1 / normal / x2 a la firma
-- [ ] Win condition: mundo natal HP 0
-- [ ] Sistema de Héroe (Edad I residente / Edad II desplegable / Edad III natales)
+- [x] GAME-RULES v3.0 cerrado (simplificación post-canarys: sin Edades, sin planetas, sin Luz/Sombra, energía automática creciente).
+- [x] CANON-LORE v2.0 cerrado (bucle causal, razas inventadas, ecos terrestres).
+- [x] Canary Würon (8 cartas + DSL v3.0.1) — archetype Külen-stacking.
+- [x] Canary Tezhal (8 cartas + DSL v3.0.2) — archetype Kamikaze-tempo.
+- [x] Canary Q'ralan (8 cartas) — archetype Formación Solar masa-control.
+- [x] Canary Zaqe (8 cartas + DSL v3.0.3) — archetype Persistencia económica.
+- [x] Pool total: 74 cartas (Q'ralan 19, Würon 19, Tezhal 18, Zaqe 18).
+- [x] DSL v3.0.3 schema-only (interpreter pending Phase 3).
 
-## Fase 3 — Razas (set base, ~30 cartas por raza)
+Auditorías canary en `docs/audits/`.
 
-### Würon (PRIMERA — categoría Reactiva, ancla narrativa)
+---
 
-- [ ] `Külen`: nave gana +1 fuerza permanente al recibir daño
-- [ ] `Lof`: clanes vinculados se buffean entre sí
-- [ ] ~30 cartas iniciales (placeholder design)
+## Fase 2 — Loop de validación offline ✅
 
-### Q'ralan (Acumulativa)
+4 agents operativos para validación cuantitativa offline (no se ejecutan en producción — son tooling de diseño).
 
-- [ ] `Formación Solar`: +1 fuerza por cada otra nave Q'ralan en juego
-- [ ] `Mit'a interno` (submecánica): tributo acumulado activa habilidades especiales
-- [ ] ~30 cartas
+- [x] SPEC 1: card-designer agent actualizado con compendio de restricciones inviolables del set base (`.claude/agents/card-designer.md`).
+- [x] SPEC 2: deck-builder agent + 12 mazos canónicos del meta (`docs/playtest/decks/`).
+- [x] SPEC 3: game-simulator agent (Python tooling, IA scripted) + sim-validation initial baseline (`docs/playtest/sim-validation/initial-tests.yaml`).
+- [x] SPEC 4: balance-analyst agent + analysis-validation initial baseline (`docs/playtest/analysis-validation/initial-tests.yaml`).
+- [~] Known limitation: IA del simulator no es variant-aware. Pendiente para mejora opcional (ver Opcional A).
 
-### Tezhal (Iniciativa)
+---
 
-- [ ] `Ignición`: sacrificás nave propia para potenciar otra acción
-- [ ] ~30 cartas
+## Fase 3 — Engine kernel TypeScript (Phase 1 técnica) 🚧
 
-### Zaqe (Post-combate)
+Implementar el interpreter de primitives DSL v3.0.3 en TypeScript puro. Habilita Phase 4 (web MVP jugable) y Phase 5 (playtesting humano).
 
-- [ ] `Refluencia`: naves derrotadas vuelven al fondo del mazo, -1 al ser robadas otra vez
-- [ ] ~30 cartas
+- [ ] Port `rng.ts` (splitmix32 + xoshiro128\*\*, seed determinista).
+- [ ] `GameState` types completos.
+- [ ] Reducer puro skeleton + acciones (CONCEDE, END_PHASE, PLAY_CARD, ATTACK, ACTIVATE_ABILITY).
+- [ ] Event bus con resolución por categoría (Reactive → Initiative → Accumulative → Post-combat) + Premonition.
+- [ ] Interpreter para los primitives v3.0.3 (was_damaged_this_turn, ship_attacked, attacker target, keyword_amplifier, set_to_max, cost_modifier, chosen_permanent, count_filter con zone, search con zone pozo_astral).
+- [ ] Strategy pattern base para las 4 razas.
+- [ ] Property tests baseline con fast-check (invariantes).
+- [ ] Replay tests: seed + acciones producen mismo state.
+- [ ] Coverage gate ≥ 85% para `src/engine/`.
 
-### Cross-raza
+---
 
-- [ ] Habilidades duales Luz/Sombra en Legendarias (Sombra activa por condición de la firma)
-- [ ] 1-3 héroes por raza
-- [ ] 12-16 Dones de planetas únicos
+## Fase 4 — Web MVP jugable 🚧
 
-## Fase 4 — UI playable
+Conectar el engine TS (Fase 3) con la UI existente. Habilita primer playtesting humano.
 
-- [ ] React shell + routing
-- [ ] Canvas del sector estelar (PixiJS)
-- [ ] Mano + deck + tablero + héroe en mundo natal
-- [ ] Drag & drop de cartas
-- [ ] Animaciones de combate básicas
-- [ ] AI scripted ("si puedo matar, mato; si no, defiendo")
-- [ ] Modo "Playtest local" (1 humano vs IA + hot-seat)
+- [ ] Reemplazar `PlayView` placeholder con vista de juego real.
+- [ ] Loader de mazos: consumir formato YAML del deck-builder (`docs/playtest/decks/`).
+- [ ] IA scripted simple integrada al frontend (referencia: simulator Python).
+- [ ] Modo single-player vs IA + hot-seat.
+- [ ] Tutorial inline básico.
+- [ ] Animaciones de combate con Framer Motion + PixiJS.
+- [ ] Drag & drop de cartas.
+- [ ] Deploy MVP (Vercel / Netlify / GitHub Pages).
 
-## Fase 5 — Multiplayer (TBD)
+---
 
-- [ ] Decidir arquitectura backend (Node + WebSocket vs Cloudflare Durable Objects vs otro)
-- [ ] Esquema de cuenta de usuario + auth
-- [ ] Async PVP estilo Marvel Snap
-- [ ] Matchmaking básico
-- [ ] Persistencia de mazos
-- [ ] Telemetría básica
+## Opcional A — Mejorar IA simulator (variant-aware) 🟡
+
+Resuelve `known_limitation` de Fase 2. Sube confidence cross-profile de balance-analyst a high.
+
+- [ ] Implementar heurísticas por archetype.variant (Aggro / Midrange / Control / Combo) en `scripts/sim/simulator.py`.
+- [ ] Re-correr validation tests.
+- [ ] Diff vs baseline original.
+
+Se puede hacer en paralelo o después de Fase 4. NO bloquea web MVP.
+
+---
+
+## Fase 5 — Playtesting humano + ajustes 🔮
+
+Después del MVP web jugable. Recolección de feedback cualitativo + validación cuantitativa con humanos.
+
+- [ ] Reclutamiento de playtesters (10-20 inicial).
+- [ ] Métricas de UX (¿se entiende?, ¿es divertido?, ¿quiero volver?).
+- [ ] Validación de criterios objetivos de nerf con simulator v1+.
+- [ ] Iteración de balance basada en data (Fase 2 + Fase 5 combinadas).
+- [ ] Decisión: ¿reintroducir Edades / planetas / héroes pasivos? (Phase 2/3 del juego).
+
+---
+
+## Fase 6 — Producción (futuro) 🔮
+
+Cuando el MVP esté validado y haya comunidad.
+
+- [ ] Decisión: launch en Steam, mobile (RN/Capacitor), web (PWA)?
+- [ ] Multiplayer arquitectura (Node + WebSocket vs Cloudflare DO vs otro).
+- [ ] Esquema de cuenta + auth.
+- [ ] Async PVP estilo Marvel Snap.
+- [ ] Matchmaking básico.
+- [ ] Persistencia de mazos.
+- [ ] Telemetría.
+- [ ] Sobres (5 cartas, 1 Rara+, pity timer cada 10).
+- [ ] Crafting con polvo (25/100/400/1600).
+- [ ] Pase del Sol ($9.99/mes).
+- [ ] Bundles.
+- [ ] Cosméticos premium.
+- [ ] Localización (es + en lanzamiento, pt con expansión Tupi-Guaraní).
+
+---
 
 ## Fase de Lore (paralela a las técnicas)
 
@@ -101,32 +137,13 @@ Derivada del **Arco del Jugador** (`docs/lore/arco-del-jugador.md` v1.0). Estos 
 - [ ] **Sub-spec del virus** — Regla 4 (no tiene voz, no se personifica). Cómo se manifiesta mecánicamente (efectos de Corrupción, propagación, espejos oscuros). Cómo se invoca sin invocar.
 - [ ] **Sub-spec de la Tierra-tumba** — Regla 6 (espejo, no escenario). Cómo se referencia en flavor text del set base sin desarrollarse, cómo se desarrolla parcialmente en Mini 1.3, cómo se mantiene fuera de cuadro a perpetuidad.
 
-## Fase 6 — Beta + monetización
-
-- [ ] 50 jugadores invitados
-- [ ] Métricas de balance (winrate por facción)
-- [ ] **Sobres**: 5 cartas, 1 garantizada Rara+, 150 oro o $1.99 USD; pity timer cada 10 sobres
-- [ ] **Crafting de cartas con polvo**: 25/100/400/1600 desencanto, 4× para craft
-- [ ] **Pase del Sol** (suscripción mensual $9.99): +25% oro, +1 sobre/día, pity timer mejorado, battle pass premium
-- [ ] **Bundles**: set base completo $59.99, faction bundles $19.99, starter bundle $19.99
-- [ ] **Cosméticos premium**: variantes de carta, tableros, finishers, avatars, marcos por facción
-- [ ] **Math F2P validation**: ~3 meses a colección base completa para F2P, ~5-6 semanas para suscriptor
-- [ ] Decisión: launch en Steam, mobile (RN/Capacitor), web (PWA)?
-
-## Fase 7 — Lanzamiento
-
-- [ ] Localización español + inglés (lanzamiento)
-- [ ] Localización portugués (con expansión Tupi-Guaraní)
-- [ ] Marketing inicial
-- [ ] Tournaments comunitarios
-
 ---
 
 ## Roadmap de ediciones (post-lanzamiento)
 
-### Set base — "Sexto Sol" (lanzamiento)
+### Set base — "Sexto Sol" (v3.0)
 
-4 razas: Q'ralan, Würon, Tezhal, Zaqe. ~120-150 cartas.
+4 razas: Q'ralan, Würon, Tezhal, Zaqe. 74 cartas validadas.
 
 ### Expansiones futuras (TBD)
 
@@ -138,6 +155,15 @@ Mecanismos canónicos para introducir nuevas razas (ver `CANON-LORE.md` §10):
 
 Para cada raza nueva: nombre propio inventado, cosmovisión inspirada pero distinta, categoría de mecánica (Reactiva / Iniciativa / Acumulativa / Post-combate o nueva), eco terrestre en lore (sin nombrarlo como raza jugable).
 
+### Re-introducción de capas v2.0 (TBD)
+
+Capas removidas temporalmente en v3.0 para validar el core. Posibles candidatos a re-introducir post-validación:
+
+- **Edades I/II/III** — sistema de escalado de poder narrativo. Removido en v3.0. Posiblemente vuelva con set 2 si simulación valida que el core funciona sin ellas.
+- **Planetas neutrales con Dones** — recursos compartidos. Removido en v3.0. Posible re-introducción como expansión de modo de juego.
+- **Héroes pasivos en mundo natal** — héroe como comandante de Edad I. Simplificado a Naves Legendarias en v3.0.
+- **Luz/Sombra en Legendarias** — habilidad dual condicional. Posible mecánica de expansión, no del set base.
+
 ### Posible facción "Espejo Oscuro"
 
 Versiones tecno-industriales corruptas de cada raza, manifestación del virus. Material para Edición 2 o 3, no del set inicial. Ver `CANON-LORE.md` §6.4.
@@ -148,14 +174,11 @@ Versiones tecno-industriales corruptas de cada raza, manifestación del virus. M
 
 - [ ] Multiplayer realtime o async?
 - [ ] Async tipo Marvel Snap (turnos enviados) vs LoR (sesiones live)?
-- [ ] Sobres como modelo principal o subscripción?
-- [ ] Engine híbrido determinista + UI procedural (para animations)?
+- [ ] Engine híbrido determinista + UI procedural (animations)?
 - [ ] Voice acting / soundtrack original?
-- [ ] Lista cerrada de Dones de planetas (target: 12-16)
-- [ ] Confirmación de nombres definitivos de mecánicas firma (Külen, Ignición, Formación Solar, Refluencia son provisionales)
-- [ ] Diseño de los 4 héroes principales (1 por raza para v0.1)
-- [ ] Reglas para cartas multi-categoría (si las habrá)
+- [ ] Cuándo reintroducir Edades (post-MVP humano? con set 2?)
+- [ ] Cuándo reintroducir planetas (post-MVP humano? con set 2?)
 
 ---
 
-_Vivo. Última actualización: 2026-05-08._
+_Vivo. Última actualización: 2026-05-11._
