@@ -72,7 +72,9 @@ export interface ShipInstance {
   instanceId: ShipInstanceId
   cardId: string
   controller: PlayerId
-  /** Fuerza actual (puede modificarse por Külen, Formación Solar, etc.). */
+  /** Fuerza base. Buffs permanentes (Külen, etc.) la modifican directamente.
+   *  La fuerza EFECTIVA (incluye derive como Formación Solar) se computa via
+   *  `getEffectiveStrength(ship, state)` de `src/engine/derive/strength.ts`. */
   strength: number
   /** HP máximo de la nave (no cambia por combate, solo por buffs). */
   maxHp: number
@@ -84,6 +86,13 @@ export interface ShipInstance {
   keywords: readonly string[]
   /** True si esta instancia es el héroe del jugador. Su muerte vuelve al natal. */
   isHero?: boolean
+  /** v3.0.1: true si la nave recibió daño durante el turno actual.
+   *  Set true en applyDamageToShip; reset false en TURN_START.
+   *  Filtro `ShipFilter.wasDamagedThisTurn` consulta este campo. */
+  damagedThisTurn?: boolean
+  /** v3.0.3: tracking de revival Refluencia. Si true, la próxima muerte va a
+   *  Disolución terminal (no vuelve a pozoAstral). */
+  revivedFromRefluencia?: boolean
 }
 
 // ---- Héroe ----------------------------------------------------------------
@@ -151,6 +160,33 @@ export interface PlayerState {
   /** Energía gastable este turno (no acumula entre turnos). */
   energy: number
   fleet: readonly ShipInstance[]
+  /** v3.0.3 Refluencia: naves Zaqe con keyword `refluencia` que murieron y
+   *  pueden revivirse en fase Despliegue del owner via acción PAY_REFLUENCIA.
+   *  Su muerte siguiente va a `disolucion` (terminal, no recuperable). */
+  pozoAstral: readonly ShipInstance[]
+  /** v3.0.3 Disolución: naves que ya no pueden volver al juego por ningún medio.
+   *  Cementerio terminal. NO se expone via API de search/move_to_zone. */
+  disolucion: readonly ShipInstance[]
+  /** v3.0.3 Reliquias en juego (zona separada de fleet, no atacable). */
+  relicsInPlay: readonly ShipInstance[]
+  /** v3.0.3 Tecnologías "permanentes" en juego (zona separada de fleet). */
+  techInPlay: readonly ShipInstance[]
+}
+
+/** v3.0.3 Cost modifier registrado por relics como R2 Espejo del Reflujo Áureo. */
+export interface CostModifier {
+  /** Identidad de la fuente del modifier (instanceId del relic). Permite limpiar
+   *  el modifier al destruir el relic. */
+  source: ShipInstanceId
+  /** Ámbito del modifier. `refluencia`: descuento al revival via PAY_REFLUENCIA.
+   *  `play`: descuento al jugar la carta target. */
+  scope: 'refluencia' | 'play'
+  /** Keyword/cardType al que aplica el modifier (ej: `refluencia`, `tezhal`). */
+  target: { keyword?: string; cardType?: CardType; race?: Race }
+  /** Delta aplicado al costo. Negativo = descuento. */
+  amount: number
+  /** Costo mínimo después del clamp. Mínimo inviolable (no revival/play gratis). */
+  minCost: number
 }
 
 // ---- Estado global --------------------------------------------------------
@@ -190,6 +226,12 @@ export interface GameState {
    * createInitialState lo construye).
    */
   cardRegistry: Readonly<Record<string, Card>>
+  /**
+   * v3.0.3 Cost modifiers activos. Cada relic con `op: 'cost_modifier'` se
+   * registra acá al desplegarse y se limpia al destruirse. Consultado al
+   * calcular costo de revival (PAY_REFLUENCIA) o de jugar una carta.
+   */
+  costModifiers: readonly CostModifier[]
 }
 
 // ---- Acciones (lo que el jugador puede hacer) -----------------------------
@@ -207,6 +249,22 @@ export type GameAction =
   | { type: 'ACTIVATE_HERO_POWER'; abilityId: string }
   | { type: 'DEPLOY_HERO' }
   | { type: 'ACTIVATE_ABILITY'; sourceId: string; abilityId: string }
+  | {
+      /** v3.0.3 Tezhal Initiative: activa una carta con keyword `ignicion`
+       *  sacrificando una nave Tezhal aliada. Reemplaza PLAY_CARD para cartas
+       *  tech/event con esta keyword (handlePlayCard sólo procesa ships).
+       *  Para cartas ship con `ignicion`, también puede usarse. */
+      type: 'ACTIVATE_IGNICION'
+      cardId: string
+      sacrificeShipId: ShipInstanceId
+    }
+  | {
+      /** v3.0.3 Zaqe Post-combat: paga el costo de revival de una nave Zaqe
+       *  que está en `pozoAstral` para devolverla al campo con stats base
+       *  y HP máximo. Sólo en fase `despliegue` del owner. */
+      type: 'PAY_REFLUENCIA'
+      shipId: ShipInstanceId
+    }
   | { type: 'END_PHASE' }
   | { type: 'CONCEDE'; player: PlayerId }
 

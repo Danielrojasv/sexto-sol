@@ -3,6 +3,7 @@
 
 import { useGameStore } from '@/store/gameStore'
 import { cardById } from '@/data/cards'
+import { getEffectiveStrength } from '@/engine/derive/strength'
 import type { GameState, PlayerId, PlayerState, ShipInstance } from '@/engine/types'
 import { MiniCard } from './MiniCard'
 import { PrivacyShield } from './PrivacyShield'
@@ -34,24 +35,27 @@ function FleetCard({
   isOwn,
   isActive,
   selectedAttackerId,
+  state,
   onClick,
 }: {
   ship: ShipInstance
   isOwn: boolean
   isActive: boolean
   selectedAttackerId: string | null
+  state: GameState
   onClick?: () => void
 }) {
   const cardDef = cardById(ship.cardId)
   const isSelected = selectedAttackerId === ship.instanceId
   const canAttack = isOwn && isActive
+  const effStrength = getEffectiveStrength(ship, state)
 
   if (!cardDef) {
     return (
       <div className="flex-shrink-0 w-[90px] aspect-[2/3] rounded bg-slate-800 border border-slate-700 p-2">
         <div className="text-[10px] text-slate-300">{ship.cardId}</div>
         <div className="text-[10px] font-mono text-slate-400 mt-1">
-          {ship.strength}/{ship.hp}
+          {effStrength}/{ship.hp}
         </div>
       </div>
     )
@@ -61,6 +65,7 @@ function FleetCard({
       card={cardDef}
       compact
       shipInstance={ship}
+      effectiveStrength={effStrength}
       onClick={onClick}
       highlight={
         isSelected
@@ -180,6 +185,7 @@ function PlayerSection({
                 isOwn={player === state.activePlayer}
                 isActive={phase === 'combate'}
                 selectedAttackerId={selectedAttackerId}
+                state={state}
                 onClick={() => handleFleetShipClick(ship.instanceId, player)}
               />
             ))}

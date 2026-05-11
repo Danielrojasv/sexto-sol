@@ -9,6 +9,7 @@
 // DEPLOY_HERO, ACTIVATE_HERO_POWER (skeleton), mano cap 7, win conditions.
 
 import { createRng } from './rng'
+import { getEffectiveStrength } from './derive/strength'
 import { processEventWithCascade } from './eventBus'
 import { executeEffect } from './interpreter'
 import type {
@@ -92,7 +93,12 @@ function applyDamageToShip(
 ): { ship: ShipInstance; destroyed: boolean } {
   const newHp = ship.hp - amount
   return {
-    ship: { ...ship, hp: newHp, damageTaken: ship.damageTaken + amount },
+    ship: {
+      ...ship,
+      hp: newHp,
+      damageTaken: ship.damageTaken + amount,
+      damagedThisTurn: true,
+    },
     destroyed: newHp <= 0,
   }
 }
@@ -121,9 +127,18 @@ function replaceShip(
   return setPlayer(state, ownerId, { ...player, fleet })
 }
 
+const KW_REFLUENCIA = 'refluencia'
+
 /**
- * Una nave muere: si es héroe vuelve al mundo natal con cooldown=1; si no,
- * sale del fleet (no se modela cementerio de naves explícito en Phase 2).
+ * Routing de muerte canónico v3.0:
+ *   1. Héroe → vuelve a mundo natal con cooldown 1.
+ *   2. Nave con keyword `refluencia` que NO ha revivido → pozoAstral del owner
+ *      (con stats base reseteados desde card def).
+ *   3. Nave con `revivedFromRefluencia: true` → disolucion (terminal).
+ *   4. Default → removida del fleet (sin destino persistente).
+ *
+ * Reset al pozoAstral: stats base = ship.strength/maxHp/keywords del card def
+ * (resetea Külen buffs y otros modifiers permanentes). damagedThisTurn → false.
  */
 function killShip(state: GameState, ownerId: PlayerId, ship: ShipInstance): {
   state: GameState
@@ -146,6 +161,41 @@ function killShip(state: GameState, ownerId: PlayerId, ship: ShipInstance): {
       emitEvent(events, { type: 'HERO_RETURNED', player: ownerId })
       return { state: next, events }
     }
+  }
+  // Refluencia: si la nave tiene la keyword y no revivió previamente, va a
+  // pozoAstral con stats base. Si ya revivió, va a disolucion (terminal).
+  if (ship.keywords.includes(KW_REFLUENCIA) && !ship.revivedFromRefluencia) {
+    const card = state.cardRegistry[ship.cardId]
+    const baseShip: ShipInstance =
+      card && card.strength !== undefined && card.hp !== undefined
+        ? {
+            ...ship,
+            strength: card.strength,
+            maxHp: card.hp,
+            hp: card.hp,
+            damageTaken: 0,
+            damagedThisTurn: false,
+            keywords: card.keywords,
+          }
+        : ship
+    const player = state.players[ownerId]
+    const stateWithPozo = setPlayer(state, ownerId, {
+      ...player,
+      pozoAstral: [...player.pozoAstral, baseShip],
+    })
+    const next = replaceShip(stateWithPozo, ownerId, ship.instanceId, null)
+    emitEvent(events, { type: 'SHIP_DESTROYED', shipId: ship.instanceId, cause: 'combat' })
+    return { state: next, events }
+  }
+  if (ship.revivedFromRefluencia) {
+    const player = state.players[ownerId]
+    const stateWithDisolution = setPlayer(state, ownerId, {
+      ...player,
+      disolucion: [...player.disolucion, ship],
+    })
+    const next = replaceShip(stateWithDisolution, ownerId, ship.instanceId, null)
+    emitEvent(events, { type: 'SHIP_DESTROYED', shipId: ship.instanceId, cause: 'combat' })
+    return { state: next, events }
   }
   const next = replaceShip(state, ownerId, ship.instanceId, null)
   emitEvent(events, { type: 'SHIP_DESTROYED', shipId: ship.instanceId, cause: 'combat' })
@@ -226,6 +276,28 @@ function applyTurnStart(
     p.exhaustedBy === player ? { ...p, exhausted: false, exhaustedBy: null } : p,
   )
   let next: GameState = { ...state, sector: { planets } }
+
+  // v3.0.1: reset damagedThisTurn en TODAS las naves al iniciar turno.
+  // El flag persiste a través de los turnos del oponente (no se resetea entre
+  // turnos parciales). Reseteamos en el TURN_START del activePlayer.
+  next = {
+    ...next,
+    players: {
+      ...next.players,
+      p1: {
+        ...next.players.p1,
+        fleet: next.players.p1.fleet.map((sh) =>
+          sh.damagedThisTurn ? { ...sh, damagedThisTurn: false } : sh,
+        ),
+      },
+      p2: {
+        ...next.players.p2,
+        fleet: next.players.p2.fleet.map((sh) =>
+          sh.damagedThisTurn ? { ...sh, damagedThisTurn: false } : sh,
+        ),
+      },
+    },
+  }
 
   // Hero: decrementa cooldown, resetea power counter.
   const playerState = next.players[player]
@@ -457,9 +529,14 @@ function handleDeclareAttack(
   events.push(attackedEvent)
   next = processEventWithCascade(next, attackedEvent, events)
 
+  // Fuerza efectiva del atacante (base + FS dinámico) congelada al inicio del
+  // combate. Cualquier cambio de fuerza durante el combate (ej: FS recalcula si
+  // otra nave muere) no afecta esta resolución particular.
+  const attackerEffStrength = getEffectiveStrength(attacker, state)
+
   if (target.kind === 'homeworld') {
     if (target.ref !== defenderId) return { state, events: [] }
-    const dmg = damageHomeworld(next, defenderId, attacker.strength, attackerShipId)
+    const dmg = damageHomeworld(next, defenderId, attackerEffStrength, attackerShipId)
     next = dmg.state
     for (const e of dmg.events) {
       events.push(e)
@@ -470,15 +547,16 @@ function handleDeclareAttack(
     const defInfo = findShipById(next, target.ref as ShipInstanceId)
     if (!defInfo || defInfo.ownerId !== defenderId) return { state, events: [] }
     const defender = defInfo.ship
-    const atkResult = applyDamageToShip(attacker, defender.strength)
-    const defResult = applyDamageToShip(defender, attacker.strength)
+    const defenderEffStrength = getEffectiveStrength(defender, state)
+    const atkResult = applyDamageToShip(attacker, defenderEffStrength)
+    const defResult = applyDamageToShip(defender, attackerEffStrength)
     next = replaceShip(next, attackerInfo.ownerId, attacker.instanceId, atkResult.ship)
     next = replaceShip(next, defInfo.ownerId, defender.instanceId, defResult.ship)
 
     const defDamagedEvent: GameEvent = {
       type: 'SHIP_DAMAGED',
       shipId: defender.instanceId,
-      amount: attacker.strength,
+      amount: attackerEffStrength,
       source: attackerShipId,
     }
     events.push(defDamagedEvent)
@@ -487,7 +565,7 @@ function handleDeclareAttack(
     const atkDamagedEvent: GameEvent = {
       type: 'SHIP_DAMAGED',
       shipId: attacker.instanceId,
-      amount: defender.strength,
+      amount: defenderEffStrength,
       source: defender.instanceId,
     }
     events.push(atkDamagedEvent)
@@ -495,7 +573,7 @@ function handleDeclareAttack(
 
     // Desgarro: si atacante tiene Desgarro y mata al defensor con exceso, pasa al natal.
     if (defResult.destroyed && attacker.keywords.includes(KW_DESGARRO)) {
-      const excess = attacker.strength - defender.hp
+      const excess = attackerEffStrength - defender.hp
       if (excess > 0) {
         const dmg = damageHomeworld(next, defenderId, excess, attackerShipId)
         next = dmg.state
@@ -585,6 +663,134 @@ function handleActivateHeroPower(state: GameState, abilityId: string): ReducerRe
   }
 }
 
+const KW_IGNICION = 'ignicion'
+const RACE_TEZHAL = 'tezhal'
+
+/**
+ * v3.0.3 — Activa una carta con keyword `ignicion` sacrificando una nave
+ * Tezhal aliada (mandatory). La canónica del set base v3.0 exige race=tezhal,
+ * incluso si el filter del primitive sacrifice de la carta es más permisivo.
+ *
+ * El sacrificeShipId se pasa al interpreter via EffectContext.chosenTargets
+ * para que el primitive `sacrifice` con target `chosen_ship` resuelva a esa
+ * nave específica.
+ */
+function handleActivateIgnicion(
+  state: GameState,
+  cardId: string,
+  sacrificeShipId: ShipInstanceId,
+): ReducerResult {
+  if (state.phase !== 'despliegue') return { state, events: [] }
+  const player = state.activePlayer
+  const ps = state.players[player]
+  // Card debe estar en hand con keyword ignicion.
+  const idx = ps.hand.findIndex((c) => c.id === cardId)
+  if (idx < 0) return { state, events: [] }
+  const card = ps.hand[idx]
+  if (!card || !card.keywords.includes(KW_IGNICION)) return { state, events: [] }
+  if (card.cost > ps.energy) return { state, events: [] }
+  // sacrificeShipId debe ser nave Tezhal del mismo player.
+  const sacrificeShip = ps.fleet.find((s) => s.instanceId === sacrificeShipId)
+  if (!sacrificeShip) return { state, events: [] }
+  const sacCard = state.cardRegistry[sacrificeShip.cardId]
+  if (!sacCard || sacCard.race !== RACE_TEZHAL) return { state, events: [] }
+
+  let next = setPlayer(state, player, {
+    ...ps,
+    hand: [...ps.hand.slice(0, idx), ...ps.hand.slice(idx + 1)],
+    energy: ps.energy - card.cost,
+    graveyard: [...ps.graveyard, card],
+  })
+  const events: GameEvent[] = [{ type: 'CARD_PLAYED', cardId, player }]
+  events.push({ type: 'PHASE_START', phase: state.phase, player }) // placeholder no-op; real flow continues
+  // Quitamos el placeholder — fue mistype. Mejor mantener events limpios.
+  events.pop()
+
+  // Ejecutar abilities con trigger 'on_play' pasando sacrificeShipId como
+  // chosenTargets. El primitive `sacrifice` con target chosen_ship resolverá
+  // a la nave elegida y emitirá SHIP_DESTROYED cause:'sacrifice'.
+  for (const ability of card.abilities) {
+    if (ability.trigger.kind !== 'on_play') continue
+    const result = executeEffect(ability.effect, next, {
+      controller: player,
+      sourceCardId: card.id,
+      chosenTargets: [sacrificeShipId],
+    })
+    next = result.state
+    for (const e of result.emit) {
+      events.push(e)
+      next = processEventWithCascade(next, e, events)
+    }
+  }
+
+  return {
+    state: appendLog(next, { type: 'ACTIVATE_IGNICION', cardId, sacrificeShipId }),
+    events,
+  }
+}
+
+/**
+ * v3.0.3 — Revival via Refluencia. La nave debe estar en `pozoAstral`. El
+ * costo de revival es el costo de la card con cost modifiers scope=refluencia
+ * aplicados (clamp mínimo según modifier.minCost, default 1).
+ *
+ * Al revivir: stats base + maxHp completos + revivedFromRefluencia: true.
+ * Una segunda muerte va a Disolución (terminal) — gestionado en killShip.
+ */
+function handlePayRefluencia(state: GameState, shipId: ShipInstanceId): ReducerResult {
+  if (state.phase !== 'despliegue') return { state, events: [] }
+  const player = state.activePlayer
+  const ps = state.players[player]
+  const ship = ps.pozoAstral.find((s) => s.instanceId === shipId)
+  if (!ship) return { state, events: [] }
+  const card = state.cardRegistry[ship.cardId]
+  if (!card || card.strength === undefined || card.hp === undefined) {
+    return { state, events: [] }
+  }
+  const cost = computeRevivalCost(state, card.cost)
+  if (ps.energy < cost) return { state, events: [] }
+
+  const revivedShip: ShipInstance = {
+    ...ship,
+    strength: card.strength,
+    maxHp: card.hp,
+    hp: card.hp,
+    damageTaken: 0,
+    damagedThisTurn: false,
+    keywords: card.keywords,
+    revivedFromRefluencia: true,
+  }
+
+  const next = setPlayer(state, player, {
+    ...ps,
+    energy: ps.energy - cost,
+    pozoAstral: ps.pozoAstral.filter((s) => s.instanceId !== shipId),
+    fleet: [...ps.fleet, revivedShip],
+  })
+  return {
+    state: appendLog(next, { type: 'PAY_REFLUENCIA', shipId }),
+    events: [{ type: 'CARD_PLAYED', cardId: card.id, player }],
+  }
+}
+
+/**
+ * Calcula el costo de revival aplicando cost modifiers con scope='refluencia'.
+ * Cada modifier aplica su `amount` (negativo = descuento). El resultado se
+ * clamp-ea al máximo de los minCost (1 por defecto, GAME-RULES v3.0:
+ * "no revival gratis").
+ */
+function computeRevivalCost(state: GameState, baseCost: number): number {
+  let cost = baseCost
+  let minCost = 1
+  for (const mod of state.costModifiers) {
+    if (mod.scope !== 'refluencia') continue
+    if (mod.target.keyword !== KW_REFLUENCIA) continue
+    cost += mod.amount
+    if (mod.minCost > minCost) minCost = mod.minCost
+  }
+  return Math.max(minCost, cost)
+}
+
 /**
  * Apply pure: aplica una acción al state, devuelve el nuevo state + eventos
  * que emitió la acción.
@@ -611,5 +817,9 @@ export function apply(state: GameState, action: GameAction): ReducerResult {
     case 'ACTIVATE_ABILITY':
       // Phase 3+ implementará. No-op por ahora.
       return { state, events: [] }
+    case 'ACTIVATE_IGNICION':
+      return handleActivateIgnicion(state, action.cardId, action.sacrificeShipId)
+    case 'PAY_REFLUENCIA':
+      return handlePayRefluencia(state, action.shipId)
   }
 }

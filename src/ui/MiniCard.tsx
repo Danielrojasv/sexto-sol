@@ -16,6 +16,10 @@ interface MiniCardProps {
   highlight?: 'selected' | 'valid' | 'invalid' | null
   /** Si es una nave en fleet, muestra el HP/strength current. */
   shipInstance?: ShipInstance
+  /** Fuerza efectiva pre-calculada (incluye bonuses dinámicos como Formación
+   *  Solar). Si está set, se muestra en lugar de shipInstance.strength.
+   *  Si difiere de base se muestra como "eff (base)" para indicar el bonus. */
+  effectiveStrength?: number
   className?: string
 }
 
@@ -32,6 +36,7 @@ export function MiniCard({
   onClick,
   highlight,
   shipInstance,
+  effectiveStrength,
   className = '',
 }: MiniCardProps) {
   const width = compact ? 90 : 120
@@ -66,7 +71,15 @@ export function MiniCard({
           <div className="text-[9px] font-mono text-slate-300">
             {shipInstance ? (
               <>
-                {shipInstance.strength}/{shipInstance.hp}
+                {effectiveStrength !== undefined && effectiveStrength !== shipInstance.strength ? (
+                  <span>
+                    <span className="text-amber-300">{effectiveStrength}</span>
+                    <span className="text-slate-500"> ({shipInstance.strength})</span>
+                  </span>
+                ) : (
+                  <>{effectiveStrength ?? shipInstance.strength}</>
+                )}
+                /{shipInstance.hp}
                 {shipInstance.hp < (shipInstance.maxHp ?? card.hp) && (
                   <span className="text-red-400 ml-1">·dmg</span>
                 )}
