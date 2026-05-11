@@ -22,6 +22,7 @@
 
 import { dispatch, type EventHandler, type HandlerContext } from './events'
 import { executeEffect } from './interpreter'
+import { KW_KULEN, buildKulenHandler } from './mechanics/kulen'
 import type {
   Ability,
   Trigger,
@@ -158,11 +159,38 @@ export function runTriggers(state: GameState, event: GameEvent): RunTriggersResu
 }
 
 /**
- * Punto de extensión central: agrega aquí los scanners de mecánicas firma
- * (Külen, Refluencia, etc.) en Commit 2.
+ * Deriva handlers desde keywords firma de las naves. Las mecánicas firma
+ * (Külen, etc.) se modelan acá en vez de en ability JSON porque las cartas
+ * con la keyword no traen ability declarada — la lógica vive en el engine.
+ *
+ * - Külen (Würon, reactive): on_event SHIP_DAMAGED + survive → +1 strength
+ *   permanent. Implementación en `src/engine/mechanics/kulen.ts`.
+ * - Refluencia (Zaqe, post_combat): manejado fuera del bus en killShip
+ *   (death routing a pozoAstral).
+ * - Formación Solar (Q'ralan, accumulative): manejado via derive layer
+ *   (getEffectiveStrength), NO via bus.
+ * - Ignición (Tezhal, initiative): action explícita ACTIVATE_IGNICION, NO
+ *   via bus reactivo.
+ */
+export function deriveHandlersFromKeywords(state: GameState): readonly EventHandler[] {
+  const handlers: EventHandler[] = []
+  for (const owner of ['p1', 'p2'] as const) {
+    for (const ship of state.players[owner].fleet) {
+      if (ship.keywords.includes(KW_KULEN)) {
+        handlers.push(buildKulenHandler(ship))
+      }
+    }
+  }
+  return handlers
+}
+
+/**
+ * Punto de extensión central. Combina handlers de abilities JSON + keywords
+ * firma del engine. Ordenados luego por `dispatch()` según MechanicCategory
+ * + Premonición.
  */
 export function deriveAllHandlers(state: GameState): readonly EventHandler[] {
-  return deriveHandlersFromAbilities(state)
+  return [...deriveHandlersFromAbilities(state), ...deriveHandlersFromKeywords(state)]
 }
 
 /**

@@ -116,6 +116,10 @@ function emptyPlayer(
     graveyard: [],
     energy: 0,
     fleet: [],
+    pozoAstral: [],
+    disolucion: [],
+    relicsInPlay: [],
+    techInPlay: [],
   }
 }
 
@@ -197,6 +201,7 @@ export function createInitialState(setup: NewGameSetup): GameState {
     log: [],
     outcome: { kind: 'in_progress' },
     cardRegistry,
+    costModifiers: [],
   }
 
   return applyFirstTurnStart(setupState)
