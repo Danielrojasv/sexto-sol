@@ -1,0 +1,143 @@
+date_run: 2026-05-11
+analyst_version: 'v0 (pre-Phase-1, on top of simulator v0)'
+agent_spec: .claude/agents/balance-analyst.md
+tests_passed: 6
+tests_total: 6
+all_passed: true
+data_sources:
+  pre_existing_logs: docs/playtest/sim-validation/sample-games/ (8 games del SPEC 3)
+  inline_batches: Generadas en runtime via simulate_match (test 2-6)
+meta_pool: docs/playtest/decks/ (12 mazos del SPEC 2)
+notes:
+  - Analyst v0 calibra confianza por gap conocido del simulator v0 (IA no variant-aware).
+  - 'Métricas mecánicas (firma activations, turn stats) reportadas con high confidence.'
+  - Win rates cross-archetype reportados con low confidence + caveats explícitos.
+  - 'Recomendaciones marcadas como "pending validación con simulator v1+" cuando confidence < high.'
+  - 'Cierre del loop: card-designer → deck-builder → game-simulator → balance-analyst.'
+tests:
+  - test: 1_basic_batch_analysis
+    passed: true
+    detail:
+      files_analyzed: 8
+      has_firma_section: true
+      has_turn_stats: true
+      has_top_cards: true
+      confidence_field_present: true
+      sample_metric:
+        avg_turn: 5.5
+        validations_count: 2
+  - test: 2_criterion_evaluation
+    passed: true
+    detail:
+      criteria_evaluated: 2
+      all_have_required_fields: true
+      all_status_values_valid: true
+      criteria_summary:
+        - id: wuron_avg_close_turn_low
+          status: not_triggered
+          observed: 6.1
+          threshold: 6
+        - id: zaqe_avg_close_turn_low
+          status: triggered
+          observed: 6.1
+          threshold: 10
+      note: Valida la mecánica de evaluación. Criterios pueden o no triggear según datos reales.
+  - test: 3_counter_wheel_validation
+    passed: true
+    detail:
+      matchups_evaluated: 4
+      matchups:
+        - matchup: wuron_vs_quralan
+          expected_winner: wuron
+          observed_win_rate_for_expected: 0.3
+          matches_theory: no
+          sample_size: 10
+          confidence: low
+          note: wuron no le gana a su rival teórico en simulación.
+        - matchup: quralan_vs_tezhal
+          expected_winner: quralan
+          observed_win_rate_for_expected: 1.0
+          matches_theory: yes (strong)
+          sample_size: 10
+          confidence: low
+          note: 
+        - matchup: tezhal_vs_zaqe
+          expected_winner: tezhal
+          observed_win_rate_for_expected: 0.3
+          matches_theory: no
+          sample_size: 10
+          confidence: low
+          note: tezhal no le gana a su rival teórico en simulación.
+        - matchup: zaqe_vs_wuron
+          expected_winner: zaqe
+          observed_win_rate_for_expected: 0.3
+          matches_theory: no
+          sample_size: 10
+          confidence: low
+          note: zaqe no le gana a su rival teórico en simulación.
+      note: IA v0 puede sesgar resultados — confidence anotada per matchup.
+  - test: 4_analyze_card
+    passed: true
+    detail:
+      card: Trono de Lhülkan
+      total_plays_observed: 3
+      inclusion_rate_in_logged_games: 0.167
+      win_rate_when_played: 1.0
+      sample_size_games: 18
+      sample_size_with_card: 3
+      confidence: low
+      note: Solo cuenta plays observados en log.actions[].card. Cartas vanilla sin handler pueden no aparecer si no se loggea play.
+  - test: 5_validate_meta_executive
+    passed: true
+    detail:
+      race_global_win_rates:
+        wuron: 0.367
+        quralan: 0.95
+        tezhal: 0.0
+        zaqe: 0.667
+      dominant_races:
+        - quralan
+        - zaqe
+      underpowered_races:
+        - wuron
+        - tezhal
+      criteria_triggered_count: 2
+      criteria_triggered_ids:
+        - qralan_avg_close_turn_low
+        - zaqe_avg_close_turn_low
+      counter_wheel_summary:
+        - matchup: wuron_vs_quralan
+          matches_theory: no
+        - matchup: quralan_vs_tezhal
+          matches_theory: yes (strong)
+        - matchup: tezhal_vs_zaqe
+          matches_theory: no
+        - matchup: zaqe_vs_wuron
+          matches_theory: yes (weak)
+      confidence_summary:
+        race_win_rates: medium (calibrado por gap IA v0)
+        criteria_triggered: medium
+        counter_wheel: medium-low (depende de sample size + IA gap)
+      top_recommendations:
+        - Implementar AI variant-aware en simulator v1 antes de aplicar nerfs basados en cross-profile win rates.
+        - Re-correr full meta matrix con simulator v1+ una vez disponible.
+        - 'Mientras tanto: validations de mecánicas firma (high confidence) confirman diseño.'
+  - test: 6_distinguish_ai_vs_balance
+    passed: true
+    detail:
+      matchup:
+        deck_a: Külen Midrange Tank
+        deck_b: Persistencia Long-Game Pure
+        profile: cross_profile_other
+      games: 20
+      wins_a: 14
+      wins_b: 6
+      ties: 0
+      win_rate_a: 0.7
+      win_rate_b: 0.3
+      confidence: low
+      confidence_reason: Cross-profile heterogéneo. IA v0 puede sesgar.
+      caveats:
+        - Win rate alto en cross-profile matchup. IA v0 no diferencia heurísticas por archetype — control y midrange juegan igual de aggro. Distinguir con simulator v1+.
+        - Confidence low por gap conocido en IA v0. NO recomendar nerf antes de re-validar.
+      check_explanation: 'Si win_rate_a >= 70%, debe haber caveats + confidence=low. Sino, test pasa por bajo win rate.'
