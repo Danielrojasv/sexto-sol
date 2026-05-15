@@ -294,57 +294,63 @@ Antes de cualquier publicación de expansión que toque inspiración indígena, 
 
 ---
 
-## 13. El Peregrinaje del Sexto Sol
+## 13. El Peregrinaje del Héroe
 
-> Capa narrativa introducida con `GAME-RULES.md` v4.0. Compatible con todo el canon anterior — describe **cómo se manifiesta el conflicto del Tiempo C** desde la perspectiva ritual.
+> Capa narrativa actualizada en `GAME-RULES.md` v4.1 (reemplaza la primera redacción v4.0 de esta misma sección). Compatible con todo el canon anterior — describe **cómo se manifiesta el conflicto del Tiempo C** desde la perspectiva del Héroe que cada civilización envía al peregrinaje.
 
 ### 13.1. Qué es el Peregrinaje
 
-Cuando el virus despierta otra vez (Tiempo C, presente del juego), las civilizaciones lúcidas no responden con ejércitos masivos sino con una práctica antigua: el **Peregrinaje del Sexto Sol**. Cada raza envía a su Héroe a un viaje ritual a través de tres estaciones cosmológicas: **Nebulosa**, **Estrellas**, **Sexto Sol**. El peregrinaje no busca destruir al otro — busca **leerlo**. Dos peregrinajes paralelos que se cruzan, se anticipan, se intentan adivinar.
+Cuando el virus despierta otra vez (Tiempo C, presente del juego), las civilizaciones lúcidas no responden con ejércitos masivos sino con una práctica antigua: el **Peregrinaje del Héroe**. Cada raza envía a **un Héroe** a un viaje ritual a través de tres estaciones cosmológicas: **Nebulosa**, **Estrellas**, **Sexto Sol**. El Héroe es el sujeto del viaje — no un jugador genérico acumulando puntos, sino un ser que se forja en cada gesto, ganando atributos que lo definen al cierre.
 
-El conflicto del cosmos se condensa en estas tres estaciones porque las civilizaciones entendieron tarde que **la guerra abierta era exactamente lo que el virus quería**. Atacarse con fuerza bruta —el modo de la Tierra infectada— alimenta al virus. La única vía es el duelo ritual de lectura mutua: una práctica donde cada gesto es una declaración pública (Premonición) y cada acción es una decisión oculta (Acción). Quien lee mejor al otro acumula presencia en el cosmos. Quien acumula más presencia en el clímax (Sexto Sol) gana este ciclo del bucle.
+El peregrinaje no busca destruir al otro — busca **leerlo**. Dos Héroes en paralelo, dos peregrinajes que se cruzan, se anticipan, se intentan adivinar. Cuando los Héroes finalmente se enfrentan en el Sexto Sol, no pelean con armas: comparan lo que se forjaron. **Gana el Héroe que demuestre superioridad en al menos 2 de los 3 atributos cardinales** (Fuerza, Resguardo, Resonancia).
 
-### 13.2. Las tres estaciones del peregrinaje
+El conflicto del cosmos se condensa en estas tres estaciones porque las civilizaciones entendieron tarde que **la guerra abierta era exactamente lo que el virus quería**. Atacarse con fuerza bruta —el modo de la Tierra infectada— alimenta al virus. La única vía es el duelo ritual de lectura mutua: una práctica donde cada gesto es una declaración pública (Premonición) y cada acción es una decisión oculta (Acción). Cada acción que el Héroe consagra alimenta uno de sus tres atributos: **Fuerza** (cuando golpea), **Resguardo** (cuando protege), **Resonancia** (cuando canta). Los tres crecen en paralelo y se acumulan a lo largo del peregrinaje completo — el Héroe nunca pierde lo que ya forjó.
 
-#### 13.2.1. Nebulosa
+### 13.2. Los tres atributos del Héroe
 
-La estación inicial. El cosmos todavía es polvo y posibilidad. Los peregrinos llegan con su Héroe en estado **Neutral** — el ser todavía no ha despertado a su don. Cada gesto en Nebulosa establece el tono del peregrinaje: la primera lectura que hagas del otro define cómo se verá el resto del viaje.
+- **Fuerza** — la capacidad ofensiva del Héroe. Se forja con cada Acción de categoría Ataque que consagra durante el viaje.
+- **Resguardo** — la capacidad defensiva. Se forja con cada Acción de categoría Defensa.
+- **Resonancia** — la conexión con el cosmos. Se forja con cada Acción de categoría Ritual.
 
-Dominar Nebulosa **despierta al Héroe**: la primera habilidad pasiva se activa, y el peregrino entra a Estrellas con una carta extra (lectura adicional del cosmos).
+En el duelo final, los tres atributos se comparan lado a lado contra los del Héroe rival. El que supera al otro en al menos 2 de 3 gana este ciclo del bucle.
 
-#### 13.2.2. Estrellas
+### 13.3. Las tres estaciones del peregrinaje
 
-La estación intermedia. Cada peregrino **elige su Estrella** — no hay exclusividad, ambos peregrinos pueden estar atravesando la misma estrella sin estorbarse, porque la estrella es lente personal, no territorio. Las tres estrellas canónicas:
+#### 13.3.1. Nebulosa
 
-- **Estrella del Eco** — la estrella donde los Rituales resuenan más fácilmente. Los peregrinos que la eligen oyen el cosmos con claridad ritual aumentada.
-- **Estrella Sangrante** — la estrella roja, herida desde antes del virus. Aquí los Ataques pesan más porque la propia estrella conserva memoria de daño.
-- **Estrella Silenciosa** — la estrella donde no se puede esconder. Las cartas de Defensa no funcionan: la Estrella las disuelve. A cambio, la estrella ofrece lecturas adicionales (cartas extra) — el silencio fuerza claridad.
+La estación inicial. El cosmos todavía es polvo y posibilidad. Los Héroes llegan en estado **Neutral** — el ser todavía no ha despertado a su don. En esta estación cada Héroe **elige en secreto uno de tres planetas** (Ataque, Defensa o Ritual) — el planeta que decide trabajar más en esta etapa del viaje. La elección se mantiene oculta hasta el cierre del tramo. Cada gesto en Nebulosa establece el tono del peregrinaje.
 
-Dominar Estrellas **asciende al Héroe**: la segunda habilidad pasiva se activa (la primera sigue activa). El peregrino entra al Sexto Sol con una energía extra al inicio (intensidad cosmológica acumulada).
+Si el Héroe gana el atributo correspondiente al planeta que eligió, **despierta**: la primera habilidad pasiva se activa.
 
-#### 13.2.3. Sexto Sol
+#### 13.3.2. Estrellas
 
-La estación final. Aquí se decide este ciclo del bucle. Los peregrinos acumulan presencia (fuerza) específicamente en esta estación — lo acumulado en Nebulosa y Estrellas **no se traspasa**. Esto es coherente con la cosmología: cada estación es un mundo en sí mismo, y solo el Sexto Sol importa para la victoria, porque solo el Sexto Sol es el momento del bucle que se está decidiendo _ahora_.
+La estación intermedia. Otros tres planetas, otra elección secreta. Los Héroes ya despiertan o no según lo que forjaron en Nebulosa, pero los atributos acumulados de la primera estación **no se resetean** — siguen creciendo. Lo que se construyó en Nebulosa pesa en Estrellas, y lo que se construye en Estrellas pesa en el Sexto Sol.
 
-### 13.3. El Eclipse
+Si el Héroe gana el atributo correspondiente al planeta que eligió en Estrellas, **asciende**: la segunda habilidad pasiva se activa (la primera sigue activa).
+
+#### 13.3.3. Sexto Sol
+
+La estación final. Aquí se decide este ciclo del bucle. **No hay elección de planeta** en el Sexto Sol — el clímax es neutral, sin filtros. Los Héroes siguen acumulando los tres atributos, pero ya no hay bonus de planeta: lo que tienen es lo que tienen. El duelo final compara los tres atributos lado a lado. **Gana quien supera al rival en 2 de los 3.**
+
+### 13.4. El Eclipse
 
 En cualquier turno del Sexto Sol, un peregrino puede invocar el **Eclipse**: un gesto ritual de cierre forzado. La acción del invocador cuenta **doble** (porque el Eclipse concentra el peregrinaje en un solo instante denso), el oponente recibe una carta extra (porque el Eclipse también ilumina al otro), y la partida termina al final de ese turno. Solo se puede invocar una vez por partida.
 
 El Eclipse es **decisión de ruptura**: el peregrino que lo invoca está apostando que su gesto en ese instante pesa más que el resto de turnos por jugar. Es lectura mutua llevada al extremo: si el oponente predijo correctamente la categoría de la Acción del Eclipse, el invocador queda expuesto. Si predijo mal, el invocador cierra el peregrinaje con ventaja decisiva.
 
-### 13.4. Las dos razas del prototipo
+### 13.5. Las dos razas del prototipo
 
-`GAME-RULES.md` v4.0 activa solo **Tezhal** y **Würon** como razas jugables. Q'ralan y Zaqe **mantienen su lugar en el canon** (§5) pero no envían peregrinos en este set. Las razones narrativas posibles (a profundizar en set 2):
+`GAME-RULES.md` v4.1 activa solo **Tezhal** y **Würon** como razas jugables. Q'ralan y Zaqe **mantienen su lugar en el canon** (§5) pero no envían peregrinos en este set. Las razones narrativas posibles (a profundizar en set 2):
 
 - Los Q'ralan están organizando sus Formaciones Solares en preparación para entrar al Peregrinaje cuando el virus alcance su sector.
 - Los Zaqe practican un peregrinaje distinto — uno que ocurre en los lagos de luz, no en las estaciones cosmológicas — y la versión visible del Peregrinaje del Sexto Sol es solo una de las formas en que el conflicto se manifiesta.
 
 Mecánicamente esto significa: Tezhal y Würon están en cartas activas, Q'ralan y Zaqe en lore vivo. Las cuatro razas en el canon, dos en el campo de batalla del prototipo.
 
-### 13.5. Coherencia con el bucle
+### 13.6. Coherencia con el bucle
 
-El Peregrinaje del Sexto Sol no rompe el bucle causal: lo **ritualiza**. Cada partida es un voto cosmológico (como ya decía §2.4), pero v4.0 lo hace concreto: la lectura mutua entre peregrinos es la práctica que las civilizaciones lúcidas desarrollaron como respuesta al virus. **El virus quiere guerra abierta. El peregrinaje opone lectura ritualizada.** Ningún peregrinaje rompe el bucle por sí solo, pero cada peregrinaje cambia ligeramente cómo se transmite la siguiente vuelta.
+El Peregrinaje del Héroe no rompe el bucle causal: lo **ritualiza**. Cada partida es un voto cosmológico (como ya decía §2.4), pero v4.0 lo hace concreto: la lectura mutua entre peregrinos es la práctica que las civilizaciones lúcidas desarrollaron como respuesta al virus. **El virus quiere guerra abierta. El peregrinaje opone lectura ritualizada.** Ningún peregrinaje rompe el bucle por sí solo, pero cada peregrinaje cambia ligeramente cómo se transmite la siguiente vuelta.
 
 ---
 
-_Versión 2.1 — mayo 2026. Documento canónico vivo. v2.1 agrega §13 "El Peregrinaje del Sexto Sol" para integrar la capa narrativa de `GAME-RULES.md` v4.0. Toda nueva expansión debe respetar este marco o justificar explícitamente su desviación._
+_Versión 2.2 — mayo 2026. Documento canónico vivo. v2.2 actualiza §13 a "El Peregrinaje del Héroe" para integrar la capa narrativa de `GAME-RULES.md` v4.1 (héroe como sujeto, 3 atributos, elección secreta de planeta, duelo final 2 de 3). Toda nueva expansión debe respetar este marco o justificar explícitamente su desviación._

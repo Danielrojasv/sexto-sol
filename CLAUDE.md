@@ -36,9 +36,9 @@ Specs en `docs/specs/`. Antes de empezar feature ≥ 3 días, que toque mecánic
 
 ## 1. Contexto del proyecto
 
-**Sexto Sol** es un juego PVP de cartas entre **cuatro razas espaciales inventadas** — **Q'ralan, Würon, Tezhal, Zaqe** — descendientes de civilizaciones ancestrales de un sistema estelar. Desde la versión v4.0 (mayo 2026), la mecánica del juego es un **duelo de lectura mutua** llamado "Peregrinaje del Sexto Sol", donde cada jugador progresa por 3 estaciones cosmológicas (Nebulosa, Estrellas, Sexto Sol) declarando **Premoniciones públicas** sobre la categoría de Acción que el oponente jugará y respondiendo con una **Acción oculta** propia. Las cartas tienen efectos condicionales según ambas declaraciones. Inspiración estructural: Marvel Snap. Innovación propia: Acción oculta + Premonición pública.
+**Sexto Sol** es un juego PVP de cartas entre **cuatro razas espaciales inventadas** — **Q'ralan, Würon, Tezhal, Zaqe** — descendientes de civilizaciones ancestrales de un sistema estelar. Desde **v4.1 (mayo 2026)**, el juego es **"El Peregrinaje del Héroe"**: cada jugador comanda un Héroe que se forja a lo largo de un peregrinaje cósmico por 3 tramos (Nebulosa → Estrellas → Sexto Sol), nutriendo sus 3 atributos (**Fuerza**, **Resguardo**, **Resonancia**) con cada acción. En el clímax, los dos héroes se enfrentan comparando sus 3 atributos finales — **gana el héroe superior en al menos 2 de los 3** (best-of-3 estilo Marvel Snap, pero conceptualizado como duelo de héroes). Cada turno hay declaración de **Premonición pública** + **Acción oculta** + revelado simultáneo. Las cartas tienen efectos condicionales según las premoniciones. **Innovación propia:** Acción oculta + Premonición pública + Héroe-como-sujeto del peregrinaje.
 
-> v4.0 reemplazó a v3.0, que era un TCG de combate clásico (HP, ataque/defensa con fuerza, counter-wheel explícito). v3.0 quedó archivada en `docs/archive/GAME-RULES-v3.0.md`. El código TypeScript en `src/` todavía implementa v3.0 — la migración del engine a v4.0 es un refactor futuro pendiente de su propia spec. v4.0 está **diseñada para playtest manual** (impresión de YAMLs en `docs/playtest/cards-v4.0/`).
+> v4.1 evolucionó de v4.0 (que era acumulación de un solo contador) tras la sesión 2026-05-15. v4.0 archivada en `docs/archive/GAME-RULES-v4.0.md`. v3.0 (TCG combate con HP) archivada en `docs/archive/GAME-RULES-v3.0.md`. El código TypeScript en `src/` **todavía implementa v3.0** — la migración del engine a v4.1 es refactor futuro pendiente de su propia spec. v4.1 está **diseñada para playtest manual** (impresión de YAMLs en `docs/playtest/cards-v4.1/`).
 
 Las culturas precolombinas reales (Mapuche, Inca, Mexica, Muisca, Maya, etc.) **NO son razas jugables** — aparecen como ecos resonantes en el lore (ver `CANON-LORE.md`). El proyecto se construye dentro de un **bucle causal cerrado** tipo Evangelion/Dark/Steins;Gate: el virus que infecta a las civilizaciones fue traído del futuro al pasado por los Sabios que intentaban salvarlas.
 
@@ -48,10 +48,10 @@ Las culturas precolombinas reales (Mapuche, Inca, Mexica, Muisca, Maya, etc.) **
 2. **Coleccionable** (sobres + crafting; sin singles market estilo MTG)
 3. **Soft P2W** estilo Marvel Snap / LoR — F2P jugable competitivamente.
 4. **Counter emergente vía interacción de condicionales**, no por reglas hardcoded de tipo "raza X vence raza Y". El SPEC v4.0 quitó el counter-wheel explícito de v3.0; ahora el counter cae como propiedad de cómo se cruzan las cláusulas (`premonicion_propia`, `premonicion_oponente`, `premonicion_acierta`) de las cartas en juego.
-5. **Sustracción radical sobre agregado.** Cada nueva regla candidata debe primero responder: _¿puedo resolverlo eliminando algo en vez de agregar?_ La meta v4.0: el juego se aprende en menos de 3 minutos y se juega en 10-15.
+5. **Sustracción radical + agregado deliberado.** Cada nueva regla candidata debe primero responder: _¿puedo resolverlo eliminando algo en vez de agregar?_ La meta v4.1: el juego se aprende en menos de 3 minutos y se juega en 10-15.
 6. **Las facciones se diferencian por cómo se sienten al jugarse**, no por tabla de bonus contra otras razas. Tezhal = aggro/sacrificio/comprometerse. Würon = control/resiliencia/lectura. Q'ralan y Zaqe vuelven en set 2.
 7. **Sin rotación tipo Standard.** Las cartas no se descartan por tiempo. El meta se mantiene fresco vía nerfs/buffs (más eventualmente sets nuevos).
-8. **3 planetas, no recursos compartidos.** v4.0 eliminó la capa de planetas neutrales con Dones de v3.0. Los planetas son las 3 estaciones del peregrinaje, con cuenta de fuerza independiente. Solo el Sexto Sol decide la partida.
+8. **El héroe es el sujeto del peregrinaje.** Tres atributos (Fuerza/Resguardo/Resonancia) crecen toda la partida sin reseteo entre tramos. Dentro de Nebulosa y Estrellas, cada jugador elige en secreto un **planeta** de un pool de 3 (Atq/Def/Rit) — la categoría del planeta-elegido recibe +1 fuerza a sus cartas durante el tramo. El Sexto Sol final es clímax neutral, sin elección. Victoria = ganar 2 de los 3 atributos en el duelo de héroes.
 
 ### Stack técnico
 
@@ -72,40 +72,39 @@ Las culturas precolombinas reales (Mapuche, Inca, Mexica, Muisca, Maya, etc.) **
 
 ---
 
-## 2. Reglas del juego (high-level v4.0)
+## 2. Reglas del juego (high-level v4.1)
 
-**El detalle vivo está en `GAME-RULES.md` (v4.0) y el lore en `CANON-LORE.md` (§13 cubre el Peregrinaje).** Acá el resumen para que Claude Code pueda razonar sin abrir esos archivos.
+**El detalle vivo está en `GAME-RULES.md` (v4.1) y el lore en `CANON-LORE.md` (§13 cubre el Peregrinaje del Héroe).** Acá el resumen para que Claude Code pueda razonar sin abrir esos archivos.
 
-- **Win condition**: mayor fuerza acumulada al cierre del **Sexto Sol** (último tramo). La fuerza de planetas previos NO se traspasa — cuenta independiente por planeta.
+- **Win condition**: ganar 2 de los 3 atributos del héroe al cierre del Sexto Sol. **Duelo de héroes** comparando Fuerza, Resguardo, Resonancia lado a lado.
+- **3 atributos del héroe** (arrancan en 0): **Fuerza** (Ataque), **Resguardo** (Defensa), **Resonancia** (Ritual). Los 3 visibles para ambos jugadores siempre. NO se resetean entre tramos.
 - **Estructura de partida**: 5-7 turnos en 3 tramos:
-  - **Nebulosa** (turnos 1-2). Mismo planeta para ambos.
-  - **Estrellas** (turnos 3-4). Cada jugador elige su planeta-Estrella de un pool de 3.
-  - **Sexto Sol** (turnos 5-7, máx 3 turnos; terminable antes vía Eclipse).
+  - **Nebulosa** (turnos 1-2). Elección secreta de planeta de un pool de 3 (Atq/Def/Rit).
+  - **Estrellas** (turnos 3-4). Nueva elección secreta de planeta.
+  - **Sexto Sol** (turnos 5-7, máx 3 turnos; terminable antes vía Eclipse). Sin elección de planeta — clímax neutral.
+- **Bonus de planeta elegido**: +1 fuerza a tus cartas de la categoría del planeta-elegido, durante el tramo. Solo Nebulosa y Estrellas.
 - **Mazo**: 20 cartas de UNA raza, máx 2 copias por carta.
-- **Mano inicial**: 4 cartas. Mulligan permitido una vez (re-baraja y roba 4).
+- **Mano inicial**: 4 cartas. Mulligan permitido una vez.
 - **Energía**: igual al número de turno (T1=1, …, T7=7). No acumula entre turnos.
 - **Turno (fase compuesta única)**:
   1. Robo (ambos roban 1).
   2. Energía actualizada.
-  3. Premonición PÚBLICA: ambos declaran qué categoría (Ataque/Defensa/Ritual) cree que jugará el oponente.
-  4. Acción OCULTA: cada uno juega 1 carta boca abajo pagando su coste.
+  3. **Acción OCULTA** primero: cada uno coloca 1 carta boca abajo pagando coste.
+  4. **Premonición PÚBLICA** después: ambos declaran qué categoría (Atq/Def/Rit) creen que jugó el oponente.
   5. Revelado simultáneo.
-  6. Acumulación de fuerza al planeta actual.
-- **Cartas de Acción** tienen: nombre, raza, coste 1-6, categoría intrínseca (Ataque/Defensa/Ritual), fuerza base, y hasta 3 cláusulas condicionales:
-  - `premonicion_propia`: activa si YO declaré X
-  - `premonicion_oponente`: activa si EL OPONENTE declaró X
-  - `premonicion_acierta`: activa si la premonición del oponente coincide con la categoría de esta carta
-- **Cierre de tramo**: el que acumuló más fuerza domina el planeta. Dominar avanza el estado del Héroe (Neutral → Despertado → Ascendido) que activa habilidades pasivas, y otorga un bonus de entrada al siguiente planeta.
-- **Eclipse**: en cualquier turno del Sexto Sol, un jugador puede invocarlo (1 vez por partida). Su Acción cuenta doble, el oponente roba 1 carta extra antes de jugar, y la partida termina al final del turno.
-- **Razas activas en v4.0**: **Tezhal** (aggro/sacrificio/comprometerse) y **Würon** (control/resiliencia/lectura). Q'ralan y Zaqe se mantienen en el canon pero no tienen cartas activas hasta el set 2.
+  6. Acumulación: la fuerza final de cada carta (base + condicionales + bonus planeta si aplica) suma al atributo correspondiente del héroe.
+- **Cartas de Acción** tienen: nombre, raza, coste 1-6, categoría intrínseca, fuerza base, y hasta 3 cláusulas condicionales (`premonicion_propia`, `premonicion_oponente`, `premonicion_acierta`).
+- **Cierre de tramo no-final**: cada jugador revela su planeta-elegido. Se compara solo el atributo de la categoría del planeta-elegido. El ganador avanza héroe (Neutral → Despertado → Ascendido). Atributos no se resetean.
+- **Eclipse**: en cualquier turno del Sexto Sol, 1 vez por partida. La fuerza de la carta del invocador cuenta doble al atributo correspondiente. Oponente roba 1 extra. Partida termina al final del turno.
+- **Razas activas en v4.1**: **Tezhal** (aggro/sacrificio) y **Würon** (control/lectura). Q'ralan y Zaqe en lore vivo pero sin cartas activas.
 
 ### Pool y mazos preconstruidos
 
-- Pool de Acción v4.0: `docs/playtest/cards-v4.0/tezhal.yaml` (15 cartas), `wuron.yaml` (15 cartas).
-- Héroes: `docs/playtest/cards-v4.0/heroes.yaml` (4 cartas: 2 razas × 2 estados activos).
-- Estrellas: `docs/playtest/cards-v4.0/stars.yaml` (3 cartas: Eco, Sangrante, Silenciosa).
-- 4 mazos preconstruidos en `docs/playtest/decks-v4.0/`: tezhal-aggro, tezhal-sacrificio, wuron-control, wuron-ritual.
-- Auto-validación inicial documentada en `SIM-RESULTS-v4.0.md`. Preguntas abiertas en `OPEN-QUESTIONS-v4.0.md`. Notas de playtest manual en `PLAYTEST-NOTES-v4.0.md`.
+- Pool de Acción v4.1: `docs/playtest/cards-v4.1/tezhal.yaml` (15 cartas), `wuron.yaml` (15 cartas).
+- Héroes: `docs/playtest/cards-v4.1/heroes.yaml` (4 cartas: 2 razas × 2 estados activos).
+- **Planetas**: `docs/playtest/cards-v4.1/planets.yaml` (6 cartas: 3 Nebulosa + 3 Estrellas, una por categoría cada tramo). Reemplazan las "estrellas" de v4.0.
+- 4 mazos preconstruidos en `docs/playtest/decks-v4.1/`: tezhal-aggro, tezhal-sacrificio, wuron-control, wuron-ritual.
+- Auto-validación inicial documentada en `SIM-RESULTS-v4.1.md`. Preguntas abiertas en `OPEN-QUESTIONS-v4.1.md`. Notas de playtest manual en `PLAYTEST-NOTES-v4.1.md`.
 
 ---
 
