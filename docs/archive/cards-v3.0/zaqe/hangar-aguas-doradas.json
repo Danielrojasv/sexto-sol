@@ -1,0 +1,34 @@
+{
+  "id": "zaqe_hangar_aguas_doradas",
+  "name": "Hangar de Aguas Doradas",
+  "race": "zaqe",
+  "type": "relic",
+  "cost": 4,
+  "rarity": "rare",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "ship_destroyed",
+        "filter": {
+          "shipFilter": {
+            "controller": "self",
+            "race": "zaqe"
+          }
+        }
+      },
+      "category": "post_combat",
+      "effect": {
+        "op": "draw",
+        "player": "self",
+        "n": 1
+      }
+    }
+  ],
+  "flavorText": "Hangar-balsa enorme: cada nave que el lago de luz se traga deja una orden nueva en la mano.",
+  "artSlot": {
+    "row": 1,
+    "col": 2
+  }
+}

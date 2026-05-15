@@ -1,0 +1,41 @@
+{
+  "id": "quralan_phaqcha_del_crisol_estelar",
+  "name": "Phaqcha del Crisol Estelar",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 5,
+  "rarity": "rare",
+  "strength": 5,
+  "hp": 5,
+  "keywords": ["formacion_solar"],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "continuous"
+      },
+      "category": "accumulative",
+      "effect": {
+        "op": "for_each",
+        "filter": {
+          "controller": "self",
+          "race": "quralan"
+        },
+        "effect": {
+          "op": "modify_hp",
+          "target": {
+            "kind": "self"
+          },
+          "kind": "delta",
+          "value": 1,
+          "duration": "permanent"
+        }
+      },
+      "description": "Mientras esté en juego, gana +1 HP permanente por cada otra nave Q'ralan que controles (Formación Solar de blindaje)."
+    }
+  ],
+  "flavorText": "Su crisol funde el resplandor del astro: cuanto mayor la flota, más grueso el blindaje.",
+  "artSlot": {
+    "row": 1,
+    "col": 1
+  }
+}

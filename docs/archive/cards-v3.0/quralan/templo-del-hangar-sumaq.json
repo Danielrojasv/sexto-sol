@@ -1,0 +1,38 @@
+{
+  "id": "quralan_templo_del_hangar_sumaq",
+  "name": "Templo del Hangar Sumaq",
+  "race": "quralan",
+  "type": "relic",
+  "cost": 4,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_event",
+        "event": "turn_start",
+        "filter": { "controller": "self" }
+      },
+      "category": "accumulative",
+      "effect": {
+        "op": "conditional",
+        "condition": {
+          "kind": "count_filter",
+          "filter": { "controller": "self", "race": "quralan" },
+          "op": "lte",
+          "value": 3
+        },
+        "thenEffect": {
+          "op": "search",
+          "owner": "self",
+          "zone": "deck",
+          "filter": { "race": "quralan", "costLte": 2 },
+          "count": 1,
+          "destination": "hand"
+        }
+      },
+      "description": "Al inicio de tu turno, si controlás menos de 4 naves Q'ralan, busca una nave Q'ralan de costo ≤ 2 en tu deck y agregala a tu mano."
+    }
+  ],
+  "flavorText": "El templo nodriza guarda escuadrones bajo cristal; cuando la formación duele, los entrega."
+}

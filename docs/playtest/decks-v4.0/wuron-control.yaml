@@ -1,0 +1,40 @@
+# SEXTO SOL — Mazo preconstruido v4.0: Würon Control
+# 20 cartas. Máx 2 copias por carta.
+# Estrategia: Defensa y anulación. Premia lectura correcta del oponente —
+# muchas cartas con payoff en premonicion_acierta. Negar fuerza enemiga,
+# acumular vía aciertos + contraataques reactivos.
+
+deck:
+  name: "Würon-Control"
+  race: "Würon"
+  hero: "HRO-WURON"
+  archetype: "lectura-control"
+  win_plan: |
+    Defender Nebulosa con anulaciones (WUR-006, WUR-010). Buscar aciertos
+    de premonición desde turno 1 — Lhülkan Despertada da +1 adicional cada
+    vez que acertás. En Estrellas elegir Estrella Silenciosa: oponente
+    Tezhal pierde sus Defensas para reactuar — y a nosotros las Defensas
+    nos rinden por el bonus de Lhülkan. Cerrar Sexto Sol con WUR-009 Trono
+    + WUR-005 Despertar de la Raíz acumulando fuerza por aciertos. No
+    invocar Eclipse — esperar que Tezhal lo haga primero y leerlo.
+  weakness: |
+    Si el oponente bluffea bien (rota categorías), perdemos la línea de
+    aciertos y los payoffs caen. Mazos Ritual rápidos (Tezhal-Aggro
+    declarando Ritual + jugando Ritual barato) pueden ganarnos tempo
+    Nebulosa.
+
+  cards:
+    - { id: "WUR-007", copies: 2 }  # Raíz Profunda (Def 1)
+    - { id: "WUR-002", copies: 2 }  # Cuchilla Lhüf (Atq 2)
+    - { id: "WUR-011", copies: 2 }  # Susurro del Bosque (Rit 2) — cycling
+    - { id: "WUR-006", copies: 2 }  # Wütrüpang Resistente (Def 3)
+    - { id: "WUR-008", copies: 2 }  # Bosque del Eco (Def 3) — acierto payoff
+    - { id: "WUR-001", copies: 2 }  # Aullido del Bosque (Atq 3) — acierto payoff
+    - { id: "WUR-014", copies: 2 }  # Eco del Brote (Rit 3)
+    - { id: "WUR-010", copies: 2 }  # Raíz Ancestral (Def 4)
+    - { id: "WUR-009", copies: 2 }  # Trono de Lhülkan (Def 5) — finisher
+    - { id: "WUR-003", copies: 1 }  # Brote Espinado (Atq 4)
+    - { id: "WUR-005", copies: 1 }  # Despertar de la Raíz (Atq 5)
+
+  # Total: 20 cartas. 6 Ataque, 10 Defensa, 4 Ritual.
+  # Curva: 2@1, 4@2, 8@3, 3@4, 3@5.

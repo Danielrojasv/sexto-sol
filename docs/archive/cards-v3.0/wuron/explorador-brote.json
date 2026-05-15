@@ -1,0 +1,17 @@
+{
+  "id": "wuron_explorador_brote",
+  "name": "Explorador del Brote",
+  "race": "wuron",
+  "type": "ship",
+  "cost": 2,
+  "rarity": "common",
+  "strength": 2,
+  "hp": 3,
+  "keywords": ["kulen"],
+  "abilities": [],
+  "flavorText": "Cada herida es una raíz que profundiza.",
+  "artSlot": {
+    "row": 2,
+    "col": 2
+  }
+}

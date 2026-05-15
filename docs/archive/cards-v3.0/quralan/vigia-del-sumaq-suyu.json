@@ -1,0 +1,17 @@
+{
+  "id": "quralan_vigia_del_sumaq_suyu",
+  "name": "Vigía del Sumaq-suyu",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 1,
+  "rarity": "common",
+  "strength": 1,
+  "hp": 3,
+  "keywords": ["bastion"],
+  "abilities": [],
+  "flavorText": "Su casco labrado custodia las ciudadelas flotantes del sector Sumaq-suyu.",
+  "artSlot": {
+    "row": 0,
+    "col": 1
+  }
+}

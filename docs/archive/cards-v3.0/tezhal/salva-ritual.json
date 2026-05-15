@@ -1,0 +1,38 @@
+{
+  "id": "tezhal_salva_ritual",
+  "name": "Salva Ritual",
+  "race": "tezhal",
+  "type": "event",
+  "cost": 4,
+  "rarity": "rare",
+  "keywords": ["ignicion"],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "sacrifice",
+            "target": {
+              "kind": "chosen_ship",
+              "filter": { "controller": "self", "race": "tezhal" }
+            }
+          },
+          {
+            "op": "for_each",
+            "filter": { "controller": "opponent" },
+            "effect": {
+              "op": "damage",
+              "target": { "kind": "self" },
+              "amount": 2
+            }
+          }
+        ]
+      },
+      "description": "Ignición: hacé 2 daño a todas las naves enemigas."
+    }
+  ],
+  "flavorText": "El sector entero se enciende cuando una sola nave se ofrenda."
+}

@@ -1,0 +1,33 @@
+{
+  "id": "zaqe_inmersion_aurea",
+  "name": "Inmersión Áurea",
+  "race": "zaqe",
+  "type": "tech",
+  "cost": 3,
+  "rarity": "rare",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "on_play"
+      },
+      "category": "initiative",
+      "effect": {
+        "op": "search",
+        "owner": "self",
+        "zone": "pozo_astral",
+        "filter": {
+          "race": "zaqe"
+        },
+        "count": 1,
+        "destination": "hand"
+      }
+    }
+  ],
+  "flavorText": "Sumergís el hangar en luz líquida: una balsa caída en otro sector emerge intacta a tu mano.",
+  "intentionalOffCategory": true,
+  "artSlot": {
+    "row": 1,
+    "col": 0
+  }
+}

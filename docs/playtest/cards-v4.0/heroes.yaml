@@ -1,0 +1,54 @@
+# SEXTO SOL — Cartas de Héroe v4.0
+# 4 cartas total: 2 razas × 2 estados activos (Despertado, Ascendido).
+# El héroe inicia en estado Neutral sin habilidades; las cartas de abajo
+# representan los estados que se "desbloquean" al dominar planetas.
+# - Despertado: se activa al dominar Nebulosa.
+# - Ascendido: se activa al dominar Estrellas. La habilidad Despertado
+#   sigue activa (acumulan).
+#
+# Ver GAME-RULES.md §6 (Transformación del Héroe).
+
+heroes:
+  - id: "HRO-TEZHAL-DESPERTADO"
+    nombre: "Tlanixtli — Despertado"
+    raza: "Tezhal"
+    estado: "Despertado"
+    activacion: "Al dominar Nebulosa."
+    habilidad: "Cuando jugás una carta de Ataque, +1 fuerza."
+    persona: >
+      Iniciado de la pirámide Quetlani. Su plumaje, todavía verde al partir
+      del Peregrinaje, se enciende cuando la Nebulosa lo reconoce.
+    flavor: "El primer sol que abraza no quema. Forma."
+
+  - id: "HRO-TEZHAL-ASCENDIDO"
+    nombre: "Tlanixtli — Ascendido"
+    raza: "Tezhal"
+    estado: "Ascendido"
+    activacion: "Al dominar Estrellas (la habilidad Despertado sigue activa)."
+    habilidad: "Una vez por turno, mirá la primera carta del mazo del oponente."
+    persona: >
+      Tlanixtli leyó las Estrellas y aprendió a ver lo que el cosmos guarda
+      antes de soltarlo. Ya no necesita esperar el siguiente sol — lo anticipa.
+    flavor: "Los ojos del iniciado ya no buscan el siguiente sol. Lo ven."
+
+  - id: "HRO-WURON-DESPERTADO"
+    nombre: "Lhülkan — Despertada"
+    raza: "Würon"
+    estado: "Despertado"
+    activacion: "Al dominar Nebulosa."
+    habilidad: "Cuando tu premonición acierta la categoría de la carta del oponente, +1 fuerza adicional este turno."
+    persona: >
+      Würon vieja del Sur Profundo. Su escucha es lenta pero no se equivoca;
+      la Nebulosa la despierta enseñándole a oír lo que el otro no dijo.
+    flavor: "La raíz que escuchó primero ya leyó el viento."
+
+  - id: "HRO-WURON-ASCENDIDO"
+    nombre: "Lhülkan — Ascendida"
+    raza: "Würon"
+    estado: "Ascendido"
+    activacion: "Al dominar Estrellas (la habilidad Despertada sigue activa)."
+    habilidad: "Empezás cada turno con 1 energía adicional."
+    persona: >
+      Lhülkan en su forma plena. El bosque ya no le pide caminos; se los
+      ofrece. La savia antigua corre con ella, fuera de tiempo.
+    flavor: "Cuando el bosque te ofrece su savia, no se la pedís: ya la tenés."

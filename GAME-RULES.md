@@ -1,325 +1,221 @@
-# SEXTO SOL — GAME RULES (v3.0)
+# SEXTO SOL — GAME RULES (v4.0)
 
-> **Versión simplificada para playtest.** Reemplaza GAME-RULES v2.0. Objetivo: validar el corazón del juego (combate + habilidades + counter wheel) antes de agregar capas de complejidad.
+> **Refactor radical: "Peregrinaje del Sexto Sol".** Reemplaza v3.0. El juego deja de ser un TCG de combate con HP y se convierte en un **duelo de lectura mutua** sobre un peregrinaje de 3 planetas. Inspiración estructural: Marvel Snap (revelado simultáneo, partidas cortas, decisiones densas). Innovación propia: **Acción oculta + Premonición pública**, donde cada carta tiene efectos condicionales según ambas declaraciones.
 >
-> Capas removidas temporalmente: planetas neutrales, Edades I/II/III, héroes pasivos en mundo natal, Resonancia. Estas capas pueden volver en versiones futuras una vez que el core esté validado.
+> Capas removidas: HP del mundo natal, atacar/defender con fuerza vs HP, 5 fases de turno, counter-wheel explícito, planetas neutrales con Dones, Edades I/II/III, mareo de invocación, Tributo, sistema de resolución por categorías. Algunas vuelven en set 2; otras quedan archivadas indefinidamente.
 >
-> v2.0 archivada en `docs/archive/GAME-RULES-v2.0.md` como referencia histórica.
+> v3.0 archivada en `docs/archive/GAME-RULES-v3.0.md`. Pool de cartas v3.0 archivado en `docs/archive/cards-v3.0/` (referencia histórica; el código TS en `src/` sigue cargando esos JSONs hasta el próximo refactor de implementación).
 
 ---
 
-## 0. Cambios respecto a v2.0
+## 0. Cambios respecto a v3.0
 
-| Cambio                                          | Razón                                         |
-| ----------------------------------------------- | --------------------------------------------- |
-| Energía automática creciente (+1/turno, cap 10) | Eliminar cuello de botella de recursos.       |
-| Mazo de 30 cartas, todas mecánicas              | Más espacio para identidad de raza.           |
-| Sin planetas neutrales                          | Validar core antes de agregar territorio.     |
-| Sin Edades                                      | Mecánicas firma a costo normal desde turno 1. |
-| Héroes = Naves Legendarias normales             | Simplificación.                               |
-| Legendarias sin Luz/Sombra                      | Una sola habilidad individual potente.        |
-| Cementerio → **Pozo Astral**                    | Diferenciar de MyL.                           |
-| Vigilia → **Eclipse**                           | Diferenciar de MyL.                           |
-| Nueva zona: **Disolución** (exilio)             | Para mecánica de Refluencia.                  |
-| Mareo de invocación confirmado                  | Las naves no atacan el turno que entran.      |
+| Aspecto              | v3.0                                               | v4.0                                                      |
+| -------------------- | -------------------------------------------------- | --------------------------------------------------------- |
+| Win condition        | HP del mundo natal a 0                             | Mayor fuerza acumulada al cierre del Sexto Sol            |
+| Combate              | Atacante/defensor con fuerza vs HP                 | Acción oculta + Premonición pública                       |
+| Estructura partida   | Abierta, ~10–15 turnos                             | Fija, 5–7 turnos en 3 tramos                              |
+| Fases por turno      | 5 (Recolección/Despliegue/Combate/Regroup/Eclipse) | 1 fase compuesta (premonición → acción oculta → revelado) |
+| Razas activas        | 4 (Q'ralan, Würon, Tezhal, Zaqe)                   | 2 para prototipo (Tezhal + Würon)                         |
+| Cartas jugadas/turno | Varias según energía                               | 1 por turno                                               |
+| Counter-wheel        | Explícito, con tabla por categoría                 | Emergente vía condicionales de carta                      |
+| Tamaño de mazo       | 30                                                 | 20                                                        |
 
----
-
-## 1. Setup
-
-- **Mazo:** 30 cartas de UNA sola raza. Máximo 3 copias por carta. Legendarias: 1 copia.
-- **Mano inicial:** 4 cartas. Mulligan: una vez. Robas 4 nuevas, pones 1 al fondo.
-- **Tablero:** mundo natal por jugador (HP 20). Zona de despliegue propia.
-- **Compensación de segundo jugador:** +1 carta inicial (mano de 5).
-- **Energía inicial:** 1 energía en turno 1.
+> Q'ralan y Zaqe se mantienen en el canon (`CANON-LORE.md` §5) pero no tienen cartas activas en v4.0. Vuelven en set 2 una vez validado el core con Tezhal + Würon.
 
 ---
 
-## 2. Recurso: Energía
+## 1. Estructura de partida
 
-- **+1 energía base por turno**, automático.
-- **Cap máximo:** 10.
-- La energía se renueva al inicio de cada turno: arrancas cada turno con tu cap actual lleno.
-- Energía no gastada se pierde al final de tu turno.
+Una partida dura **5 a 7 turnos**, divididos en **3 tramos secuenciales**:
 
-| Turno | Energía  |
-| ----- | -------- |
-| 1     | 1        |
-| 2     | 2        |
-| 3     | 3        |
-| …     | …        |
-| 10    | 10 (cap) |
-| 11+   | 10       |
+| Tramo         | Turnos             | Notas                                                       |
+| ------------- | ------------------ | ----------------------------------------------------------- |
+| **Nebulosa**  | 1–2                | Tramo inicial. Mismo planeta para ambos jugadores.          |
+| **Estrellas** | 3–4                | Cada jugador eligió su planeta-Estrella al cerrar Nebulosa. |
+| **Sexto Sol** | 5–7 (máx 3 turnos) | Tramo final. Terminable antes vía Eclipse.                  |
+
+Ambos jugadores progresan simultáneamente por los mismos tramos. **No hay desfase temporal entre jugadores**: ambos juegan el turno 1 al mismo tiempo, ambos cierran Nebulosa juntos, etc.
 
 ---
 
-## 3. Estructura de turno
+## 2. Setup
 
-5 fases por jugador:
-
-1. **Recolección** — Energía actualizada. Robas 1 carta.
-2. **Despliegue** — Juegas cartas pagando energía.
-3. **Combate** — Atacas. Combate simultáneo.
-4. **Regroup** — Mueves naves (gratis aquí, 1 energía en Despliegue).
-5. **Eclipse** — Habilidades activadas y respuestas. Energía no gastada se pierde.
-
-### 3.1. Combate
-
-- Combate directo desde turno 1.
-- Atacante elige objetivo: nave enemiga o mundo natal.
-- Combate simultáneo: ambos se hacen daño igual a fuerza.
-- **Mareo de invocación:** las naves NO atacan el turno que entran, salvo keyword **Embate**.
-- **Bloqueo:** solo vía keyword **Bastión**.
-- **Daño residual:** solo vía keyword **Desgarro**.
+- Cada jugador elige una **raza** (Tezhal o Würon).
+- **Mazo:** 20 cartas. Máximo **2 copias** por carta.
+- **Mano inicial:** 4 cartas. **Mulligan** permitido una vez: re-baraja la mano completa y roba 4 nuevas.
+- Cada jugador empieza con su carta de **Héroe** en zona dedicada (no cuenta en mazo). El héroe inicia en estado **Neutral** (sin habilidades activas).
 
 ---
 
-## 4. Sistema de Resolución por Naturaleza de Mecánica
+## 3. Turno (fase compuesta única)
 
-| Orden | Categoría        | Naturaleza                         | Raza firma |
-| ----- | ---------------- | ---------------------------------- | ---------- |
-| 1     | **Reactivas**    | Responden a algo recibido          | Würon      |
-| 2     | **Iniciativa**   | El jugador activa pagando costo    | Tezhal     |
-| 3     | **Acumulativas** | Dependen del estado del tablero    | Q'ralan    |
-| 4     | **Post-combate** | Se activan al salir algo del juego | Zaqe       |
+Cada turno se ejecuta en esta secuencia, en paralelo entre ambos jugadores:
 
-### 4.1. Sub-pasos de combate
+1. **Robo:** ambos roban 1 carta del mazo.
+2. **Energía:** ambos tienen energía igual al número de turno (turno 1 = 1 energía, …, turno 7 = 7 energía). **No acumula** entre turnos.
+3. **Declaración de Premonición (PÚBLICA):** cada jugador declara, visible para ambos, qué tipo de Acción cree que jugará el oponente este turno. Las **3 categorías** son:
+   - **Ataque**
+   - **Defensa**
+   - **Ritual**
 
-1. **Declaración de daño:** se calcula daño basado en fuerza ANTES de reactivas.
-2. **Reactivas:** habilidades reactivas se disparan con valores declarados. Modifican fuerza para combates futuros, no para el actual.
-3. **Iniciativa:** habilidades de iniciativa activadas explícitamente.
-4. **Acumulativas:** se recalculan buffs de masa con estado actual.
-5. **Aplicación de daño:** ambas naves reciben daño declarado en paso 1.
-6. **Post-combate:** efectos al morir o salir del juego.
+   Ambas premoniciones quedan a la vista antes de jugar Acción.
 
-### 4.2. Counter wheel emergente
-
-- **Würon > Q'ralan:** Reactiva resuelve antes que Acumulativa.
-- **Q'ralan > Tezhal:** Acumulativa absorbe la Iniciativa.
-- **Tezhal > Zaqe:** Iniciativa actúa antes que Post-combate.
-- **Zaqe > Würon:** Post-combate domina partidas largas.
-
-### 4.3. Premonición
-
-> **Premonición** _(esta carta o habilidad resuelve antes que cualquier categoría de mecánica)_
-
-- Máx 1-2 cartas con Premonición por mazo.
-- Costo alto.
-- Permite romper el counter natural.
+4. **Jugada de Acción (OCULTA):** cada jugador elige UNA carta de Acción de su mano y la coloca boca abajo en su zona del planeta actual. **Paga su coste en energía**.
+   - Si no puede pagar ninguna carta de la mano, declara **"Pasa"** (no juega Acción este turno, no acumula fuerza).
+5. **Revelado simultáneo:** ambas cartas se revelan a la vez. Se resuelven sus efectos condicionales (ver §4).
+6. **Acumulación de fuerza:** la fuerza final de cada carta (base + condicionales) se suma a la cuenta del jugador en el planeta actual.
 
 ---
 
-## 5. Tipos de carta
+## 4. Cartas de Acción — estructura
 
-- **Nave** — Combate. Fuerza, HP, keywords, habilidad individual.
-- **Arma** — Equipamiento. Modifica una Nave.
-- **Tecnología** — Instantáneo. Un solo uso, va al Pozo Astral.
-- **Reliquia** — Pasiva permanente.
-- **Evento** — Respuesta. Turno propio o reactivo.
+Cada carta de Acción tiene:
 
----
+- **Nombre**
+- **Raza** (Tezhal o Würon)
+- **Coste** (1 a 6 energía)
+- **Categoría intrínseca** (Ataque / Defensa / Ritual) — esto define qué premonición la "leería" correctamente. Cuando el oponente predice esta categoría, está acertando el tipo de la carta.
+- **Fuerza base** (un número entero)
+- **Efectos condicionales**, en hasta 3 cláusulas:
 
-## 6. Capas de habilidad por carta
+```
+SI tu premonición fue [X]: [efecto].
+SI la premonición del oponente fue [X]: [efecto].
+SI la premonición del oponente acertó la categoría de esta carta: [efecto].
+```
 
-Cada carta puede tener hasta 3 capas:
+No todas las cartas tienen las 3 cláusulas. Las cartas pueden tener 1, 2 o 3 condicionales. **Toda carta debe tener al menos 1 condicional** — no existen cartas "vanilla" (solo fuerza, sin efecto).
 
-### 6.1. Capa 1 — Stats base
+### Ejemplo Tezhal
 
-Costo, fuerza, HP. Siempre presente.
+```
+Lanza Solar (Tezhal)
+Categoría: Ataque · Coste: 2 · Fuerza base: 3
+- SI tu premonición fue Ataque: +2 fuerza.
+- SI la premonición del oponente fue Defensa: el oponente descarta 1 carta.
+```
 
-### 6.2. Capa 2 — Keywords
+### Ejemplo Würon
 
-Cero o más keywords del pool definido. En Set 1 incluyen reminder text entre paréntesis.
+```
+Sombra del Külen (Würon)
+Categoría: Defensa · Coste: 3 · Fuerza base: 2
+- SI tu premonición fue Defensa: +1 fuerza y robás 1 carta.
+- SI la premonición del oponente fue Ataque: anula 2 fuerza de la carta enemiga este turno.
+```
 
-### 6.3. Capa 3 — Habilidad individual
+### 4.1 Resolución de condicionales
 
-Cero o una habilidad única de esa carta. Le da identidad propia.
+Cuando ambas cartas se revelan, se resuelven en paralelo las cláusulas que aplican:
 
-### 6.4. Reglas de balance entre capas
+1. Se evalúan todos los condicionales de ambas cartas con la información disponible (premoniciones declaradas, categorías intrínsecas).
+2. Los efectos que modifican fuerza (`+N fuerza`, `-N fuerza`, `anula N fuerza`) se aplican antes de la acumulación.
+3. Los efectos que tocan el estado del oponente (descarte, robo extra, anulación) se aplican después de calcular fuerza pero antes de cerrar el turno.
 
-| Tipo                     | Total stats (fuerza + HP) vs costo |
-| ------------------------ | ---------------------------------- |
-| Vanilla (sin habilidad)  | costo × 3 + 1                      |
-| Con keyword              | costo × 3                          |
-| Con habilidad individual | costo × 2.5                        |
-| **Con dos keywords**     | **costo × 2.5**                    |
-| Con keyword + habilidad  | costo × 2                          |
-
-Las cartas con más habilidades tienen stats más bajos. La habilidad es el valor. Dos keywords pesan lo mismo que keyword + habilidad individual a efectos de stats.
-
-### 6.5. Distribución por rareza
-
-**Comunes (60%):**
-
-- Keyword O habilidad individual, rara vez ambas.
-- Habilidades simples: efectos al entrar, buffs condicionales, una activación.
-
-**Raras (30%):**
-
-- Habitualmente keyword + habilidad individual.
-- Habilidades complejas: triggers múltiples, sinergias con mecánica firma.
-
-**Legendarias (10%):**
-
-- Keyword + habilidad individual potente.
-- Sin Luz/Sombra (simplificación v3.0).
-- Definidoras de mazo.
-- 1 copia máxima por mazo. Única en juego.
+Si dos efectos entran en conflicto (ej: ambos intentan anular fuerza al otro al mismo tiempo), se resuelven simultáneamente y ambos surten efecto. Las cláusulas de una misma carta se resuelven en el orden en que están listadas (premonicion_propia → premonicion_oponente → premonicion_acierta).
 
 ---
 
-## 7. Mecánicas firma por raza
+## 5. Cierre de tramo y Dominio del planeta
 
-### 7.1. Würon — Külen (Reactiva)
+Al final del **último turno** de cada tramo (turno 2 de Nebulosa, turno 4 de Estrellas):
 
-> **Külen** _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_
-
-### 7.2. Q'ralan — Formación Solar (Acumulativa)
-
-> **Formación Solar** _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles. La condición es "raza Q'ralan", independiente de si las otras naves portan la keyword.)_
-
-**Aclaración (v3.0.2):** la condición de Formación Solar se evalúa por **raza**, no por **keyword**. Una nave Q'ralan que NO porta `formacion_solar` (ej. una nave nueva off-category, una weapon, o un ship con bastión puro) **sí cuenta** para activar el +1 en otra nave que sí lleva la keyword. Esto permite que el archetype Q'ralan tenga mazos diversificados: cartas no-FS aportan al conteo de masa sin escalar ellas mismas.
-
-### 7.3. Tezhal — Ignición (Iniciativa)
-
-> **Ignición** _(al jugar/activar, sacrifica una nave Tezhal aliada para activar el efecto descrito en la carta)_
-
-El efecto específico varía por carta. Ejemplo: "Ignición: haz 3 daño a una nave enemiga."
-
-El refraseo (v3.0.2) normaliza dos formas de invocar Ignición:
-
-- **Activado**: cartas con trigger `activated` que sacrifican como parte de la activación voluntaria (ej. Piloto de Obsidiana). El sacrificio es opcional — el jugador elige cuándo activar.
-- **Al jugar**: cartas con trigger `on_play` (eventos / tech) cuyo efecto incluye `sacrifice` mandatory dentro del effect tree (ej. Plumaje Encendido). El sacrificio se resuelve al pagar la carta.
-
-En ambos casos el target del sacrificio está fijado por la firma: `controller: 'self'`, `race: 'tezhal'`. La keyword `ignicion` marca ambos patrones.
-
-### 7.4. Zaqe — Refluencia (Post-combate)
-
-> **Refluencia** _(al morir va al Pozo Astral; puedes pagar su costo durante tu Despliegue para revivirla con stats base y HP máximo; si muere de nuevo, va a Disolución)_
-
-**Aclaración (v3.0.3):** una nave Zaqe revivida vía Refluencia entra al campo **con sus stats base** (todos los buffs permanentes que tenía antes de morir se resetean — coherente con la "transmutación en el lago de luz" del lore + previene combos cross-raza como Q'ralan Formación Solar otorgando +N fuerza persistente entre vidas) **y con HP máximo** (la nave se renueva — evita tracking de HP entre vidas + coherente con lore).
+1. Se compara la fuerza acumulada de ambos jugadores en ese planeta.
+2. El que tiene **más fuerza** _domina_ el planeta. **Empate: ninguno domina.**
+3. El dominador:
+   - **Avanza el estado de su Héroe** (Neutral → Despertado → Ascendido) y activa una habilidad pasiva nueva.
+   - **Recibe un bonus de entrada** al siguiente planeta (ver §7).
+4. La fuerza acumulada **NO se traspasa** al siguiente planeta. Cada planeta tiene su cuenta independiente.
 
 ---
 
-## 8. Glosario completo de keywords (Set 1 con reminder text)
+## 6. Transformación del Héroe
 
-| Keyword             | Reminder text                                                                                                                     |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Bastión**         | _(debe ser atacada antes que otras unidades en su zona)_                                                                          |
-| **Embate**          | _(puede atacar el turno que entra al juego)_                                                                                      |
-| **Desgarro**        | _(el daño excedente pasa al objetivo siguiente)_                                                                                  |
-| **Vuelo**           | _(solo puede ser bloqueada por unidades con Vuelo o Bastión)_                                                                     |
-| **Premonición**     | _(resuelve antes que cualquier categoría de mecánica)_                                                                            |
-| **Külen**           | _(cuando esta nave recibe daño y sobrevive, gana +1 fuerza permanente)_                                                           |
-| **Formación Solar** | _(esta nave gana +1 fuerza por cada otra nave Q'ralan que controles. Se cuenta por raza, no por keyword.)_                        |
-| **Ignición**        | _(al jugar/activar, sacrifica una nave Tezhal aliada para activar el efecto)_                                                     |
-| **Refluencia**      | _(al morir, va al Pozo Astral; puedes revivirla pagando su costo con stats base y HP máximo; si muere de nuevo, va a Disolución)_ |
+Cada raza tiene un Héroe con **3 estados**:
 
----
+| Estado         | Activación                             | Habilidad                              |
+| -------------- | -------------------------------------- | -------------------------------------- |
+| **Neutral**    | Inicio de partida                      | Ninguna                                |
+| **Despertado** | Dominar el primer planeta (Nebulosa)   | Activa habilidad A                     |
+| **Ascendido**  | Dominar el segundo planeta (Estrellas) | Activa habilidad B (la A sigue activa) |
 
-## 9. Zonas del juego
+Las habilidades son **pasivas, fijas por raza y por planeta dominado**. Matriz: 2 razas × 2 planetas dominables (Nebulosa, Estrellas) = **4 habilidades de héroe**.
 
-- **Mazo:** cartas no robadas.
-- **Mano:** cartas robadas no jugadas.
-- **Campo:** zona de naves desplegadas.
-- **Pozo Astral:** equivalente de "cementerio". Cartas muertas o descartadas.
-- **Disolución:** zona de exilio. Cartas refluidas que mueren por segunda vez van aquí. No pueden recuperarse.
+### Habilidades pasivas por raza × planeta
+
+- **Tezhal — domina Nebulosa:** "Cuando jugás una carta de Ataque, +1 fuerza."
+- **Tezhal — domina Estrellas:** "Una vez por turno, mirá la primera carta del mazo del oponente."
+- **Würon — domina Nebulosa:** "Cuando tu premonición acierta la categoría del oponente, +1 fuerza adicional."
+- **Würon — domina Estrellas:** "Empezás cada turno con 1 energía adicional."
 
 ---
 
-## 10. Win conditions
+## 7. Bonus de dominio (entrada al siguiente planeta)
 
-1. **Destruir mundo natal enemigo** (HP 0). Primaria.
-2. **Decking out:** el oponente no puede robar cuando le tocaría.
-3. **Concesión.**
+| Planeta dominado | Bonus de entrada al siguiente tramo                |
+| ---------------- | -------------------------------------------------- |
+| **Nebulosa**     | Robás 1 carta extra al inicio de Estrellas.        |
+| **Estrellas**    | Empezás el Sexto Sol con +1 energía en el turno 5. |
 
-### 10.1. Casos límite
-
-| Caso                             | Resolución                                                      |
-| -------------------------------- | --------------------------------------------------------------- |
-| Ambos mundos a 0 simultáneamente | Gana quien gatilló el daño. Tablas si absolutamente simultáneo. |
-| Cap de mano                      | 7. Excedente se descarta al final de Eclipse (jugador elige).   |
-| Cartas únicas                    | Legendarias: solo 1 copia desplegada simultáneamente.           |
+Estos bonuses son aditivos respecto a las habilidades pasivas de Héroe del §6.
 
 ---
 
-## 11. Reglas de combate detalladas
+## 8. Elección del planeta Estrella
 
-### 11.1. Declarar ataque
+Después de cerrar Nebulosa (fin del turno 2), ambos jugadores eligen su planeta-Estrella del pool. Ambos pueden elegir el mismo o distintos — **no hay exclusividad**.
 
-Atacas con cualquier nave que:
+**Pool de 3 planetas-Estrella** (cada uno con regla especial que afecta solo al jugador que lo eligió):
 
-- No tenga mareo de invocación (entró este turno, salvo Embate).
-- No esté agotada por otro efecto.
+- **Estrella del Eco** — las cartas de Ritual cuestan -1 energía (mínimo 1).
+- **Estrella Sangrante** — las cartas de Ataque ganan +1 fuerza base.
+- **Estrella Silenciosa** — no podés jugar cartas de Defensa. A cambio, robás 1 carta extra al inicio del tramo.
 
-### 11.2. Elección de objetivo
+> Scope temporal de las reglas de Estrella: aplican mientras el jugador esté en el tramo de Estrellas (turnos 3–4). En el Sexto Sol vuelven las reglas neutrales. (Confirmar en playtest, ver `OPEN-QUESTIONS-v4.0.md`.)
 
-- Si hay Bastión enemigo, DEBE elegirse una nave Bastión primero.
-- Una vez eliminadas o evitadas (con Vuelo), se puede atacar libremente.
-
-### 11.3. Resolución
-
-- Combate simultáneo. HP ≤ 0 → Pozo Astral (o Refluencia si aplica).
-- Daño al mundo natal reduce HP. Sin regeneración salvo cartas específicas.
-
-### 11.4. Daño excedente
-
-Por defecto se pierde. Con **Desgarro** pasa al objetivo siguiente.
+El **Sexto Sol** no tiene reglas especiales — es **clímax neutral**.
 
 ---
 
-## 12. Reglas de despliegue
+## 9. Sexto Sol y Eclipse
 
-- Pagas el costo de energía indicado.
-- Mareo de invocación: la nave no ataca este turno (salvo Embate).
-- Sí puede usar habilidades activadas no de combate.
-- Movimiento: gratis en Regroup, 1 energía en Despliegue.
+Los turnos **5–7** son el Sexto Sol. Se juegan igual que los planetas anteriores (premonición + acción + revelado), acumulando fuerza específicamente en el Sexto Sol.
 
----
+### 9.1 Eclipse (regla especial)
 
-## 13. Habilidades activadas
+En cualquier turno del Sexto Sol, al inicio de la declaración de premonición, cualquier jugador puede declarar **"Invoco el Eclipse"**. Efectos:
 
-Requieren:
+- La Acción del invocador este turno cuenta **doble** en fuerza acumulada.
+- El oponente roba **1 carta extra** antes de declarar su premonición y elegir su Acción.
+- La partida termina al final de este turno (no se juegan turnos restantes del Sexto Sol).
 
-- Pagar costo (energía, sacrificio, descarte).
-- Cumplir condiciones (fase, turno).
-
-Si una habilidad activada coincide con combate, se aplica orden de Resolución por Categorías.
+Solo se puede invocar Eclipse **una vez por partida** (sea por uno u otro jugador). Si nadie lo invoca, la partida llega al fin del turno 7 normalmente.
 
 ---
 
-## 14. Roadmap post-validación core
+## 10. Victoria
 
-**Fase 1 (validación core, EN CURSO)**
+Al cierre del Sexto Sol (turno 7 o turno del Eclipse), **gana quien acumuló más fuerza en el Sexto Sol**.
 
-- Set 1 con 30 cartas por raza.
-- Sin planetas, sin Edades, sin héroes pasivos.
-- Simulación intensiva.
+Los planetas anteriores dominados **NO suman fuerza al Sexto Sol**. Su valor está en las habilidades de héroe activadas y los bonuses de entrada.
 
-**Fase 2 (re-introducción gradual)**
+### Tiebreakers en orden
 
-- Héroes con pasivo en mundo natal (revisar diseño).
-- Edades (sistema de escalado).
-
-**Fase 3 (capa territorial)**
-
-- Planetas neutrales con Dones.
-
-**Fase 4 (expansiones)**
-
-- Set 2: nueva mecánica (ej: Luz/Sombra).
-- Nuevas razas vía mecanismos canónicos del lore.
+1. Mayor fuerza en el Sexto Sol.
+2. Mayor cantidad de planetas previos dominados.
+3. **Empate técnico** (ambos pierden la partida — raro, evitable con balance fino).
 
 ---
 
-## 15. TBDs pendientes (próxima iteración)
+## 11. Filosofía de diseño (resumen vivo)
 
-- Diseñar Eventos por raza (cero actualmente).
-- Diseñar Reliquias adicionales.
-- Definir habilidades individuales de las 42 cartas existentes.
-- Generar 8-10 cartas adicionales por raza.
-- Re-balancear stats según reglas de balance entre capas.
+Este refactor es **sustracción radical, no agregado**. Toda regla pendiente de inclusión debe responder primero: _¿puedo resolverlo eliminando algo en vez de agregar?_ La meta: el juego se aprende en menos de 3 minutos y se juega en 10–15.
+
+Las cartas generan **decisiones por su perfil de riesgo**, no por su valor numérico bruto. Una carta de fuerza base 3 con condicionales fuertes es más interesante que una de fuerza base 6 sin condicionales.
+
+Las facciones se diferencian por **cómo se sienten al jugarse**, no por una tabla de bonus contra otras razas. El counter emerge de las interacciones de condicionales, no de reglas globales.
 
 ---
 
-_Versión 3.0 — mayo 2026. Documento simplificado para playtest. Reemplaza v2.0._
+_Versión 4.0 — mayo 2026. "Peregrinaje del Sexto Sol". Reemplaza v3.0._

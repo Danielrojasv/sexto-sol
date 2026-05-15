@@ -1,0 +1,43 @@
+{
+  "id": "tezhal_brasa_tlani",
+  "name": "Brasa Tlani",
+  "race": "tezhal",
+  "type": "ship",
+  "cost": 1,
+  "rarity": "common",
+  "strength": 2,
+  "hp": 1,
+  "keywords": ["ignicion"],
+  "abilities": [
+    {
+      "trigger": {
+        "kind": "activated",
+        "window": "any_time",
+        "cost": {
+          "sacrificeShip": {
+            "controller": "self"
+          }
+        }
+      },
+      "category": "initiative",
+      "effect": {
+        "op": "modify_strength",
+        "target": {
+          "kind": "chosen_ship",
+          "filter": {
+            "controller": "self"
+          }
+        },
+        "kind": "delta",
+        "value": 2,
+        "duration": "end_of_turn"
+      },
+      "description": "Activada (sacrifica esta nave): otra nave aliada gana +2 fuerza este turno."
+    }
+  ],
+  "flavorText": "Su casco de obsidiana se ofrenda al hangar; otra nave arde con su mismo fuego ritual.",
+  "artSlot": {
+    "row": 0,
+    "col": 0
+  }
+}

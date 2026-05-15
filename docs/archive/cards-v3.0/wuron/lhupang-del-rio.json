@@ -1,0 +1,17 @@
+{
+  "id": "wuron_lhupang_del_rio",
+  "name": "Lhüpang del Río",
+  "race": "wuron",
+  "type": "ship",
+  "cost": 2,
+  "rarity": "common",
+  "strength": 2,
+  "hp": 4,
+  "keywords": ["kulen"],
+  "abilities": [],
+  "flavorText": "El río no se rompe cuando lo golpean; se hace más hondo.",
+  "artSlot": {
+    "row": 0,
+    "col": 1
+  }
+}

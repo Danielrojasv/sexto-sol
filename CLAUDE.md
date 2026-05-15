@@ -36,7 +36,9 @@ Specs en `docs/specs/`. Antes de empezar feature ≥ 3 días, que toque mecánic
 
 ## 1. Contexto del proyecto
 
-**Sexto Sol** es un TCG (Trading Card Game) PVP de combate directo entre **cuatro razas espaciales inventadas** — **Q'ralan, Würon, Tezhal, Zaqe** — descendientes de civilizaciones ancestrales de un sistema estelar. Cada raza pelea según una **categoría de mecánica** distinta (Reactiva / Iniciativa / Acumulativa / Post-combate), y el orden natural de resolución produce un counter wheel emergente.
+**Sexto Sol** es un juego PVP de cartas entre **cuatro razas espaciales inventadas** — **Q'ralan, Würon, Tezhal, Zaqe** — descendientes de civilizaciones ancestrales de un sistema estelar. Desde la versión v4.0 (mayo 2026), la mecánica del juego es un **duelo de lectura mutua** llamado "Peregrinaje del Sexto Sol", donde cada jugador progresa por 3 estaciones cosmológicas (Nebulosa, Estrellas, Sexto Sol) declarando **Premoniciones públicas** sobre la categoría de Acción que el oponente jugará y respondiendo con una **Acción oculta** propia. Las cartas tienen efectos condicionales según ambas declaraciones. Inspiración estructural: Marvel Snap. Innovación propia: Acción oculta + Premonición pública.
+
+> v4.0 reemplazó a v3.0, que era un TCG de combate clásico (HP, ataque/defensa con fuerza, counter-wheel explícito). v3.0 quedó archivada en `docs/archive/GAME-RULES-v3.0.md`. El código TypeScript en `src/` todavía implementa v3.0 — la migración del engine a v4.0 es un refactor futuro pendiente de su propia spec. v4.0 está **diseñada para playtest manual** (impresión de YAMLs en `docs/playtest/cards-v4.0/`).
 
 Las culturas precolombinas reales (Mapuche, Inca, Mexica, Muisca, Maya, etc.) **NO son razas jugables** — aparecen como ecos resonantes en el lore (ver `CANON-LORE.md`). El proyecto se construye dentro de un **bucle causal cerrado** tipo Evangelion/Dark/Steins;Gate: el virus que infecta a las civilizaciones fue traído del futuro al pasado por los Sabios que intentaban salvarlas.
 
@@ -45,11 +47,11 @@ Las culturas precolombinas reales (Mapuche, Inca, Mexica, Muisca, Maya, etc.) **
 1. **PVP** (jugador vs jugador, async o realtime — TBD)
 2. **Coleccionable** (sobres + crafting; sin singles market estilo MTG)
 3. **Soft P2W** estilo Marvel Snap / LoR — F2P jugable competitivamente.
-4. **Counter wheel emergente**: el orden de resolución entre categorías de mecánica (Reactiva→Iniciativa→Acumulativa→Post-combate) produce el counter wheel naturalmente. **Sin reglas hardcodeadas de tipo "raza X vence raza Y"**.
-5. **Habilidades duales Luz/Sombra** en Legendarias: Sombra activa bajo condición específica de la mecánica firma de la raza.
-6. **3 Edades como escalada de poder narrativo**: Edad I firma cuesta +1, Edad II costo normal + Resonancia, Edad III firma x2 + daño directo desde mano. Transición global turno 5/9.
-7. **Sin rotación tipo Standard**: las cartas no se descartan por tiempo. Meta se mantiene fresco vía nerfs/buffs.
-8. **Energía territorial con planetas no conquistables**: planetas son recursos compartidos con Dones únicos; activarlos cuesta 1 energía y otorga +1 esa fase. No hay control persistente de planeta.
+4. **Counter emergente vía interacción de condicionales**, no por reglas hardcoded de tipo "raza X vence raza Y". El SPEC v4.0 quitó el counter-wheel explícito de v3.0; ahora el counter cae como propiedad de cómo se cruzan las cláusulas (`premonicion_propia`, `premonicion_oponente`, `premonicion_acierta`) de las cartas en juego.
+5. **Sustracción radical sobre agregado.** Cada nueva regla candidata debe primero responder: _¿puedo resolverlo eliminando algo en vez de agregar?_ La meta v4.0: el juego se aprende en menos de 3 minutos y se juega en 10-15.
+6. **Las facciones se diferencian por cómo se sienten al jugarse**, no por tabla de bonus contra otras razas. Tezhal = aggro/sacrificio/comprometerse. Würon = control/resiliencia/lectura. Q'ralan y Zaqe vuelven en set 2.
+7. **Sin rotación tipo Standard.** Las cartas no se descartan por tiempo. El meta se mantiene fresco vía nerfs/buffs (más eventualmente sets nuevos).
+8. **3 planetas, no recursos compartidos.** v4.0 eliminó la capa de planetas neutrales con Dones de v3.0. Los planetas son las 3 estaciones del peregrinaje, con cuenta de fuerza independiente. Solo el Sexto Sol decide la partida.
 
 ### Stack técnico
 
@@ -70,31 +72,40 @@ Las culturas precolombinas reales (Mapuche, Inca, Mexica, Muisca, Maya, etc.) **
 
 ---
 
-## 2. Reglas del juego (high-level)
+## 2. Reglas del juego (high-level v4.0)
 
-**El detalle vivo está en `GAME-RULES.md` (v2.0) y el lore en `CANON-LORE.md`.** Acá el resumen para que Claude Code pueda razonar sin abrir esos archivos.
+**El detalle vivo está en `GAME-RULES.md` (v4.0) y el lore en `CANON-LORE.md` (§13 cubre el Peregrinaje).** Acá el resumen para que Claude Code pueda razonar sin abrir esos archivos.
 
-- **Win condition**: destruir el mundo natal del oponente (HP 20). También gana por decking out o concesión.
-- **Mazos**: 30 cartas de UNA raza, máx 3 copias (Legendarias 1).
-- **Mano inicial**: 4 cartas (5 para segundo jugador). Mulligan: una vez, mano completa, 1 al fondo. Cap mano: 7.
-- **Recurso (Energía Territorial)**: no acumulable entre turnos. Mundo natal +1/turno. Planetas neutrales **no se conquistan** — activarlos cuesta 1, otorga +1 esa fase y agota el planeta hasta tu siguiente turno. Cada planeta tiene un **Don** único revelado al setup (12-16 Dones distintos en el set inicial; cada partida usa 3).
-- **Turnos por fases**:
-  1. **Recolección** — recibís energía + robás 1
-  2. **Despliegue** — jugás cartas (Naves/Armas/Tecnologías/Reliquias)
-  3. **Combate** — atacás. Combate simultáneo, daño = fuerza. Bloqueo solo via keyword **Bastión**; daño residual solo via **Desgarro**
-  4. **Regroup** — mover naves gratis (en Despliegue cuesta 1)
-  5. **Vigilia** — habilidades activadas y respuestas. Energía no gastada se pierde
-- **3 Edades** (transición global turno 5 → II, turno 9 → III):
-  - **Edad I "El Despertar"**: firma cuesta +1, stats base
-  - **Edad II "Las Estrellas Recuerdan"**: firma costo normal, **Resonancia** activa
-  - **Edad III "El Sexto Sol"**: firma x2, **daño directo desde la mano** habilitado
-- **4 Razas** (cada una con una categoría de mecánica):
-  - **Q'ralan** "Hijos del Sol Pétreo" — Acumulativa. Firma: **Formación Solar** (+1 fuerza por cada otra nave Q'ralan en juego)
-  - **Würon** "Pueblos del Sur Profundo" — Reactiva. Firma: **Külen** (cada daño recibido = +1 fuerza permanente)
-  - **Tezhal** "Devotos del Corazón Ardiente" — Iniciativa. Firma: **Ignición** (sacrificás nave propia para potenciar otra acción)
-  - **Zaqe** "Mercaderes del Lago Cósmico" — Post-combate. Firma: **Refluencia** (naves derrotadas vuelven al fondo del mazo, -1 al ser robadas de nuevo)
-- **Sistema de Resolución por Naturaleza de Mecánica**: toda interacción simultánea resuelve en orden Reactiva→Iniciativa→Acumulativa→Post-combate. **Counter wheel emergente** (Würon > Q'ralan > Tezhal > Zaqe > Würon) sin reglas hardcoded por raza. Keyword **Premonición** rompe el orden con preparación de mazo.
-- **Héroe**: 1 por mazo. Edad I vive en mundo natal (hero power 1-2 activadas/turno). Edad II despliega como Nave Legendaria. Edad III ataca natales. Si muere vuelve al natal con 1 turno de cooldown.
+- **Win condition**: mayor fuerza acumulada al cierre del **Sexto Sol** (último tramo). La fuerza de planetas previos NO se traspasa — cuenta independiente por planeta.
+- **Estructura de partida**: 5-7 turnos en 3 tramos:
+  - **Nebulosa** (turnos 1-2). Mismo planeta para ambos.
+  - **Estrellas** (turnos 3-4). Cada jugador elige su planeta-Estrella de un pool de 3.
+  - **Sexto Sol** (turnos 5-7, máx 3 turnos; terminable antes vía Eclipse).
+- **Mazo**: 20 cartas de UNA raza, máx 2 copias por carta.
+- **Mano inicial**: 4 cartas. Mulligan permitido una vez (re-baraja y roba 4).
+- **Energía**: igual al número de turno (T1=1, …, T7=7). No acumula entre turnos.
+- **Turno (fase compuesta única)**:
+  1. Robo (ambos roban 1).
+  2. Energía actualizada.
+  3. Premonición PÚBLICA: ambos declaran qué categoría (Ataque/Defensa/Ritual) cree que jugará el oponente.
+  4. Acción OCULTA: cada uno juega 1 carta boca abajo pagando su coste.
+  5. Revelado simultáneo.
+  6. Acumulación de fuerza al planeta actual.
+- **Cartas de Acción** tienen: nombre, raza, coste 1-6, categoría intrínseca (Ataque/Defensa/Ritual), fuerza base, y hasta 3 cláusulas condicionales:
+  - `premonicion_propia`: activa si YO declaré X
+  - `premonicion_oponente`: activa si EL OPONENTE declaró X
+  - `premonicion_acierta`: activa si la premonición del oponente coincide con la categoría de esta carta
+- **Cierre de tramo**: el que acumuló más fuerza domina el planeta. Dominar avanza el estado del Héroe (Neutral → Despertado → Ascendido) que activa habilidades pasivas, y otorga un bonus de entrada al siguiente planeta.
+- **Eclipse**: en cualquier turno del Sexto Sol, un jugador puede invocarlo (1 vez por partida). Su Acción cuenta doble, el oponente roba 1 carta extra antes de jugar, y la partida termina al final del turno.
+- **Razas activas en v4.0**: **Tezhal** (aggro/sacrificio/comprometerse) y **Würon** (control/resiliencia/lectura). Q'ralan y Zaqe se mantienen en el canon pero no tienen cartas activas hasta el set 2.
+
+### Pool y mazos preconstruidos
+
+- Pool de Acción v4.0: `docs/playtest/cards-v4.0/tezhal.yaml` (15 cartas), `wuron.yaml` (15 cartas).
+- Héroes: `docs/playtest/cards-v4.0/heroes.yaml` (4 cartas: 2 razas × 2 estados activos).
+- Estrellas: `docs/playtest/cards-v4.0/stars.yaml` (3 cartas: Eco, Sangrante, Silenciosa).
+- 4 mazos preconstruidos en `docs/playtest/decks-v4.0/`: tezhal-aggro, tezhal-sacrificio, wuron-control, wuron-ritual.
+- Auto-validación inicial documentada en `SIM-RESULTS-v4.0.md`. Preguntas abiertas en `OPEN-QUESTIONS-v4.0.md`. Notas de playtest manual en `PLAYTEST-NOTES-v4.0.md`.
 
 ---
 

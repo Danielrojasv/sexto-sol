@@ -1,0 +1,26 @@
+{
+  "id": "quralan_despliegue_del_sumaq_wasi",
+  "name": "Despliegue del Sumaq-Wasi",
+  "race": "quralan",
+  "type": "event",
+  "cost": 4,
+  "rarity": "rare",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "initiative",
+      "effect": {
+        "op": "search",
+        "owner": "self",
+        "zone": "deck",
+        "filter": { "race": "quralan", "costLte": 2 },
+        "count": 2,
+        "destination": "play"
+      },
+      "description": "Al jugarse: busca hasta 2 naves Q'ralan de costo ≤ 2 en tu deck y ponelas en juego."
+    }
+  ],
+  "flavorText": "El hangar central abre dos compuertas a la vez; el escuadrón pequeño nace ya en órbita.",
+  "intentionalOffCategory": true
+}

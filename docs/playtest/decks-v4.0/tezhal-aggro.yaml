@@ -1,0 +1,38 @@
+# SEXTO SOL — Mazo preconstruido v4.0: Tezhal Aggro
+# 20 cartas. Máx 2 copias por carta.
+# Estrategia: comprometerse temprano declarando Ataque + jugando Ataques.
+# Cierra fuerza en Nebulosa para activar Tlanixtli Despertado (+1 fuerza por
+# cada Ataque). Curva agresiva 1-3.
+
+deck:
+  name: "Tezhal-Aggro"
+  race: "Tezhal"
+  hero: "HRO-TEZHAL"  # estados Despertado + Ascendido se desbloquean en partida
+  archetype: "aggro-temprano"
+  win_plan: |
+    Forzar dominio de Nebulosa con Ataques baratos (curva 1-3). Activar
+    Tlanixtli Despertado. En Estrellas elegir Estrella Sangrante (+1 fuerza
+    base a Ataques). Cerrar Sexto Sol antes de turno 7 declarando Ataque
+    repetidamente. Eclipse temprano (turno 5-6) si llevamos ventaja.
+  weakness: |
+    Vulnerable a Würon-Control: si el oponente acierta premonición Ataque
+    consistentemente, nuestras cartas Ataque caen (premonicion_acierta = -2
+    en TZH-003 y TZH-005). Bluff con Rituales en turnos 1-2 puede mitigar.
+
+  cards:
+    - { id: "TZH-002", copies: 2 }  # Filo del Tonatzin (Atq 1)
+    - { id: "TZH-001", copies: 2 }  # Lanza Solar (Atq 2)
+    - { id: "TZH-013", copies: 2 }  # Brasa Tlani (Rit 2)
+    - { id: "TZH-004", copies: 2 }  # Salva Ritual (Atq 3)
+    - { id: "TZH-015", copies: 2 }  # Cuchilla del Tonatzin (Rit 3)
+    - { id: "TZH-006", copies: 1 }  # Espejo Disolutorio (Def 3)
+    - { id: "TZH-003", copies: 2 }  # Cuchilla del Quinto Sol (Atq 4)
+    - { id: "TZH-007", copies: 1 }  # Hangar de Tlapetl (Def 4)
+    - { id: "TZH-009", copies: 1 }  # Brasero del Sol Quinto (Def 4)
+    - { id: "TZH-011", copies: 1 }  # Ofrenda del Xocotzin (Rit 4)
+    - { id: "TZH-005", copies: 2 }  # Plumaje Encendido (Atq 5)
+    - { id: "TZH-010", copies: 1 }  # Obsidiana Ardiente (Def 5)
+    - { id: "TZH-012", copies: 1 }  # Cántico Tlapetl (Rit 5)
+
+  # Total: 20 cartas. 10 Ataque, 4 Defensa, 6 Ritual.
+  # Curva: 2@1, 4@2, 5@3, 5@4, 4@5.

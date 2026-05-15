@@ -1,0 +1,17 @@
+{
+  "id": "quralan_qaphaq_del_cristal_orbital",
+  "name": "Q'aphaq del Cristal Orbital",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 4,
+  "rarity": "common",
+  "strength": 5,
+  "hp": 7,
+  "keywords": ["formacion_solar"],
+  "abilities": [],
+  "flavorText": "Su casco devora luz solar; cada nave hermana vuelve más afilado su disparo.",
+  "artSlot": {
+    "row": 0,
+    "col": 3
+  }
+}

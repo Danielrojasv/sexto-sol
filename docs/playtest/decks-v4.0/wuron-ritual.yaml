@@ -1,0 +1,43 @@
+# SEXTO SOL — Mazo preconstruido v4.0: Würon Ritual
+# 20 cartas. Máx 2 copias por carta.
+# Estrategia: Rituales tardíos con payoff grande. Sobrevivir Nebulosa
+# (perderla está ok), llegar al Sexto Sol con mano cargada de Rituales 5-6
+# coste y explotar. Robo de cartas vía Susurro del Bosque + Lhwentrü.
+
+deck:
+  name: "Würon-Ritual"
+  race: "Würon"
+  hero: "HRO-WURON"
+  archetype: "ritual-tardio"
+  win_plan: |
+    Aceptar perder Nebulosa si es necesario — el plan es Sexto Sol. En
+    Estrellas elegir Estrella del Eco (Ritual -1 coste) para acelerar la
+    rampa ritual. Defender lo suficiente con Wütrüpang y Bosque del Eco.
+    Cerrar Sexto Sol con WUR-013 Lhüpang del Río (coste 6 → 5 con Eco; +3
+    fuerza por premonicion_propia Ritual; descartas oponente si lee mal).
+    Eclipse turno 6-7 con Lhüpang descartando 2 cartas al oponente y +1
+    adicional por acierto. Lhülkan Ascendida da +1 energía/turno — clave
+    para sostener rituales caros.
+  weakness: |
+    Vulnerable a presión Nebulosa (puede perder dominio = sin acceso a
+    Lhülkan Despertada). Si Tezhal-Aggro nos mata el tempo, llegamos al
+    Sexto Sol sin mano. Mulligan crítico: necesitamos al menos 1 Ritual
+    barato (WUR-011 Susurro).
+
+  cards:
+    - { id: "WUR-007", copies: 1 }  # Raíz Profunda (Def 1)
+    - { id: "WUR-011", copies: 2 }  # Susurro del Bosque (Rit 2) — cycling
+    - { id: "WUR-002", copies: 1 }  # Cuchilla Lhüf (Atq 2)
+    - { id: "WUR-014", copies: 2 }  # Eco del Brote (Rit 3)
+    - { id: "WUR-008", copies: 2 }  # Bosque del Eco (Def 3)
+    - { id: "WUR-006", copies: 2 }  # Wütrüpang Resistente (Def 3)
+    - { id: "WUR-010", copies: 1 }  # Raíz Ancestral (Def 4)
+    - { id: "WUR-015", copies: 2 }  # Lhwentrü de las Raíces (Rit 5) — acierto payoff
+    - { id: "WUR-012", copies: 2 }  # Savia Antigua (Rit 5) — acierto payoff
+    - { id: "WUR-009", copies: 1 }  # Trono de Lhülkan (Def 5)
+    - { id: "WUR-004", copies: 1 }  # Lhünke Cazador (Atq 5)
+    - { id: "WUR-005", copies: 1 }  # Despertar de la Raíz (Atq 5)
+    - { id: "WUR-013", copies: 2 }  # Lhüpang del Río (Rit 6) — finisher
+
+  # Total: 20 cartas. 3 Ataque, 7 Defensa, 10 Ritual.
+  # Curva: 1@1, 3@2, 6@3, 1@4, 7@5, 2@6.

@@ -1,0 +1,249 @@
+# SEXTO SOL — Pool de cartas Würon v4.0
+# 15 cartas: 5 Ataque + 5 Defensa + 5 Ritual
+# Distribución coste: 3 cards 1-2 + 6 cards 3-4 + 4 cards 5-6 + 2 flex
+# Vibe Würon: control, resiliencia, lectura. Premia leer al oponente y jugar
+# Defensa. Mecánicas firma: anular fuerza enemiga, ganar bonus cuando la
+# premonición acierta, robo de cartas. Los Ataques Würon existen pero son
+# contraataques (potenciados si oponente jugó Ataque).
+#
+# Formato: ver GAME-RULES.md §4 y SPEC v4.0 §6.3.
+
+cards:
+  # ============================================================================
+  # ATAQUE — 5 cartas (contraataques reactivos)
+  # ============================================================================
+
+  - id: "WUR-001"
+    nombre: "Aullido del Bosque"
+    raza: "Würon"
+    categoria: "Ataque"
+    coste: 3
+    fuerza_base: 3
+    rareza: "comun"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Ataque"
+        efecto: "+1 fuerza"
+      - tipo: "premonicion_acierta"
+        efecto: "+2 fuerza adicional y robá 1 carta"
+    flavor: "El bosque grita cuando reconoce al cazador."
+
+  - id: "WUR-002"
+    nombre: "Cuchilla Lhüf"
+    raza: "Würon"
+    categoria: "Ataque"
+    coste: 2
+    fuerza_base: 2
+    rareza: "comun"
+    condicionales:
+      - tipo: "premonicion_oponente"
+        valor: "Ataque"
+        efecto: "+2 fuerza"
+    flavor: "Cuando dos filos se cruzan, gana el que escuchó primero."
+
+  - id: "WUR-003"
+    nombre: "Brote Espinado"
+    raza: "Würon"
+    categoria: "Ataque"
+    coste: 4
+    fuerza_base: 3
+    rareza: "comun"
+    condicionales:
+      - tipo: "premonicion_oponente"
+        valor: "Ataque"
+        efecto: "anula 2 fuerza de la carta enemiga y +2 fuerza propia"
+    flavor: "Quien pisa el brote, sangra la espina y alimenta la raíz."
+
+  - id: "WUR-004"
+    nombre: "Lhünke Cazador"
+    raza: "Würon"
+    categoria: "Ataque"
+    coste: 5
+    fuerza_base: 4
+    rareza: "rara"
+    condicionales:
+      - tipo: "premonicion_acierta"
+        efecto: "+3 fuerza y robá 1 carta"
+      - tipo: "premonicion_oponente"
+        valor: "Ritual"
+        efecto: "+1 fuerza adicional"
+    flavor: "El cazador no persigue. Espera. Y cuando se mueve, ya leyó el rastro."
+
+  - id: "WUR-005"
+    nombre: "Despertar de la Raíz"
+    raza: "Würon"
+    categoria: "Ataque"
+    coste: 5
+    fuerza_base: 4
+    rareza: "rara"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Ataque"
+        efecto: "+2 fuerza"
+      - tipo: "premonicion_oponente"
+        valor: "Ataque"
+        efecto: "+2 fuerza adicional"
+    flavor: "Lo que dormía bajo la tierra recuerda cómo se quiebra el cielo."
+
+  # ============================================================================
+  # DEFENSA — 5 cartas (anular + resiliencia)
+  # ============================================================================
+
+  - id: "WUR-006"
+    nombre: "Wütrüpang Resistente"
+    raza: "Würon"
+    categoria: "Defensa"
+    coste: 3
+    fuerza_base: 3
+    rareza: "comun"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Defensa"
+        efecto: "+2 fuerza"
+      - tipo: "premonicion_oponente"
+        valor: "Ataque"
+        efecto: "anula 2 fuerza enemiga este turno"
+    flavor: "Lo que resiste no se quiebra. Lo que se quiebra no era resistencia."
+
+  - id: "WUR-007"
+    nombre: "Raíz Profunda"
+    raza: "Würon"
+    categoria: "Defensa"
+    coste: 1
+    fuerza_base: 1
+    rareza: "comun"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Defensa"
+        efecto: "+1 fuerza"
+      - tipo: "premonicion_oponente"
+        valor: "Ataque"
+        efecto: "+1 fuerza adicional"
+    flavor: "La raíz crece más rápido cuando la pisan."
+
+  - id: "WUR-008"
+    nombre: "Bosque del Eco"
+    raza: "Würon"
+    categoria: "Defensa"
+    coste: 3
+    fuerza_base: 2
+    rareza: "rara"
+    condicionales:
+      - tipo: "premonicion_acierta"
+        efecto: "+3 fuerza"
+      - tipo: "premonicion_oponente"
+        valor: "Ritual"
+        efecto: "robá 1 carta"
+    flavor: "El bosque devuelve lo que se grita en él. Por eso, el cazador calla."
+
+  - id: "WUR-009"
+    nombre: "Trono de Lhülkan"
+    raza: "Würon"
+    categoria: "Defensa"
+    coste: 5
+    fuerza_base: 4
+    rareza: "rara"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Defensa"
+        efecto: "+2 fuerza"
+      - tipo: "premonicion_acierta"
+        efecto: "+2 fuerza adicional"
+      - tipo: "premonicion_oponente"
+        valor: "Ataque"
+        efecto: "anula 2 fuerza enemiga este turno"
+    flavor: "El trono no se conquista. Se hereda por escucha."
+
+  - id: "WUR-010"
+    nombre: "Raíz Ancestral"
+    raza: "Würon"
+    categoria: "Defensa"
+    coste: 4
+    fuerza_base: 3
+    rareza: "comun"
+    condicionales:
+      - tipo: "premonicion_oponente"
+        valor: "Ataque"
+        efecto: "anula 3 fuerza enemiga este turno y +1 fuerza propia"
+    flavor: "Antes del bosque hubo una sola raíz. Sigue ahí."
+
+  # ============================================================================
+  # RITUAL — 5 cartas (payoff tardío, robo, lectura)
+  # ============================================================================
+
+  - id: "WUR-011"
+    nombre: "Susurro del Bosque"
+    raza: "Würon"
+    categoria: "Ritual"
+    coste: 2
+    fuerza_base: 1
+    rareza: "comun"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Ritual"
+        efecto: "+1 fuerza y robá 1 carta"
+    flavor: "El susurro nunca grita. Por eso se escucha desde más lejos."
+
+  - id: "WUR-012"
+    nombre: "Savia Antigua"
+    raza: "Würon"
+    categoria: "Ritual"
+    coste: 5
+    fuerza_base: 4
+    rareza: "rara"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Ritual"
+        efecto: "+2 fuerza"
+      - tipo: "premonicion_acierta"
+        efecto: "+2 fuerza adicional"
+    flavor: "La savia recuerda lo que el tronco olvida."
+
+  - id: "WUR-013"
+    nombre: "Lhüpang del Río"
+    raza: "Würon"
+    categoria: "Ritual"
+    coste: 6
+    fuerza_base: 5
+    rareza: "epica"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Ritual"
+        efecto: "+3 fuerza"
+      - tipo: "premonicion_oponente"
+        valor: "Defensa"
+        efecto: "el oponente descarta 1 carta"
+      - tipo: "premonicion_acierta"
+        efecto: "+1 fuerza adicional"
+    flavor: "El río que baja del Sur Profundo lleva memoria de cada cosa que tocó."
+
+  - id: "WUR-014"
+    nombre: "Eco del Brote"
+    raza: "Würon"
+    categoria: "Ritual"
+    coste: 3
+    fuerza_base: 2
+    rareza: "comun"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Ritual"
+        efecto: "+2 fuerza"
+      - tipo: "premonicion_oponente"
+        valor: "Ataque"
+        efecto: "+1 fuerza adicional"
+    flavor: "Cada brote es un eco del primer bosque."
+
+  - id: "WUR-015"
+    nombre: "Lhwentrü de las Raíces"
+    raza: "Würon"
+    categoria: "Ritual"
+    coste: 5
+    fuerza_base: 4
+    rareza: "rara"
+    condicionales:
+      - tipo: "premonicion_propia"
+        valor: "Ritual"
+        efecto: "+1 fuerza"
+      - tipo: "premonicion_acierta"
+        efecto: "+3 fuerza adicional y robá 1 carta"
+    flavor: "Lhwentrü no manda al bosque. Lo escucha hasta que el bosque manda solo."

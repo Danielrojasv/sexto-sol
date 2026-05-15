@@ -1,0 +1,31 @@
+{
+  "id": "wuron_eco_del_brote",
+  "name": "Eco del Brote",
+  "race": "wuron",
+  "type": "event",
+  "cost": 1,
+  "rarity": "common",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "reactive",
+      "effect": {
+        "op": "modify_strength",
+        "target": {
+          "kind": "chosen_ship",
+          "filter": {
+            "controller": "self",
+            "race": "wuron",
+            "wasDamagedThisTurn": true
+          }
+        },
+        "kind": "delta",
+        "value": 1,
+        "duration": "permanent"
+      },
+      "description": "Al jugarse: una nave Würon tuya que recibió daño este turno gana +1 fuerza permanente."
+    }
+  ],
+  "flavorText": "El bosque guarda cada herida; al rato, todo lo que el bosque guarda crece."
+}

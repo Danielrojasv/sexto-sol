@@ -1,0 +1,41 @@
+# SEXTO SOL — Mazo preconstruido v4.0: Tezhal Sacrificio
+# 20 cartas. Máx 2 copias por carta.
+# Estrategia: cartas medianas/caras. Descartar de la propia mano para
+# potenciar acciones del Sexto Sol. Sobrevivir Nebulosa con Defensas y
+# Rituales baratos, explotar en Estrellas y Sexto Sol con descartes-fuerza.
+
+deck:
+  name: "Tezhal-Sacrificio"
+  race: "Tezhal"
+  hero: "HRO-TEZHAL"
+  archetype: "sacrificio-mediano"
+  win_plan: |
+    Ritmo medio. No buscar Nebulosa a toda costa — sobrevivir con Defensas
+    y Rituales baratos, robar cartas vía Iniciado Xocotzin (TZH-008). En
+    Estrellas elegir Estrella del Eco (Ritual -1 coste) para abaratar las
+    ofrendas. Sexto Sol: TZH-014 Pirámide Orbital + TZH-011 Ofrenda
+    descartan mano por fuerza explosiva. Eclipse tarde (turno 7) o no
+    invocar si el oponente lleva ventaja inalcanzable.
+  weakness: |
+    Lento contra Tezhal-Aggro (puede perder Nebulosa decisivamente). Si el
+    oponente lee Ritual consistentemente en el Sexto Sol, las penalidades
+    de premonicion_acierta hunden las cartas pesadas (TZH-014: -3 fuerza si
+    acertaron).
+
+  cards:
+    - { id: "TZH-002", copies: 1 }  # Filo del Tonatzin (Atq 1)
+    - { id: "TZH-001", copies: 2 }  # Lanza Solar (Atq 2)
+    - { id: "TZH-013", copies: 2 }  # Brasa Tlani (Rit 2)
+    - { id: "TZH-015", copies: 2 }  # Cuchilla del Tonatzin (Rit 3)
+    - { id: "TZH-006", copies: 2 }  # Espejo Disolutorio (Def 3)
+    - { id: "TZH-007", copies: 2 }  # Hangar de Tlapetl (Def 4)
+    - { id: "TZH-011", copies: 2 }  # Ofrenda del Xocotzin (Rit 4) — core sacrifice
+    - { id: "TZH-009", copies: 1 }  # Brasero del Sol Quinto (Def 4)
+    - { id: "TZH-003", copies: 1 }  # Cuchilla del Quinto Sol (Atq 4)
+    - { id: "TZH-012", copies: 2 }  # Cántico Tlapetl (Rit 5)
+    - { id: "TZH-008", copies: 1 }  # Iniciado Xocotzin (Def 5)
+    - { id: "TZH-005", copies: 1 }  # Plumaje Encendido (Atq 5)
+    - { id: "TZH-014", copies: 1 }  # Pirámide Orbital Quetlani (Rit 6) — finisher
+
+  # Total: 20 cartas. 5 Ataque, 6 Defensa, 9 Ritual.
+  # Curva: 1@1, 4@2, 4@3, 6@4, 4@5, 1@6.

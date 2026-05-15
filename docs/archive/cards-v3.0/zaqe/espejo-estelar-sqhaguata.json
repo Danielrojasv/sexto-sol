@@ -1,0 +1,17 @@
+{
+  "id": "zaqe_espejo_estelar_sqhaguata",
+  "name": "Espejo Estelar Sqhaguata",
+  "race": "zaqe",
+  "type": "ship",
+  "cost": 4,
+  "rarity": "common",
+  "strength": 5,
+  "hp": 7,
+  "keywords": ["refluencia"],
+  "abilities": [],
+  "flavorText": "Nave-balsa de casco-espejo: refleja la batalla del cielo y se hunde en el lago para volver.",
+  "artSlot": {
+    "row": 1,
+    "col": 1
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "quralan_escolta_tawa_pampa",
+  "name": "Escolta T'awa-pampa",
+  "race": "quralan",
+  "type": "ship",
+  "cost": 3,
+  "rarity": "common",
+  "strength": 4,
+  "hp": 5,
+  "keywords": ["formacion_solar"],
+  "abilities": [],
+  "flavorText": "Cuatro escuadrones, una sola órbita: el T'awa-pampa nunca rompe formación.",
+  "artSlot": {
+    "row": 0,
+    "col": 2
+  }
+}

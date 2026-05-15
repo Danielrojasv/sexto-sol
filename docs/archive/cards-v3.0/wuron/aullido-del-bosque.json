@@ -1,0 +1,41 @@
+{
+  "id": "wuron_aullido_del_bosque",
+  "name": "Aullido del Bosque",
+  "race": "wuron",
+  "type": "event",
+  "cost": 3,
+  "rarity": "rare",
+  "keywords": [],
+  "abilities": [
+    {
+      "trigger": { "kind": "on_play" },
+      "category": "reactive",
+      "effect": {
+        "op": "sequence",
+        "effects": [
+          {
+            "op": "damage",
+            "target": {
+              "kind": "chosen_ship",
+              "filter": { "controller": "self", "race": "wuron" }
+            },
+            "amount": 1
+          },
+          {
+            "op": "for_each",
+            "filter": { "controller": "self", "race": "wuron" },
+            "effect": {
+              "op": "modify_strength",
+              "target": { "kind": "self" },
+              "kind": "delta",
+              "value": 1,
+              "duration": "permanent"
+            }
+          }
+        ]
+      },
+      "description": "Al jugarse: una nave Würon tuya recibe 1 daño (tú eliges cuál); todas tus naves Würon ganan +1 fuerza permanente."
+    }
+  ],
+  "flavorText": "Una sola raíz grita; el bosque entero se levanta."
+}
