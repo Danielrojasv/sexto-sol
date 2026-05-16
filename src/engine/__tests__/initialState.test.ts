@@ -42,11 +42,11 @@ describe('createInitialState', () => {
     expect(state.players.b.mazoRestante.length).toBe(16)
   })
 
-  it('tramo nebulosa, turno 1, subPaso eleccion_planeta', () => {
+  it('tramo nebulosa, turno 1, subPaso mulligan_inicial', () => {
     const state = createInitialState(sampleConfig())
     expect(state.tramo).toBe('nebulosa')
     expect(state.turno).toBe(1)
-    expect(state.subPaso).toBe('eleccion_planeta')
+    expect(state.subPaso).toBe('mulligan_inicial')
   })
 
   it('energía 1 en turno 1', () => {
@@ -54,11 +54,12 @@ describe('createInitialState', () => {
     expect(state.energiaActual).toBe(1)
   })
 
-  it('eclipse no invocado, planetas asignados', () => {
+  it('eclipse no invocado, planetas asignados, historial vacío', () => {
     const state = createInitialState(sampleConfig())
     expect(state.eclipseInvocado).toBe(false)
     expect(state.poolPlanetasNebulosa).toHaveLength(3)
     expect(state.poolPlanetasEstrellas).toHaveLength(3)
+    expect(state.historialPremoniciones).toEqual([])
   })
 
   it('determinismo: misma seed produce mismo state', () => {

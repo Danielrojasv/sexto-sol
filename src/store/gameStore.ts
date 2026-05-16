@@ -12,6 +12,7 @@ import {
   pickPlanet,
   pickPremonicion,
   shouldInvokeEclipse,
+  shouldMulligan,
   type AIHistory,
 } from '@/engine/ai/scriptedAI'
 import type { Action } from '@/engine/actions'
@@ -86,10 +87,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       privacyShieldActive: false,
       inHome: false,
     })
-    // Auto-mulligan (vsIA siempre auto-acepta; humanos verán el botón en HomeView extendido).
-    // Por ahora, ambos jugadores keep para no bloquear.
-    get().dispatch({ type: 'KEEP_HAND', playerId: 'a' })
-    get().dispatch({ type: 'KEEP_HAND', playerId: 'b' })
+    // No auto-keep — el user verá su mano en mulligan_inicial y decidirá.
+    // stepIA() resolverá automáticamente el mulligan del jugador B (IA).
   },
 
   dispatch: (action: Action) => {
@@ -120,6 +119,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const pid: PlayerId = 'b'
     const aiHistory = get().aiHistory[pid]
     switch (s.subPaso) {
+      case 'mulligan_inicial': {
+        if (s.players[pid].manoAceptada) return
+        if (shouldMulligan(s, pid, DEPS) && !s.players[pid].mulliganUsado) {
+          get().dispatch({ type: 'MULLIGAN', playerId: pid })
+          // Tras mulligan, IA siempre acepta la nueva mano (1 mulligan máximo).
+          get().dispatch({ type: 'KEEP_HAND', playerId: pid })
+        } else {
+          get().dispatch({ type: 'KEEP_HAND', playerId: pid })
+        }
+        return
+      }
       case 'eleccion_planeta': {
         if (s.players[pid].planetElegidoActual !== undefined) return
         const pool = s.tramo === 'nebulosa' ? s.poolPlanetasNebulosa : s.poolPlanetasEstrellas
@@ -130,9 +140,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         })
         return
       }
-      case 'accion_pendiente': {
+      case 'seleccion_secreta': {
+        // Phase 2 reescribirá scriptedAI con tracking nuevo. Por ahora stub
+        // que mantiene flow básico: predice categoría más frecuente histórica,
+        // juega max-fuerza-esperada.
         if (s.accionesPendientes[pid] !== undefined || s.paseDeclarado[pid] === true) return
-        // Planificar premonición primero (cached para usar después).
         let planned = get().aiPlannedPremonicion[pid]
         if (planned === undefined) {
           planned = pickPremonicion(s, aiHistory)
@@ -155,20 +167,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
         const decision = pickAccion(s, pid, DEPS, aiHistory, planned)
         if (decision.type === 'play') {
-          get().dispatch({ type: 'PLAY_HIDDEN', playerId: pid, cardId: decision.cardId })
+          get().dispatch({
+            type: 'PLAY_HIDDEN',
+            playerId: pid,
+            cardId: decision.cardId,
+            premonicion: planned,
+          })
         } else {
-          get().dispatch({ type: 'PASS_TURN', playerId: pid })
+          get().dispatch({ type: 'PASS_TURN', playerId: pid, premonicion: planned })
         }
-        return
-      }
-      case 'premonicion_pendiente': {
-        if (s.premoniciones[pid] !== undefined) return
-        const planned = get().aiPlannedPremonicion[pid] ?? pickPremonicion(s, aiHistory)
-        get().dispatch({ type: 'DECLARE_PREMONICION', playerId: pid, categoria: planned })
         return
       }
       case 'revelar': {
         get().dispatch({ type: 'REVEAL' })
+        return
+      }
+      case 'revisar_resolucion': {
+        // El humano controla cuándo avanzar — la IA NO auto-continúa para que
+        // el user tenga tiempo de revisar qué jugó cada uno.
         return
       }
       case 'cierre_tramo': {

@@ -1,14 +1,16 @@
-// Tipos del engine de Sexto Sol — alineado a GAME-RULES.md v4.1.
+// Tipos del engine de Sexto Sol — alineado a GAME-RULES.md v4.2 (Modelo B2).
 //
-// "El Peregrinaje del Héroe":
-//   - El héroe es el sujeto que acumula 3 atributos (Fuerza/Resguardo/Resonancia).
-//   - 3 tramos: Nebulosa (T1-2), Estrellas (T3-4), Sexto Sol (T5-7).
-//   - Elección secreta de planeta en Nebulosa y Estrellas (no en Sexto Sol).
-//   - Bonus +1 a cartas de la categoría del planeta elegido (solo Neb/Est).
-//   - Victoria: ganar 2 de 3 atributos en duelo final.
+// Cambios v4.1 → v4.2 ("Premonición como Lectura"):
+//   - Premonición OCULTA hasta el revelado simultáneo (no pública antes).
+//   - Premonición afecta la carta del OPONENTE, no la propia:
+//     * Acierto: rival pierde `penalizacion_acierto` fuerza (campo top-level de cada carta).
+//     * Fallo: rival gana +1 fuerza.
+//   - Eliminadas las cláusulas premonicion_propia/oponente/acierta del schema.
+//   - Cláusulas ahora son sobre ESTADO DEL JUEGO (héroe, tramo, atributos, eclipse).
+//
+// Preservado de v4.1: 3 atributos, 3 tramos, planeta secreto, Eclipse, victoria 2-de-3.
 //
 // Determinismo total: todo el state pasa por un reducer puro (state, action) => newState.
-// Sin mutación in-place. Sin LLM. Sin browser deps en engine.
 
 import type { RngState } from './rng'
 
@@ -22,54 +24,74 @@ export type Tramo = 'nebulosa' | 'estrellas' | 'sexto_sol'
 
 export type HeroEstado = 'neutral' | 'despertado' | 'ascendido'
 
-export type PremonicionTipo = 'premonicion_propia' | 'premonicion_oponente' | 'premonicion_acierta'
-
 export type PlayerId = 'a' | 'b'
 
 export type Modo = 'vsIA' | 'hotseat'
 
-/** Sub-paso dentro del flujo de turno (o de transición entre tramos). */
+/** Sub-paso dentro del flujo de turno. v4.2: NO hay premonicion_pendiente
+ *  (la premonición se elige paralela con la acción, ambas ocultas). */
 export type SubPaso =
+  | 'mulligan_inicial'
   | 'eleccion_planeta'
   | 'robo'
-  | 'accion_pendiente'
-  | 'premonicion_pendiente'
+  /** Cada jugador elige carta + premonición (paralelo, ambos ocultos). */
+  | 'seleccion_secreta'
   | 'revelar'
+  /** Cartas + premoniciones reveladas; user revisa antes de avanzar. */
+  | 'revisar_resolucion'
   | 'cierre_tramo'
   | 'duelo_final'
   | 'terminado'
 
-// ---- Side effects de cláusulas condicionales -------------------------------
+// ---- Side effects (acciones más allá de fuerza) ----------------------------
 
-export type SideEffectTipo = 'descarte' | 'robo' | 'anula'
-export type SideEffectTarget = 'propio' | 'oponente'
+/** v4.2: tipos válidos de side effect según §5.4 SPEC. */
+export type SideEffectTipo =
+  | 'descarte_oponente'
+  | 'robo_propio'
+  | 'mirar_mazo_oponente'
+  | 'bloqueo_planeta'
 
 export interface SideEffect {
   tipo: SideEffectTipo
-  target: SideEffectTarget
   valor: number
+}
+
+// ---- Condicionales de carta (sobre ESTADO DEL JUEGO) -----------------------
+
+/** v4.2: tipos válidos de condicional según §5.2 SPEC.
+ *  Las viejas premonicion_* fueron eliminadas — premonición ya no condicional. */
+export type CondicionalTipo =
+  /** Tu héroe está en estado X. valor: HeroEstado. */
+  | 'heroe_estado'
+  /** El tramo actual es X. valor: Tramo. */
+  | 'tramo'
+  /** Tu atributo Y ≥ umbral. valorAtributo: Categoria, umbral: number. */
+  | 'atributo_propio'
+  /** Atributo Y del rival ≥ umbral. */
+  | 'atributo_oponente'
+  /** Eclipse fue invocado este turno. */
+  | 'eclipse_activo'
+
+export interface Condicional {
+  tipo: CondicionalTipo
+  /** Para heroe_estado | tramo: estado/tramo requerido. */
+  valor?: HeroEstado | Tramo
+  /** Para atributo_propio | atributo_oponente: la categoría/atributo a chequear. */
+  valorAtributo?: Categoria
+  /** Para atributo_*: umbral mínimo (≥). */
+  umbral?: number
+  /** Delta numérico a la fuerza final si la cláusula triggera. */
+  fuerzaDelta?: number
+  /** Efecto colateral si la cláusula triggera. */
+  sideEffect?: SideEffect
+  /** Texto humano para mostrar en UI. */
+  efectoTexto?: string
 }
 
 // ---- Cartas (definiciones estáticas del pool) ------------------------------
 
 export type Rareza = 'comun' | 'rara' | 'epica' | 'legendaria'
-
-/**
- * Cláusula condicional de una carta de Acción.
- * Formato v4.1 estructurado (ver scripts/migrate-v4.1-cards-to-structured.ts).
- * El interpreter consume directamente fuerzaDelta + sideEffect, no parsea strings.
- */
-export interface Condicional {
-  tipo: PremonicionTipo
-  /** Categoría requerida (solo para premonicion_propia / premonicion_oponente). */
-  valor?: Categoria
-  /** Delta numérico a la fuerza final si la cláusula triggera. */
-  fuerzaDelta?: number
-  /** Efecto colateral (descarte, robo, anulación) si la cláusula triggera. */
-  sideEffect?: SideEffect
-  /** Texto humano del efecto original (solo para mostrar en UI). */
-  efectoTexto?: string
-}
 
 export interface CardActionDef {
   id: string
@@ -78,8 +100,13 @@ export interface CardActionDef {
   categoria: Categoria
   coste: number
   fuerzaBase: number
+  /** v4.2: penalización aplicada a ESTA carta si el oponente acierta su premonición. ≥ 0. */
+  penalizacionAcierto: number
   rareza: Rareza
+  /** Condicionales sobre estado del juego (sin premoniciones — eliminadas en v4.2). */
   condicionales: Condicional[]
+  /** Side effects que la carta gatilla incondicionalmente al revelarse. */
+  sideEffects?: SideEffect[]
   flavor: string
 }
 
@@ -89,26 +116,19 @@ export interface CardPlanetDef {
   tramo: 'Nebulosa' | 'Estrellas'
   categoria: Categoria
   flavor: string
-  /** Reservado para v4.2+. Siempre null en v4.1. */
   efectoEspecial: null
 }
 
 export interface CardHeroEstadoDef {
-  /** ID estable del estado (ej: HRO-TEZHAL-DESPERTADO). */
   id: string
-  /** Texto humano de cuándo se activa este estado. */
   activacion: string
-  /** Texto humano de la habilidad pasiva (solo informativo — la lógica vive en el interpreter). */
   habilidad: string
-  /** Flavor narrativo del estado. */
   flavor: string
 }
 
 export interface CardHeroDef {
-  /** Nombre del héroe (ej: "Tlanixtli"). */
   nombre: string
   raza: Raza
-  /** Persona / descripción del héroe (puede venir del state Despertado del YAML). */
   persona: string
   despertado: CardHeroEstadoDef
   ascendido: CardHeroEstadoDef
@@ -127,68 +147,63 @@ export interface HeroAttributes {
 export interface Player {
   id: PlayerId
   raza: Raza
-  /** Ids de cartas remaining en el mazo (orden de robo: shift desde [0]). */
   mazoRestante: string[]
-  /** Ids de cartas en mano. */
   mano: string[]
-  /** Ids de cartas en pozo (descartadas o jugadas). */
   pozo: string[]
-  /** Atributos acumulados del héroe (toda la partida, no se resetean). */
   atributos: HeroAttributes
   heroEstado: HeroEstado
   mulliganUsado: boolean
-  /** Id del planeta elegido para el tramo actual. Undefined fuera de Neb/Est. */
+  manoAceptada: boolean
   planetElegidoActual?: string
 }
 
 // ---- Estado global de la partida -------------------------------------------
 
+/** Entrada de historial de premoniciones reveladas (visible tras cada turno). */
+export interface PremonicionRevelada {
+  turno: number
+  tramo: Tramo
+  a: Categoria
+  b: Categoria
+  cardCategoriaA: Categoria
+  cardCategoriaB: Categoria
+}
+
 export interface GameState {
-  /** Seed inicial — para reproducibilidad. */
   seed: number
-  /** Estado del RNG (mutable a través del reducer, siempre via funciones puras de rng.ts). */
   rng: RngState
   tramo: Tramo
-  /** Turno actual (1-7). */
   turno: number
   subPaso: SubPaso
-  /**
-   * Jugador "activo" para sub-pasos secuenciales en Hot-seat (ej: elección de planeta,
-   * que es secreta y debe alternarse). En vsIA siempre 'a' (el humano).
-   */
   jugadorActivo: PlayerId
   players: { a: Player; b: Player }
-  /** Pool fijo de 3 ids de cartas-planeta para Nebulosa. */
   poolPlanetasNebulosa: string[]
-  /** Pool fijo de 3 ids de cartas-planeta para Estrellas. */
   poolPlanetasEstrellas: string[]
-  /** Energía disponible este turno (== turno). */
   energiaActual: number
-  /** Premoniciones declaradas en el turno actual (vacío hasta declarar). */
+  /** v4.2: premoniciones ocultas hasta revelar. Set durante seleccion_secreta. */
   premoniciones: { a?: Categoria; b?: Categoria }
-  /** Ids de cartas jugadas boca abajo este turno (vacío hasta jugar). */
+  /** Ids de cartas elegidas (boca abajo) este turno. */
   accionesPendientes: { a?: string; b?: string }
-  /** Si "Pasa" se declaró en lugar de jugar carta. */
+  /** "Pasa" sin carta. v4.2: igual declara premonición (puede acertar y debilitar). */
   paseDeclarado: { a?: boolean; b?: boolean }
   eclipseInvocado: boolean
   eclipseInvocador?: PlayerId
   modo: Modo
-  /** Ganador final, set solo en duelo_final/terminado. */
+  /** v4.2: historial de premoniciones reveladas (visible para ambos tras cada revelado). */
+  historialPremoniciones: PremonicionRevelada[]
+  /** Carta peekada por habilidad de Tezhal Ascendido este turno (id), o undefined. */
+  peekedCardOponente?: string
   ganador?: PlayerId | 'empate'
-  /** Tally final 2-de-3, set solo en terminado. */
   finalTally?: { a: number; b: number }
 }
 
 // ---- Resultado de interpretación de una carta revelada ---------------------
 
-/** Output del interpreter para una sola carta revelada. */
 export interface InterpretResult {
-  /** Fuerza final aplicable al atributo correspondiente (≥ 0, ya con Math.max). */
+  /** Fuerza final aplicable al atributo correspondiente (≥ 0, Math.max(0,...)). */
   fuerzaFinal: number
-  /** Side effects a aplicar después de calcular fuerza de ambas cartas. */
+  /** Side effects a aplicar después de calcular fuerza. */
   sideEffects: SideEffect[]
-  /** Categoría de la carta (para que el reducer sepa a qué atributo sumar). */
   categoria: Categoria
-  /** Owner: el jugador que jugó esta carta. */
   owner: PlayerId
 }

@@ -1,3 +1,5 @@
+// invariants.test.ts v4.2 — property tests con nuevo modelo.
+
 import { describe, expect, it } from 'vitest'
 import fc from 'fast-check'
 import { interpretCondicionales } from '../interpreter'
@@ -9,35 +11,39 @@ const tramoArb = fc.constantFrom<Tramo>('nebulosa', 'estrellas', 'sexto_sol')
 const heroEstadoArb = fc.constantFrom<HeroEstado>('neutral', 'despertado', 'ascendido')
 const razaArb = fc.constantFrom<Raza>('Tezhal', 'Würon')
 
-describe('invariantes (fast-check property tests)', () => {
-  it('fuerza final de cualquier carta nunca es negativa', () => {
+describe('invariantes (fast-check)', () => {
+  it('fuerza final nunca negativa', () => {
     fc.assert(
       fc.property(
         fc.integer({ min: 0, max: 6 }),
-        fc.integer({ min: -20, max: 20 }),
+        fc.integer({ min: 0, max: 4 }),
         categoriaArb,
         categoriaArb,
         categoriaArb,
         tramoArb,
         heroEstadoArb,
         razaArb,
-        (fuerzaBase, fuerzaDelta, cardCat, miPrem, opPrem, tramo, heroEstado, raza) => {
-          const card = mockCard({
-            categoria: cardCat,
-            fuerzaBase,
-            condicionales: [{ tipo: 'premonicion_propia', valor: miPrem, fuerzaDelta }],
-          })
-          const result = interpretCondicionales({
-            card,
+        (fuerzaBase, pen, cardCat, miPrem, opPrem, tramo, heroEstado, raza) => {
+          const r = interpretCondicionales({
+            card: mockCard({
+              categoria: cardCat,
+              fuerzaBase,
+              penalizacionAcierto: pen,
+            }),
             miPremonicion: miPrem,
             oponentePremonicion: opPrem,
+            oponenteCategoria: undefined,
             planetElegido: undefined,
             tramo,
             heroEstado,
             raza,
             owner: 'a',
+            atributosPropio: { fuerza: 0, resguardo: 0, resonancia: 0 },
+            atributosOponente: { fuerza: 0, resguardo: 0, resonancia: 0 },
+            eclipseActivo: false,
+            eclipseInvocador: undefined,
           })
-          expect(result.fuerzaFinal).toBeGreaterThanOrEqual(0)
+          expect(r.fuerzaFinal).toBeGreaterThanOrEqual(0)
         },
       ),
     )
@@ -46,55 +52,29 @@ describe('invariantes (fast-check property tests)', () => {
   it('bonus de planeta no aplica en sexto_sol', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 0, max: 6 }),
+        fc.integer({ min: 0, max: 4 }),
         categoriaArb,
         categoriaArb,
         (fuerzaBase, cardCat, planetCat) => {
-          const card = mockCard({ categoria: cardCat, fuerzaBase, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ritual', fuerzaDelta: 0 }] })
-          const planet = mockPlanet({ tramo: 'Nebulosa', categoria: planetCat })
-          const result = interpretCondicionales({
-            card,
+          const r1 = interpretCondicionales({
+            card: mockCard({ categoria: cardCat, fuerzaBase, penalizacionAcierto: 0 }),
             miPremonicion: 'Ataque',
-            oponentePremonicion: 'Defensa',
-            planetElegido: planet,
+            oponentePremonicion: 'Ataque', // pen=0 → no afecta
+            oponenteCategoria: undefined,
+            planetElegido: mockPlanet({ tramo: 'Nebulosa', categoria: planetCat }),
             tramo: 'sexto_sol',
             heroEstado: 'neutral',
-            raza: 'Tezhal',
+            raza: 'Würon', // sin bonus pasivo Tezhal
             owner: 'a',
+            atributosPropio: { fuerza: 0, resguardo: 0, resonancia: 0 },
+            atributosOponente: { fuerza: 0, resguardo: 0, resonancia: 0 },
+            eclipseActivo: false,
+            eclipseInvocador: undefined,
           })
-          // En sexto_sol, fuerzaFinal === fuerzaBase (sin bonus de planeta).
-          expect(result.fuerzaFinal).toBe(fuerzaBase)
-        },
-      ),
-    )
-  })
-
-  it('múltiples condicionales suman aditivamente', () => {
-    fc.assert(
-      fc.property(
-        fc.array(fc.integer({ min: -5, max: 5 }), { minLength: 1, maxLength: 3 }),
-        (deltas) => {
-          const card = mockCard({
-            categoria: 'Ataque',
-            fuerzaBase: 10,
-            condicionales: deltas.map((d) => ({
-              tipo: 'premonicion_propia' as const,
-              valor: 'Ataque' as const,
-              fuerzaDelta: d,
-            })),
-          })
-          const result = interpretCondicionales({
-            card,
-            miPremonicion: 'Ataque', // todas las cláusulas se activan
-            oponentePremonicion: 'Defensa',
-            planetElegido: undefined,
-            tramo: 'nebulosa',
-            heroEstado: 'neutral',
-            raza: 'Tezhal',
-            owner: 'a',
-          })
-          const expected = Math.max(0, 10 + deltas.reduce((a, b) => a + b, 0))
-          expect(result.fuerzaFinal).toBe(expected)
+          // En sexto_sol no hay bonus planeta. Resultado depende solo de base + lectura rival.
+          // Acertó (Ataque == Ataque pero card.categoria es la de cardCat). Si cardCat===Ataque, acertó. Si no, falló.
+          const ricoExpected = cardCat === 'Ataque' ? fuerzaBase : fuerzaBase + 1
+          expect(r1.fuerzaFinal).toBe(Math.max(0, ricoExpected))
         },
       ),
     )

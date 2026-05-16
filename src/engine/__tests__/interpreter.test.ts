@@ -1,272 +1,257 @@
+// interpreter.test.ts v4.2 — "Premonición como Lectura"
+//
+// Tests del nuevo orden de aplicación §4.2:
+//   base → lectura rival → bonus planeta → condicionales → habilidades héroe → eclipse
+
 import { describe, expect, it } from 'vitest'
-import { aplicarBonusWuronDespertada, interpretCondicionales } from '../interpreter'
+import { interpretCondicionales, penalizacionPorPasarConAcierto } from '../interpreter'
 import { mockCard, mockPlanet } from './_helpers'
+import type { HeroAttributes, InterpretResult } from '../types'
 
-describe('interpretCondicionales — cláusulas básicas', () => {
-  it('premonicion_propia activa cuando miPremonicion === valor', () => {
-    const card = mockCard({
-      categoria: 'Ataque',
-      fuerzaBase: 3,
-      condicionales: [{ tipo: 'premonicion_propia', valor: 'Ataque', fuerzaDelta: 2 }],
+const ZERO: HeroAttributes = { fuerza: 0, resguardo: 0, resonancia: 0 }
+
+function baseInput(opts: Partial<Parameters<typeof interpretCondicionales>[0]> = {}) {
+  return {
+    card: mockCard({ categoria: 'Ataque', fuerzaBase: 3, penalizacionAcierto: 2 }),
+    miPremonicion: 'Ataque' as const,
+    oponentePremonicion: 'Defensa' as const,
+    oponenteCategoria: undefined,
+    planetElegido: undefined,
+    tramo: 'nebulosa' as const,
+    heroEstado: 'neutral' as const,
+    raza: 'Tezhal' as const,
+    owner: 'a' as const,
+    atributosPropio: ZERO,
+    atributosOponente: ZERO,
+    eclipseActivo: false,
+    eclipseInvocador: undefined,
+    ...opts,
+  }
+}
+
+describe('interpretCondicionales — lectura del rival', () => {
+  it('rival acertó → carta pierde penalizacionAcierto', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 5, penalizacionAcierto: 2 }),
+      oponentePremonicion: 'Ataque', // acertó mi categoría
     })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Ataque',
-      oponentePremonicion: 'Defensa',
-      planetElegido: undefined,
-      tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Tezhal',
-      owner: 'a',
-    })
-    expect(result.fuerzaFinal).toBe(5)
+    const r = interpretCondicionales(input)
+    // base 5 - 2 (acierto) = 3
+    expect(r.fuerzaFinal).toBe(3)
   })
 
-  it('premonicion_propia NO activa si miPremonicion ≠ valor', () => {
-    const card = mockCard({
-      categoria: 'Ataque',
-      fuerzaBase: 3,
-      condicionales: [{ tipo: 'premonicion_propia', valor: 'Ataque', fuerzaDelta: 2 }],
+  it('rival falló → carta gana +1', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 3, penalizacionAcierto: 2 }),
+      oponentePremonicion: 'Defensa', // falló
     })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Defensa',
-      oponentePremonicion: 'Defensa',
-      planetElegido: undefined,
-      tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Tezhal',
-      owner: 'a',
-    })
-    expect(result.fuerzaFinal).toBe(3)
+    const r = interpretCondicionales(input)
+    // base 3 + 1 (fallo) = 4
+    expect(r.fuerzaFinal).toBe(4)
   })
 
-  it('premonicion_oponente activa cuando oponentePremonicion === valor', () => {
-    const card = mockCard({
-      categoria: 'Defensa',
-      fuerzaBase: 2,
-      condicionales: [{ tipo: 'premonicion_oponente', valor: 'Ataque', fuerzaDelta: 1 }],
-    })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Defensa',
+  it('penalizacionAcierto = 0 → acertar no debilita', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 3, penalizacionAcierto: 0 }),
       oponentePremonicion: 'Ataque',
-      planetElegido: undefined,
-      tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Würon',
-      owner: 'a',
     })
-    expect(result.fuerzaFinal).toBe(3)
-  })
-
-  it('premonicion_acierta activa si oponentePremonicion === card.categoria', () => {
-    const card = mockCard({
-      categoria: 'Defensa',
-      fuerzaBase: 2,
-      condicionales: [{ tipo: 'premonicion_acierta', fuerzaDelta: 3 }],
-    })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Ataque',
-      oponentePremonicion: 'Defensa',
-      planetElegido: undefined,
-      tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Würon',
-      owner: 'a',
-    })
-    expect(result.fuerzaFinal).toBe(5)
-  })
-
-  it('múltiples condicionales se suman', () => {
-    const card = mockCard({
-      categoria: 'Ataque',
-      fuerzaBase: 3,
-      condicionales: [
-        { tipo: 'premonicion_propia', valor: 'Ataque', fuerzaDelta: 1 },
-        { tipo: 'premonicion_oponente', valor: 'Defensa', fuerzaDelta: 2 },
-        { tipo: 'premonicion_acierta', fuerzaDelta: -2 },
-      ],
-    })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Ataque',
-      oponentePremonicion: 'Ataque', // acierta categoría Ataque de la carta
-      planetElegido: undefined,
-      tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Tezhal',
-      owner: 'a',
-    })
-    // base 3 + 1 (propia Atq) + 0 (oponente Def NO aplica, dijo Atq) − 2 (acierta) = 2
-    expect(result.fuerzaFinal).toBe(2)
-  })
-
-  it('sideEffect se devuelve, no se aplica', () => {
-    const card = mockCard({
-      condicionales: [
-        {
-          tipo: 'premonicion_propia',
-          valor: 'Ataque',
-          sideEffect: { tipo: 'descarte', target: 'oponente', valor: 1 },
-        },
-      ],
-    })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Ataque',
-      oponentePremonicion: 'Defensa',
-      planetElegido: undefined,
-      tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Tezhal',
-      owner: 'a',
-    })
-    expect(result.sideEffects).toHaveLength(1)
-    expect(result.sideEffects[0]).toEqual({ tipo: 'descarte', target: 'oponente', valor: 1 })
-  })
-
-  it('fuerza final nunca negativa (Math.max(0, ...))', () => {
-    const card = mockCard({
-      fuerzaBase: 2,
-      condicionales: [
-        { tipo: 'premonicion_propia', valor: 'Ataque', fuerzaDelta: -10 },
-      ],
-    })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Ataque',
-      oponentePremonicion: 'Defensa',
-      planetElegido: undefined,
-      tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Tezhal',
-      owner: 'a',
-    })
-    expect(result.fuerzaFinal).toBe(0)
+    const r = interpretCondicionales(input)
+    expect(r.fuerzaFinal).toBe(3)
   })
 })
 
 describe('Bonus de planeta', () => {
-  it('+1 cuando categoria de carta === categoria del planeta-elegido en Nebulosa', () => {
-    const card = mockCard({ categoria: 'Ataque', fuerzaBase: 3, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ritual', fuerzaDelta: 99 }] })
-    const planet = mockPlanet({ tramo: 'Nebulosa', categoria: 'Ataque' })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Ataque',
-      oponentePremonicion: 'Defensa',
-      planetElegido: planet,
+  it('+1 si categoria coincide en Nebulosa', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 3, penalizacionAcierto: 0 }),
+      oponentePremonicion: 'Ataque', // rival acertó, pero pen=0
+      planetElegido: mockPlanet({ categoria: 'Ataque' }),
       tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Tezhal',
-      owner: 'a',
     })
-    // base 3 + 0 (cláusula premonicion_propia Ritual no aplica, A=Atq) + 1 (bonus planeta) = 4
-    expect(result.fuerzaFinal).toBe(4)
+    const r = interpretCondicionales(input)
+    // base 3 + 0 (acertó pero pen=0) + 1 (bonus planeta) = 4
+    expect(r.fuerzaFinal).toBe(4)
   })
 
-  it('NO aplica bonus en Sexto Sol', () => {
-    const card = mockCard({ categoria: 'Ataque', fuerzaBase: 3, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ritual', fuerzaDelta: 99 }] })
-    const planet = mockPlanet({ tramo: 'Nebulosa', categoria: 'Ataque' })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Ataque',
-      oponentePremonicion: 'Defensa',
-      planetElegido: planet,
+  it('NO bonus en Sexto Sol aunque haya planet residual', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 3, penalizacionAcierto: 0 }),
+      oponentePremonicion: 'Ataque',
+      planetElegido: mockPlanet({ categoria: 'Ataque' }),
       tramo: 'sexto_sol',
-      heroEstado: 'neutral',
-      raza: 'Tezhal',
-      owner: 'a',
     })
-    expect(result.fuerzaFinal).toBe(3)
-  })
-
-  it('NO aplica bonus si categoría no coincide', () => {
-    const card = mockCard({ categoria: 'Defensa', fuerzaBase: 2, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ritual', fuerzaDelta: 99 }] })
-    const planet = mockPlanet({ tramo: 'Nebulosa', categoria: 'Ataque' })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Defensa',
-      oponentePremonicion: 'Defensa',
-      planetElegido: planet,
-      tramo: 'nebulosa',
-      heroEstado: 'neutral',
-      raza: 'Tezhal',
-      owner: 'a',
-    })
-    expect(result.fuerzaFinal).toBe(2)
+    const r = interpretCondicionales(input)
+    // base 3 + 0 + 0 (sin bonus) = 3
+    expect(r.fuerzaFinal).toBe(3)
   })
 })
 
-describe('Habilidades de héroe pasivas', () => {
+describe('Condicionales sobre estado del juego', () => {
+  it('heroe_estado triggera si héroe está en valor', () => {
+    const input = baseInput({
+      card: mockCard({
+        categoria: 'Defensa', // evita Tezhal Despertado +1 (que solo aplica a Atq)
+        fuerzaBase: 3,
+        penalizacionAcierto: 0,
+        condicionales: [{ tipo: 'heroe_estado', valor: 'despertado', fuerzaDelta: 2 }],
+      }),
+      oponentePremonicion: 'Defensa', // pen=0, no afecta
+      heroEstado: 'despertado',
+    })
+    const r = interpretCondicionales(input)
+    // base 3 + 0 + 2 (clause) = 5
+    expect(r.fuerzaFinal).toBe(5)
+  })
+
+  it('tramo: triggera si tramo coincide', () => {
+    const input = baseInput({
+      card: mockCard({
+        categoria: 'Ataque',
+        fuerzaBase: 3,
+        penalizacionAcierto: 0,
+        condicionales: [{ tipo: 'tramo', valor: 'sexto_sol', fuerzaDelta: 2 }],
+      }),
+      oponentePremonicion: 'Ataque',
+      tramo: 'sexto_sol',
+    })
+    const r = interpretCondicionales(input)
+    expect(r.fuerzaFinal).toBe(5)
+  })
+
+  it('atributo_propio: triggera si umbral cumplido', () => {
+    const input = baseInput({
+      card: mockCard({
+        categoria: 'Ataque',
+        fuerzaBase: 3,
+        penalizacionAcierto: 0,
+        condicionales: [
+          { tipo: 'atributo_propio', valorAtributo: 'Defensa', umbral: 5, fuerzaDelta: 2 },
+        ],
+      }),
+      oponentePremonicion: 'Ataque',
+      atributosPropio: { fuerza: 0, resguardo: 5, resonancia: 0 },
+    })
+    const r = interpretCondicionales(input)
+    expect(r.fuerzaFinal).toBe(5)
+  })
+
+  it('eclipse_activo: triggera si Eclipse invocado', () => {
+    const input = baseInput({
+      card: mockCard({
+        categoria: 'Ataque',
+        fuerzaBase: 3,
+        penalizacionAcierto: 0,
+        condicionales: [{ tipo: 'eclipse_activo', fuerzaDelta: 2 }],
+      }),
+      oponentePremonicion: 'Ataque',
+      eclipseActivo: true,
+    })
+    const r = interpretCondicionales(input)
+    // base 3 + 0 + 2 (clause) = 5 (no se duplica porque no es invocador)
+    expect(r.fuerzaFinal).toBe(5)
+  })
+})
+
+describe('Habilidades de héroe', () => {
   it('Tezhal Despertado: +1 a cartas Ataque', () => {
-    const card = mockCard({ categoria: 'Ataque', fuerzaBase: 3, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ritual', fuerzaDelta: 0 }] })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Ataque',
-      oponentePremonicion: 'Defensa',
-      planetElegido: undefined,
-      tramo: 'sexto_sol',
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 3, penalizacionAcierto: 0 }),
+      oponentePremonicion: 'Ataque',
       heroEstado: 'despertado',
       raza: 'Tezhal',
+    })
+    const r = interpretCondicionales(input)
+    // base 3 + 0 + 1 (Tezhal Despertado) = 4
+    expect(r.fuerzaFinal).toBe(4)
+  })
+
+  it('Würon Despertado: +1 si MI premonición acierta categoría del rival', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Defensa', fuerzaBase: 3, penalizacionAcierto: 0 }),
+      miPremonicion: 'Ataque', // predijo Ataque
+      oponentePremonicion: 'Ritual', // su predicción sobre mí
+      oponenteCategoria: 'Ataque', // el oponente jugó Ataque → MI predicción Ataque acierta
+      heroEstado: 'despertado',
+      raza: 'Würon',
+    })
+    const r = interpretCondicionales(input)
+    // base 3 + 1 (rival falló — predijo Ritual, mi carta es Defensa) + 1 (Würon Despertado acertó) = 5
+    expect(r.fuerzaFinal).toBe(5)
+  })
+})
+
+describe('Eclipse', () => {
+  it('×2 al total si owner invocó', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 3, penalizacionAcierto: 0 }),
+      oponentePremonicion: 'Ataque',
+      eclipseActivo: true,
+      eclipseInvocador: 'a',
       owner: 'a',
     })
-    expect(result.fuerzaFinal).toBe(4)
+    const r = interpretCondicionales(input)
+    // (3 + 0) * 2 = 6
+    expect(r.fuerzaFinal).toBe(6)
   })
 
-  it('Tezhal Despertado: NO afecta cartas Defensa', () => {
-    const card = mockCard({ categoria: 'Defensa', fuerzaBase: 3, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ritual', fuerzaDelta: 0 }] })
-    const result = interpretCondicionales({
-      card,
-      miPremonicion: 'Defensa',
-      oponentePremonicion: 'Defensa',
-      planetElegido: undefined,
-      tramo: 'sexto_sol',
-      heroEstado: 'despertado',
-      raza: 'Tezhal',
+  it('NO ×2 si el invocador es el otro jugador', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 3, penalizacionAcierto: 0 }),
+      oponentePremonicion: 'Ataque',
+      eclipseActivo: true,
+      eclipseInvocador: 'b',
       owner: 'a',
     })
-    expect(result.fuerzaFinal).toBe(3)
+    const r = interpretCondicionales(input)
+    expect(r.fuerzaFinal).toBe(3)
   })
+})
 
-  it('Würon Despertada: +1 cuando mi premonición acierta categoría del oponente', () => {
-    const bonus = aplicarBonusWuronDespertada({
+describe('Side effects', () => {
+  it('Side effect de condicional triggereada se devuelve', () => {
+    const input = baseInput({
+      card: mockCard({
+        categoria: 'Ataque',
+        fuerzaBase: 3,
+        penalizacionAcierto: 0,
+        condicionales: [
+          {
+            tipo: 'heroe_estado',
+            valor: 'despertado',
+            sideEffect: { tipo: 'descarte_oponente', valor: 1 },
+          },
+        ],
+      }),
+      oponentePremonicion: 'Ataque',
       heroEstado: 'despertado',
-      raza: 'Würon',
-      miPremonicion: 'Ataque',
-      categoriaJugadaPorOponente: 'Ataque',
     })
-    expect(bonus).toBe(1)
+    const r: InterpretResult = interpretCondicionales(input)
+    expect(r.sideEffects).toHaveLength(1)
+    expect(r.sideEffects[0]).toEqual({ tipo: 'descarte_oponente', valor: 1 })
+  })
+})
+
+describe('Fuerza nunca negativa', () => {
+  it('Math.max(0, ...) clampea', () => {
+    const input = baseInput({
+      card: mockCard({ categoria: 'Ataque', fuerzaBase: 1, penalizacionAcierto: 99 }),
+      oponentePremonicion: 'Ataque',
+    })
+    const r = interpretCondicionales(input)
+    expect(r.fuerzaFinal).toBe(0)
+  })
+})
+
+describe('penalizacionPorPasarConAcierto', () => {
+  it('acertaste sin carta → -1 al rival', () => {
+    expect(penalizacionPorPasarConAcierto('Ataque', 'Ataque')).toBe(1)
   })
 
-  it('Würon Despertada: NO da bonus si no acertó', () => {
-    const bonus = aplicarBonusWuronDespertada({
-      heroEstado: 'despertado',
-      raza: 'Würon',
-      miPremonicion: 'Ataque',
-      categoriaJugadaPorOponente: 'Defensa',
-    })
-    expect(bonus).toBe(0)
+  it('fallaste sin carta → 0', () => {
+    expect(penalizacionPorPasarConAcierto('Defensa', 'Ataque')).toBe(0)
   })
 
-  it('Würon Despertada: NO da bonus si héroe Neutral', () => {
-    const bonus = aplicarBonusWuronDespertada({
-      heroEstado: 'neutral',
-      raza: 'Würon',
-      miPremonicion: 'Ataque',
-      categoriaJugadaPorOponente: 'Ataque',
-    })
-    expect(bonus).toBe(0)
-  })
-
-  it('Würon Despertada: NO afecta a Tezhal', () => {
-    const bonus = aplicarBonusWuronDespertada({
-      heroEstado: 'despertado',
-      raza: 'Tezhal',
-      miPremonicion: 'Ataque',
-      categoriaJugadaPorOponente: 'Ataque',
-    })
-    expect(bonus).toBe(0)
+  it('rival también pasó → 0', () => {
+    expect(penalizacionPorPasarConAcierto('Ataque', undefined)).toBe(0)
   })
 })

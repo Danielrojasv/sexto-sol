@@ -1,14 +1,16 @@
-// Reducer puro de Sexto Sol v4.1.
+// Reducer puro de Sexto Sol v4.2.
 //
-// (state, action) => newState. Sin mutación in-place. Sin LLM. Determinismo total.
-// Flujo por turno: ELECCIÓN_PLANETA (solo Neb/Est) → ROBO → ACCIÓN_PENDIENTE
-// → PREMONICIÓN_PENDIENTE → REVELAR → (CIERRE_TRAMO o siguiente turno o duelo).
+// Modelo B2 "Premonición como Lectura": premonición es oculta hasta el revelado.
+// El sub-paso 'premonicion_pendiente' fue eliminado; carta + premonición se eligen
+// en paralelo durante 'seleccion_secreta'.
 //
-// El reducer es una factory: createReducer(deps) devuelve (state, action) => state.
-// deps incluye los registries de cartas (definiciones estáticas del pool).
+// Flujo por turno:
+//   mulligan_inicial (T1 solo) → eleccion_planeta (inicio Neb/Est)
+//   → robo → seleccion_secreta → revelar → revisar_resolucion
+//   → (cierre_tramo o siguiente turno o duelo_final)
 
 import type { Action } from './actions'
-import { aplicarBonusWuronDespertada, interpretCondicionales, type InterpretInput } from './interpreter'
+import { interpretCondicionales, penalizacionPorPasarConAcierto, type InterpretInput } from './interpreter'
 import { createRng, shuffle } from './rng'
 import type {
   Categoria,
@@ -16,23 +18,20 @@ import type {
   CardPlanetDef,
   GameState,
   HeroEstado,
-  InterpretResult,
   PlayerId,
   Player,
+  PremonicionRevelada,
   SideEffect,
 } from './types'
 
 export interface ReducerDeps {
-  /** Pool completo de cartas de Acción indexadas por id. */
   cards: Map<string, CardActionDef>
-  /** Pool completo de cartas de Planeta indexadas por id. */
   planets: Map<string, CardPlanetDef>
 }
 
 const MANO_INICIAL = 4
 const CAP_MANO = 7
 
-/** Factory del reducer puro. */
 export function createReducer(
   deps: ReducerDeps,
 ): (state: GameState, action: Action) => GameState {
@@ -47,13 +46,13 @@ export function createReducer(
       case 'DRAW_BOTH':
         return applyDrawBoth(state)
       case 'PLAY_HIDDEN':
-        return applyPlayHidden(state, action.playerId, action.cardId, deps)
+        return applyPlayHidden(state, action.playerId, action.cardId, action.premonicion, deps)
       case 'PASS_TURN':
-        return applyPass(state, action.playerId)
-      case 'DECLARE_PREMONICION':
-        return applyDeclarePremonicion(state, action.playerId, action.categoria)
+        return applyPass(state, action.playerId, action.premonicion)
       case 'REVEAL':
         return applyReveal(state, deps)
+      case 'CONTINUE_TURN':
+        return applyContinueTurn(state)
       case 'CLOSE_TRAMO':
         return applyCloseTramo(state, deps)
       case 'INVOKE_ECLIPSE':
@@ -61,7 +60,6 @@ export function createReducer(
       case 'END_GAME':
         return applyEndGame(state)
       default: {
-        // Exhaustiveness check.
         const _exhaust: never = action
         void _exhaust
         return state
@@ -70,7 +68,7 @@ export function createReducer(
   }
 }
 
-// ===== HELPERS PRIMITIVOS ===================================================
+// ===== HELPERS ==============================================================
 
 function withRng<T>(
   state: GameState,
@@ -86,13 +84,7 @@ function updatePlayer(
   id: PlayerId,
   mutator: (p: Player) => Player,
 ): GameState {
-  return {
-    ...state,
-    players: {
-      ...state.players,
-      [id]: mutator(state.players[id]),
-    },
-  }
+  return { ...state, players: { ...state.players, [id]: mutator(state.players[id]) } }
 }
 
 function otherPlayer(id: PlayerId): PlayerId {
@@ -126,41 +118,29 @@ function capHand(mano: string[]): string[] {
   return mano
 }
 
-// ===== ENERGÍA POR JUGADOR ==================================================
-
-/** Energía efectiva del jugador en el turno actual (incluye bonus Würon Ascendida). */
 export function getEnergiaParaJugador(state: GameState, playerId: PlayerId): number {
   let base = state.turno
   const player = state.players[playerId]
-  if (player.heroEstado === 'ascendido' && player.raza === 'Würon') {
-    base += 1
-  }
+  if (player.heroEstado === 'ascendido' && player.raza === 'Würon') base += 1
   return base
 }
 
-// ===== ACTIONS ==============================================================
+// ===== MULLIGAN =============================================================
 
 function applyMulligan(state: GameState, playerId: PlayerId): GameState {
+  if (state.subPaso !== 'mulligan_inicial') {
+    throw new Error(`MULLIGAN solo válido en mulligan_inicial`)
+  }
   const player = state.players[playerId]
-  if (player.mulliganUsado) {
-    throw new Error(`Player ${playerId} ya usó mulligan`)
-  }
-  if (state.tramo !== 'nebulosa' || state.turno !== 1 || state.subPaso !== 'eleccion_planeta') {
-    throw new Error('Mulligan solo válido al inicio de Nebulosa, antes de elegir planeta')
-  }
-  if (player.planetElegidoActual !== undefined) {
-    throw new Error('Mulligan no permitido después de elegir planeta')
-  }
-  // Devolver mano al mazo restante, mezclar, robar 4 nuevas.
+  if (player.mulliganUsado) throw new Error(`Player ${playerId} ya usó mulligan`)
+  if (player.manoAceptada) throw new Error(`Player ${playerId} ya aceptó su mano`)
   const merged = [...player.mazoRestante, ...player.mano]
   const { result: shuffled, rngState } = withRng(state, (r) => shuffle(r, merged))
-  const newMano = shuffled.slice(0, MANO_INICIAL)
-  const newMazo = shuffled.slice(MANO_INICIAL)
   return {
     ...updatePlayer(state, playerId, (p) => ({
       ...p,
-      mano: newMano,
-      mazoRestante: newMazo,
+      mano: shuffled.slice(0, MANO_INICIAL),
+      mazoRestante: shuffled.slice(MANO_INICIAL),
       mulliganUsado: true,
     })),
     rng: rngState,
@@ -168,9 +148,20 @@ function applyMulligan(state: GameState, playerId: PlayerId): GameState {
 }
 
 function applyKeepHand(state: GameState, playerId: PlayerId): GameState {
-  // Marcar mulliganUsado=true (la mano se acepta tal cual).
-  return updatePlayer(state, playerId, (p) => ({ ...p, mulliganUsado: true }))
+  if (state.subPaso !== 'mulligan_inicial') {
+    throw new Error(`KEEP_HAND solo válido en mulligan_inicial`)
+  }
+  if (state.players[playerId].manoAceptada) {
+    throw new Error(`Player ${playerId} ya aceptó`)
+  }
+  let next = updatePlayer(state, playerId, (p) => ({ ...p, manoAceptada: true }))
+  if (next.players.a.manoAceptada && next.players.b.manoAceptada) {
+    next = { ...next, subPaso: 'eleccion_planeta' }
+  }
+  return next
 }
+
+// ===== SELECT_PLANET ========================================================
 
 function applySelectPlanet(
   state: GameState,
@@ -179,44 +170,38 @@ function applySelectPlanet(
   deps: ReducerDeps,
 ): GameState {
   if (state.subPaso !== 'eleccion_planeta') {
-    throw new Error(`SELECT_PLANET solo válido en eleccion_planeta, actual: ${state.subPaso}`)
+    throw new Error(`SELECT_PLANET solo válido en eleccion_planeta`)
   }
   const pool = state.tramo === 'nebulosa' ? state.poolPlanetasNebulosa : state.poolPlanetasEstrellas
-  if (!pool.includes(planetId)) {
-    throw new Error(`Planet ${planetId} no está en el pool del tramo ${state.tramo}`)
-  }
-  if (!deps.planets.has(planetId)) {
-    throw new Error(`Planet ${planetId} no existe en el registry`)
-  }
+  if (!pool.includes(planetId)) throw new Error(`Planet ${planetId} no en pool`)
+  if (!deps.planets.has(planetId)) throw new Error(`Planet ${planetId} no en registry`)
   if (state.players[playerId].planetElegidoActual !== undefined) {
-    throw new Error(`Player ${playerId} ya eligió planeta este tramo`)
+    throw new Error(`Player ${playerId} ya eligió`)
   }
-
   let next = updatePlayer(state, playerId, (p) => ({
     ...p,
     planetElegidoActual: planetId,
-    // Si no usó mulligan al llegar acá, no podrá usarlo después.
     mulliganUsado: true,
   }))
-
-  // Si ambos eligieron, avanzar a sub-paso 'robo' del turno actual.
-  const bothChose =
+  if (
     next.players.a.planetElegidoActual !== undefined &&
     next.players.b.planetElegidoActual !== undefined
-  if (bothChose) {
+  ) {
     next = { ...next, subPaso: 'robo' }
   }
   return next
 }
 
+// ===== DRAW =================================================================
+
 function applyDrawBoth(state: GameState): GameState {
   if (state.subPaso !== 'robo') {
-    throw new Error(`DRAW_BOTH solo válido en sub-paso robo, actual: ${state.subPaso}`)
+    throw new Error(`DRAW_BOTH solo válido en sub-paso robo`)
   }
   let next = state
   for (const playerId of ['a', 'b'] as const) {
     const player = next.players[playerId]
-    if (player.mazoRestante.length === 0) continue // decking out no aplica en v4.1
+    if (player.mazoRestante.length === 0) continue
     const [head, ...rest] = player.mazoRestante
     next = updatePlayer(next, playerId, (p) => ({
       ...p,
@@ -224,38 +209,31 @@ function applyDrawBoth(state: GameState): GameState {
       mazoRestante: rest,
     }))
   }
-  return {
-    ...next,
-    energiaActual: state.turno, // base, getEnergiaParaJugador agrega bonus
-    subPaso: 'accion_pendiente',
-  }
+  return { ...next, energiaActual: state.turno, subPaso: 'seleccion_secreta' }
 }
+
+// ===== PLAY / PASS ==========================================================
 
 function applyPlayHidden(
   state: GameState,
   playerId: PlayerId,
   cardId: string,
+  premonicion: Categoria,
   deps: ReducerDeps,
 ): GameState {
-  if (state.subPaso !== 'accion_pendiente') {
-    throw new Error(`PLAY_HIDDEN solo válido en accion_pendiente`)
+  if (state.subPaso !== 'seleccion_secreta') {
+    throw new Error(`PLAY_HIDDEN solo válido en seleccion_secreta`)
   }
   const player = state.players[playerId]
-  if (!player.mano.includes(cardId)) {
-    throw new Error(`Card ${cardId} no está en la mano de ${playerId}`)
-  }
-  const card = deps.cards.get(cardId)
-  if (!card) {
-    throw new Error(`Card ${cardId} no existe en el registry`)
-  }
   if (state.accionesPendientes[playerId] !== undefined || state.paseDeclarado[playerId] === true) {
-    throw new Error(`Player ${playerId} ya jugó/pasó este turno`)
+    throw new Error(`Player ${playerId} ya decidió este turno`)
   }
+  if (!player.mano.includes(cardId)) throw new Error(`Card ${cardId} no en mano`)
+  const card = deps.cards.get(cardId)
+  if (!card) throw new Error(`Card ${cardId} no en registry`)
   const energia = getEnergiaParaJugador(state, playerId)
   if (card.coste > energia) {
-    throw new Error(
-      `Card ${cardId} cuesta ${card.coste} pero ${playerId} tiene ${energia} energía`,
-    )
+    throw new Error(`Card ${cardId} cuesta ${card.coste}, energía ${energia}`)
   }
 
   let next: GameState = updatePlayer(state, playerId, (p) => ({
@@ -265,20 +243,22 @@ function applyPlayHidden(
   next = {
     ...next,
     accionesPendientes: { ...next.accionesPendientes, [playerId]: cardId },
+    premoniciones: { ...next.premoniciones, [playerId]: premonicion },
   }
   return advanceIfBothActed(next)
 }
 
-function applyPass(state: GameState, playerId: PlayerId): GameState {
-  if (state.subPaso !== 'accion_pendiente') {
-    throw new Error(`PASS_TURN solo válido en accion_pendiente`)
+function applyPass(state: GameState, playerId: PlayerId, premonicion: Categoria): GameState {
+  if (state.subPaso !== 'seleccion_secreta') {
+    throw new Error(`PASS_TURN solo válido en seleccion_secreta`)
   }
   if (state.accionesPendientes[playerId] !== undefined || state.paseDeclarado[playerId] === true) {
-    throw new Error(`Player ${playerId} ya jugó/pasó este turno`)
+    throw new Error(`Player ${playerId} ya decidió`)
   }
   const next: GameState = {
     ...state,
     paseDeclarado: { ...state.paseDeclarado, [playerId]: true },
+    premoniciones: { ...state.premoniciones, [playerId]: premonicion },
   }
   return advanceIfBothActed(next)
 }
@@ -288,41 +268,18 @@ function advanceIfBothActed(state: GameState): GameState {
     state.accionesPendientes.a !== undefined || state.paseDeclarado.a === true
   const bActed =
     state.accionesPendientes.b !== undefined || state.paseDeclarado.b === true
-  if (aActed && bActed) {
-    return { ...state, subPaso: 'premonicion_pendiente' }
+  if (aActed && bActed && state.premoniciones.a && state.premoniciones.b) {
+    return { ...state, subPaso: 'revelar' }
   }
   return state
 }
 
-function applyDeclarePremonicion(
-  state: GameState,
-  playerId: PlayerId,
-  categoria: Categoria,
-): GameState {
-  if (state.subPaso !== 'premonicion_pendiente') {
-    throw new Error(`DECLARE_PREMONICION solo válido en premonicion_pendiente`)
-  }
-  if (state.premoniciones[playerId] !== undefined) {
-    throw new Error(`Player ${playerId} ya declaró premonición este turno`)
-  }
-  let next: GameState = {
-    ...state,
-    premoniciones: { ...state.premoniciones, [playerId]: categoria },
-  }
-  if (next.premoniciones.a !== undefined && next.premoniciones.b !== undefined) {
-    next = { ...next, subPaso: 'revelar' }
-  }
-  return next
-}
-
-// ===== REVEAL ==============================================================
+// ===== REVEAL ===============================================================
 
 function applyReveal(state: GameState, deps: ReducerDeps): GameState {
-  if (state.subPaso !== 'revelar') {
-    throw new Error(`REVEAL solo válido en revelar`)
-  }
-  if (state.premoniciones.a === undefined || state.premoniciones.b === undefined) {
-    throw new Error(`No se puede REVEAL sin ambas premoniciones declaradas`)
+  if (state.subPaso !== 'revelar') throw new Error(`REVEAL solo válido en revelar`)
+  if (!state.premoniciones.a || !state.premoniciones.b) {
+    throw new Error(`Falta premonición de algún jugador`)
   }
 
   const cardIdA = state.accionesPendientes.a
@@ -330,221 +287,225 @@ function applyReveal(state: GameState, deps: ReducerDeps): GameState {
   const cardA = cardIdA ? deps.cards.get(cardIdA) : undefined
   const cardB = cardIdB ? deps.cards.get(cardIdB) : undefined
 
-  // 1. Interpretar ambas cartas (puro, no toca atributos todavía).
-  const resultA = cardA ? interpretCard(state, 'a', cardA, deps) : undefined
-  const resultB = cardB ? interpretCard(state, 'b', cardB, deps) : undefined
+  let next = state
 
-  // 1b. Bonus Würon Despertada: +1 a la fuerza si MI premonición acertó la
-  //     categoría jugada por el OPONENTE (info que requiere el segundo pase).
-  let fuerzaA = resultA?.fuerzaFinal ?? 0
-  let fuerzaB = resultB?.fuerzaFinal ?? 0
-  if (resultA) {
-    fuerzaA += aplicarBonusWuronDespertada({
+  // 1. Interpretar carta de A (si jugó).
+  let fuerzaA = 0
+  let categoriaA: Categoria | undefined
+  let sideEffectsA: SideEffect[] = []
+  if (cardA) {
+    const planetA = next.players.a.planetElegidoActual
+      ? deps.planets.get(next.players.a.planetElegidoActual)
+      : undefined
+    const input: InterpretInput = {
+      card: cardA,
+      miPremonicion: state.premoniciones.a!,
+      oponentePremonicion: state.premoniciones.b!,
+      oponenteCategoria: cardB?.categoria,
+      planetElegido: planetA,
+      tramo: state.tramo,
       heroEstado: state.players.a.heroEstado,
       raza: state.players.a.raza,
-      miPremonicion: state.premoniciones.a!,
-      categoriaJugadaPorOponente: resultB?.categoria,
-    })
+      owner: 'a',
+      atributosPropio: state.players.a.atributos,
+      atributosOponente: state.players.b.atributos,
+      eclipseActivo: state.eclipseInvocado,
+      eclipseInvocador: state.eclipseInvocador,
+    }
+    const r = interpretCondicionales(input)
+    fuerzaA = r.fuerzaFinal
+    categoriaA = r.categoria
+    sideEffectsA = r.sideEffects
+  } else if (state.paseDeclarado.a) {
+    // A pasó: sus premonición igual puede aplicar penalización mínima al rival.
+    // Esto se procesa en la rama de cardB (cuando computamos B, le restamos si A acertó).
   }
-  if (resultB) {
-    fuerzaB += aplicarBonusWuronDespertada({
+
+  // 2. Interpretar carta de B.
+  let fuerzaB = 0
+  let categoriaB: Categoria | undefined
+  let sideEffectsB: SideEffect[] = []
+  if (cardB) {
+    const planetB = next.players.b.planetElegidoActual
+      ? deps.planets.get(next.players.b.planetElegidoActual)
+      : undefined
+    const input: InterpretInput = {
+      card: cardB,
+      miPremonicion: state.premoniciones.b!,
+      oponentePremonicion: state.premoniciones.a!,
+      oponenteCategoria: cardA?.categoria,
+      planetElegido: planetB,
+      tramo: state.tramo,
       heroEstado: state.players.b.heroEstado,
       raza: state.players.b.raza,
-      miPremonicion: state.premoniciones.b!,
-      categoriaJugadaPorOponente: resultA?.categoria,
-    })
-  }
-
-  // 2. Aplicar anulaciones cruzadas: side effect 'anula' de A le resta fuerza a B y viceversa.
-  if (resultA) {
-    for (const eff of resultA.sideEffects) {
-      if (eff.tipo === 'anula' && eff.target === 'oponente') {
-        fuerzaB = Math.max(0, fuerzaB - eff.valor)
-      }
+      owner: 'b',
+      atributosPropio: state.players.b.atributos,
+      atributosOponente: state.players.a.atributos,
+      eclipseActivo: state.eclipseInvocado,
+      eclipseInvocador: state.eclipseInvocador,
     }
-  }
-  if (resultB) {
-    for (const eff of resultB.sideEffects) {
-      if (eff.tipo === 'anula' && eff.target === 'oponente') {
-        fuerzaA = Math.max(0, fuerzaA - eff.valor)
-      }
-    }
+    const r = interpretCondicionales(input)
+    fuerzaB = r.fuerzaFinal
+    categoriaB = r.categoria
+    sideEffectsB = r.sideEffects
   }
 
-  // 3. Aplicar Eclipse ×2 (después de anulaciones, antes de sumar a atributos).
-  if (state.eclipseInvocado && state.eclipseInvocador === 'a') {
-    fuerzaA *= 2
+  // 3. Pasar con acierto: si un jugador pasó y su premonición acertó la categoría
+  //    de la carta del rival, aplicamos -1 fijo al rival (§4.3 SPEC).
+  if (state.paseDeclarado.a && cardB && state.premoniciones.a) {
+    const pen = penalizacionPorPasarConAcierto(state.premoniciones.a, cardB.categoria)
+    fuerzaB = Math.max(0, fuerzaB - pen)
   }
-  if (state.eclipseInvocado && state.eclipseInvocador === 'b') {
-    fuerzaB *= 2
+  if (state.paseDeclarado.b && cardA && state.premoniciones.b) {
+    const pen = penalizacionPorPasarConAcierto(state.premoniciones.b, cardA.categoria)
+    fuerzaA = Math.max(0, fuerzaA - pen)
   }
 
-  // 4. Sumar fuerza a atributos del jugador correspondiente.
-  let next = state
-  if (resultA) {
-    const key = categoriaToAtributo(resultA.categoria)
+  // 4. Sumar fuerza a atributos.
+  if (categoriaA !== undefined) {
+    const key = categoriaToAtributo(categoriaA)
     next = updatePlayer(next, 'a', (p) => ({
       ...p,
       atributos: { ...p.atributos, [key]: p.atributos[key] + fuerzaA },
     }))
   }
-  if (resultB) {
-    const key = categoriaToAtributo(resultB.categoria)
+  if (categoriaB !== undefined) {
+    const key = categoriaToAtributo(categoriaB)
     next = updatePlayer(next, 'b', (p) => ({
       ...p,
       atributos: { ...p.atributos, [key]: p.atributos[key] + fuerzaB },
     }))
   }
 
-  // 5. Aplicar side effects no-anula (descarte, robo).
-  if (resultA) {
-    next = applyNonAnularSideEffects(next, 'a', resultA.sideEffects)
-  }
-  if (resultB) {
-    next = applyNonAnularSideEffects(next, 'b', resultB.sideEffects)
-  }
+  // 5. Aplicar side effects.
+  next = applySideEffects(next, 'a', sideEffectsA, deps)
+  next = applySideEffects(next, 'b', sideEffectsB, deps)
 
-  // 6. Mover cartas reveladas al pozo.
-  if (cardIdA) {
-    next = updatePlayer(next, 'a', (p) => ({ ...p, pozo: [...p.pozo, cardIdA] }))
+  // 6. Guardar entrada de historial de premoniciones reveladas.
+  const historial: PremonicionRevelada = {
+    turno: state.turno,
+    tramo: state.tramo,
+    a: state.premoniciones.a!,
+    b: state.premoniciones.b!,
+    cardCategoriaA: cardA?.categoria ?? state.premoniciones.a!,
+    cardCategoriaB: cardB?.categoria ?? state.premoniciones.b!,
   }
-  if (cardIdB) {
-    next = updatePlayer(next, 'b', (p) => ({ ...p, pozo: [...p.pozo, cardIdB] }))
+  next = {
+    ...next,
+    historialPremoniciones: [...next.historialPremoniciones, historial],
+    subPaso: 'revisar_resolucion',
   }
+  return next
+}
 
-  // 7. Cleanup del turno.
+function applySideEffects(
+  state: GameState,
+  source: PlayerId,
+  effs: SideEffect[],
+  _deps: ReducerDeps,
+): GameState {
+  let next = state
+  for (const eff of effs) {
+    switch (eff.tipo) {
+      case 'descarte_oponente': {
+        const target = otherPlayer(source)
+        next = updatePlayer(next, target, (p) => {
+          const descartadas = p.mano.slice(0, eff.valor)
+          return { ...p, mano: p.mano.slice(eff.valor), pozo: [...p.pozo, ...descartadas] }
+        })
+        break
+      }
+      case 'robo_propio': {
+        for (let i = 0; i < eff.valor; i++) {
+          const player = next.players[source]
+          if (player.mazoRestante.length === 0) break
+          const [head, ...rest] = player.mazoRestante
+          next = updatePlayer(next, source, (p) => ({
+            ...p,
+            mano: capHand([...p.mano, head!]),
+            mazoRestante: rest,
+          }))
+        }
+        break
+      }
+      case 'mirar_mazo_oponente': {
+        const target = otherPlayer(source)
+        const card = next.players[target].mazoRestante[0]
+        next = { ...next, peekedCardOponente: card }
+        break
+      }
+      case 'bloqueo_planeta': {
+        // El bonus de planeta del oponente NO se aplica este turno. Como ya pasamos
+        // por el interpreter, este side effect debería evaluarse antes — pero el
+        // SPEC dice que se aplica como side effect. En v4.2 lo modelamos como
+        // "elimina temporalmente el planet del oponente". Por simplicidad: no-op
+        // este turno (su carta ya fue procesada con bonus; recordar implementar
+        // si vuelve este efecto en cartas futuras).
+        break
+      }
+    }
+  }
+  return next
+}
+
+// ===== CONTINUE / CIERRE / ECLIPSE / END ====================================
+
+function applyContinueTurn(state: GameState): GameState {
+  if (state.subPaso !== 'revisar_resolucion') {
+    throw new Error(`CONTINUE_TURN solo válido en revisar_resolucion`)
+  }
+  let next = state
+
+  const cardIdA = next.accionesPendientes.a
+  const cardIdB = next.accionesPendientes.b
+  if (cardIdA) next = updatePlayer(next, 'a', (p) => ({ ...p, pozo: [...p.pozo, cardIdA] }))
+  if (cardIdB) next = updatePlayer(next, 'b', (p) => ({ ...p, pozo: [...p.pozo, cardIdB] }))
+
   next = {
     ...next,
     accionesPendientes: {},
     premoniciones: {},
     paseDeclarado: {},
+    peekedCardOponente: undefined,
   }
 
-  // 8. Eclipse fuerza el final.
   if (next.eclipseInvocado) {
     next = { ...next, subPaso: 'duelo_final' }
     return applyEndGame(next)
   }
 
-  // 9. Cierre de tramo si fue el último turno.
   const isLastTurnOfTramo =
     (next.tramo === 'nebulosa' && next.turno === 2) ||
     (next.tramo === 'estrellas' && next.turno === 4)
-  if (isLastTurnOfTramo) {
-    return { ...next, subPaso: 'cierre_tramo' }
-  }
+  if (isLastTurnOfTramo) return { ...next, subPaso: 'cierre_tramo' }
 
-  // 10. Fin del turno 7 sin Eclipse → duelo final.
   if (next.turno === 7) {
     next = { ...next, subPaso: 'duelo_final' }
     return applyEndGame(next)
   }
-
-  // 11. Avanzar al siguiente turno.
-  return {
-    ...next,
-    turno: next.turno + 1,
-    subPaso: 'robo',
-  }
+  return { ...next, turno: next.turno + 1, subPaso: 'robo' }
 }
-
-function interpretCard(
-  state: GameState,
-  ownerId: PlayerId,
-  card: CardActionDef,
-  deps: ReducerDeps,
-): InterpretResult {
-  const owner = state.players[ownerId]
-  const planetId = owner.planetElegidoActual
-  const planet = planetId ? deps.planets.get(planetId) : undefined
-  const input: InterpretInput = {
-    card,
-    miPremonicion: state.premoniciones[ownerId]!,
-    oponentePremonicion: state.premoniciones[otherPlayer(ownerId)]!,
-    planetElegido: planet,
-    tramo: state.tramo,
-    heroEstado: owner.heroEstado,
-    raza: owner.raza,
-    owner: ownerId,
-  }
-  return interpretCondicionales(input)
-}
-
-function applyNonAnularSideEffects(
-  state: GameState,
-  sourceOwner: PlayerId,
-  sideEffects: SideEffect[],
-): GameState {
-  let next = state
-  for (const eff of sideEffects) {
-    if (eff.tipo === 'anula') continue // ya aplicado en pre-cálculo
-    const target: PlayerId = eff.target === 'propio' ? sourceOwner : otherPlayer(sourceOwner)
-    if (eff.tipo === 'descarte') {
-      next = discardCardsFromHand(next, target, eff.valor)
-    } else if (eff.tipo === 'robo') {
-      next = drawCardsToHand(next, target, eff.valor)
-    }
-  }
-  return next
-}
-
-function discardCardsFromHand(state: GameState, playerId: PlayerId, n: number): GameState {
-  return updatePlayer(state, playerId, (p) => {
-    const descartadas = p.mano.slice(0, n)
-    const remaining = p.mano.slice(n)
-    return { ...p, mano: remaining, pozo: [...p.pozo, ...descartadas] }
-  })
-}
-
-function drawCardsToHand(state: GameState, playerId: PlayerId, n: number): GameState {
-  let next = state
-  for (let i = 0; i < n; i++) {
-    const player = next.players[playerId]
-    if (player.mazoRestante.length === 0) break
-    const [head, ...rest] = player.mazoRestante
-    next = updatePlayer(next, playerId, (p) => ({
-      ...p,
-      mano: capHand([...p.mano, head!]),
-      mazoRestante: rest,
-    }))
-  }
-  return next
-}
-
-// ===== CIERRE TRAMO ========================================================
 
 function applyCloseTramo(state: GameState, deps: ReducerDeps): GameState {
-  if (state.subPaso !== 'cierre_tramo') {
-    throw new Error(`CLOSE_TRAMO solo válido en cierre_tramo`)
-  }
-  // Per jugador independientemente: comparar SU atributo del planeta-elegido
-  // contra el atributo del oponente en la MISMA categoría.
+  if (state.subPaso !== 'cierre_tramo') throw new Error(`CLOSE_TRAMO solo en cierre_tramo`)
   let next = state
   for (const playerId of ['a', 'b'] as const) {
     const player = next.players[playerId]
-    if (!player.planetElegidoActual) {
-      throw new Error(`Player ${playerId} no tiene planeta elegido en cierre de tramo`)
-    }
+    if (!player.planetElegidoActual) throw new Error(`${playerId} sin planeta elegido`)
     const planet = deps.planets.get(player.planetElegidoActual)
-    if (!planet) {
-      throw new Error(`Planet ${player.planetElegidoActual} no en registry`)
-    }
-    const atributoKey = categoriaToAtributo(planet.categoria)
-    const miValor = player.atributos[atributoKey]
-    const oponenteValor = next.players[otherPlayer(playerId)].atributos[atributoKey]
-    if (miValor > oponenteValor) {
+    if (!planet) throw new Error(`Planet ${player.planetElegidoActual} no en registry`)
+    const key = categoriaToAtributo(planet.categoria)
+    const mi = player.atributos[key]
+    const op = next.players[otherPlayer(playerId)].atributos[key]
+    if (mi > op) {
       next = updatePlayer(next, playerId, (p) => ({
         ...p,
         heroEstado: avanzarHeroEstado(p.heroEstado),
       }))
     }
-    // Si <= empate o menor: NO avanza.
   }
-  // Reset planetElegidoActual para el siguiente tramo.
   next = updatePlayer(next, 'a', (p) => ({ ...p, planetElegidoActual: undefined }))
   next = updatePlayer(next, 'b', (p) => ({ ...p, planetElegidoActual: undefined }))
-
-  // Avanzar tramo + turno.
   if (next.tramo === 'nebulosa') {
     return { ...next, tramo: 'estrellas', turno: 3, subPaso: 'eleccion_planeta' }
   } else if (next.tramo === 'estrellas') {
@@ -553,32 +514,30 @@ function applyCloseTramo(state: GameState, deps: ReducerDeps): GameState {
   return next
 }
 
-// ===== ECLIPSE =============================================================
-
 function applyInvokeEclipse(state: GameState, playerId: PlayerId): GameState {
-  if (state.tramo !== 'sexto_sol') {
-    throw new Error(`Eclipse solo en Sexto Sol`)
+  if (state.tramo !== 'sexto_sol') throw new Error(`Eclipse solo en Sexto Sol`)
+  if (state.eclipseInvocado) throw new Error(`Eclipse ya invocado`)
+  if (state.subPaso !== 'seleccion_secreta') {
+    throw new Error(`Eclipse se invoca en seleccion_secreta (antes de comprometerse)`)
   }
-  if (state.eclipseInvocado) {
-    throw new Error(`Eclipse ya invocado`)
+  // Oponente roba 1 extra.
+  let next = state
+  const target = otherPlayer(playerId)
+  const player = next.players[target]
+  if (player.mazoRestante.length > 0) {
+    const [head, ...rest] = player.mazoRestante
+    next = updatePlayer(next, target, (p) => ({
+      ...p,
+      mano: capHand([...p.mano, head!]),
+      mazoRestante: rest,
+    }))
   }
-  // Eclipse se invoca al INICIO del turno antes de jugar acción (sub-paso accion_pendiente
-  // o premonicion_pendiente — práctico para UI: el jugador puede invocar antes de
-  // comprometerse con su acción).
-  if (state.subPaso !== 'accion_pendiente' && state.subPaso !== 'premonicion_pendiente') {
-    throw new Error(`Eclipse se invoca en accion_pendiente o premonicion_pendiente`)
-  }
-  // El oponente roba 1 extra antes de jugar su acción.
-  const next = drawCardsToHand(state, otherPlayer(playerId), 1)
   return { ...next, eclipseInvocado: true, eclipseInvocador: playerId }
 }
-
-// ===== END GAME ============================================================
 
 function applyEndGame(state: GameState): GameState {
   const a = state.players.a.atributos
   const b = state.players.b.atributos
-
   let tallyA = 0
   let tallyB = 0
   if (a.fuerza > b.fuerza) tallyA++
@@ -592,7 +551,6 @@ function applyEndGame(state: GameState): GameState {
   if (tallyA >= 2 && tallyA > tallyB) ganador = 'a'
   else if (tallyB >= 2 && tallyB > tallyA) ganador = 'b'
   else {
-    // Tiebreakers (§10.1).
     const sumA = a.fuerza + a.resguardo + a.resonancia
     const sumB = b.fuerza + b.resguardo + b.resonancia
     if (sumA > sumB) ganador = 'a'
@@ -604,11 +562,5 @@ function applyEndGame(state: GameState): GameState {
       else ganador = 'empate'
     }
   }
-
-  return {
-    ...state,
-    subPaso: 'terminado',
-    ganador,
-    finalTally: { a: tallyA, b: tallyB },
-  }
+  return { ...state, subPaso: 'terminado', ganador, finalTally: { a: tallyA, b: tallyB } }
 }
