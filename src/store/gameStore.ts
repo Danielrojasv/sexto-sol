@@ -147,7 +147,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (s.accionesPendientes[pid] !== undefined || s.paseDeclarado[pid] === true) return
         let planned = get().aiPlannedPremonicion[pid]
         if (planned === undefined) {
-          planned = pickPremonicion(s, aiHistory)
+          planned = pickPremonicion(s, aiHistory, pid)
           set({ aiPlannedPremonicion: { ...get().aiPlannedPremonicion, [pid]: planned } })
         }
         // Eclipse?
