@@ -1,479 +1,298 @@
-import { describe, expect, it } from 'vitest'
-import { createInitialState, type NewGameSetup } from '../initialState'
-import { apply } from '../reducer'
-import type { Card, GameAction, GameState } from '../types'
+import { beforeEach, describe, expect, it } from 'vitest'
+import type { Action } from '../actions'
+import { createInitialState, type InitConfig } from '../initialState'
+import { createReducer, type ReducerDeps } from '../reducer'
+import type { GameState } from '../types'
+import { mockCard, mockDeps } from './_helpers'
 
-function deck(size: number, overrides?: Partial<Card>): Card[] {
-  return Array.from({ length: size }, (_, i) => ({
-    id: `c${i}`,
-    name: `Carta ${i}`,
-    type: 'ship',
-    race: 'wuron',
-    cost: 0,
-    rarity: 'common',
-    keywords: [],
-    abilities: [],
-    strength: 1,
-    hp: 1,
-    ...overrides,
-  }))
-}
+const cardAtq2 = mockCard({ id: 'CARD-ATQ-2', categoria: 'Ataque', coste: 2, fuerzaBase: 3, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ataque', fuerzaDelta: 2 }] })
+const cardDef2 = mockCard({ id: 'CARD-DEF-2', raza: 'Würon', categoria: 'Defensa', coste: 2, fuerzaBase: 2, condicionales: [{ tipo: 'premonicion_propia', valor: 'Defensa', fuerzaDelta: 1 }] })
+const cardAtq1 = mockCard({ id: 'CARD-ATQ-1', categoria: 'Ataque', coste: 1, fuerzaBase: 2, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ataque', fuerzaDelta: 1 }] })
+const cardDef1 = mockCard({ id: 'CARD-DEF-1', raza: 'Würon', categoria: 'Defensa', coste: 1, fuerzaBase: 1, condicionales: [{ tipo: 'premonicion_propia', valor: 'Defensa', fuerzaDelta: 1 }] })
+// Card que anula 2 fuerza enemiga al revelar (oponente jugó Ataque).
+const cardAnula = mockCard({ id: 'CARD-ANULA', raza: 'Würon', categoria: 'Defensa', coste: 2, fuerzaBase: 1, condicionales: [{ tipo: 'premonicion_oponente', valor: 'Ataque', sideEffect: { tipo: 'anula', target: 'oponente', valor: 2 } }] })
 
-function fresh(over?: Partial<NewGameSetup>): GameState {
+const ALL_CARDS = [cardAtq1, cardAtq2, cardDef1, cardDef2, cardAnula]
+
+const deckA = Array.from({ length: 20 }, () => cardAtq1.id) // todos Atq coste 1
+const deckB = Array.from({ length: 20 }, () => cardDef1.id) // todos Def coste 1
+const deps: ReducerDeps = mockDeps(ALL_CARDS)
+
+function initState(overrides?: Partial<InitConfig>): GameState {
   return createInitialState({
-    seed: 1,
-    p1Race: 'wuron',
-    p2Race: 'tezhal',
-    p1Deck: deck(30),
-    p2Deck: deck(30),
-    ...over,
+    seed: 42,
+    modo: 'vsIA',
+    deckA: { raza: 'Tezhal', cardIds: deckA, heroId: 'HRO-TEZHAL' },
+    deckB: { raza: 'Würon', cardIds: deckB, heroId: 'HRO-WURON' },
+    planetIdsNebulosa: ['PLN-NEB-ATQ', 'PLN-NEB-DEF', 'PLN-NEB-RIT'],
+    planetIdsEstrellas: ['PLN-EST-ATQ', 'PLN-EST-DEF', 'PLN-EST-RIT'],
+    ...overrides,
   })
 }
 
-function advancePhases(state: GameState, count: number): GameState {
-  let s = state
-  for (let i = 0; i < count; i++) s = apply(s, { type: 'END_PHASE' }).state
-  return s
-}
+describe('reducer — SELECT_PLANET', () => {
+  let state: GameState
+  let reduce: (s: GameState, a: Action) => GameState
 
-describe('reducer — CONCEDE', () => {
-  it('concesión de p1 hace ganar a p2', () => {
-    const { state, events } = apply(fresh(), { type: 'CONCEDE', player: 'p1' })
-    expect(state.outcome.kind).toBe('win')
-    if (state.outcome.kind === 'win') {
-      expect(state.outcome.winner).toBe('p2')
-      expect(state.outcome.reason).toBe('concession')
-    }
-    expect(events).toContainEqual({
-      type: 'GAME_OVER',
-      outcome: { kind: 'win', winner: 'p2', reason: 'concession' },
-    })
+  beforeEach(() => {
+    state = initState()
+    reduce = createReducer(deps)
   })
 
-  it('concesión sobre partida ya terminada es no-op', () => {
-    const finished = apply(fresh(), { type: 'CONCEDE', player: 'p1' }).state
-    const second = apply(finished, { type: 'CONCEDE', player: 'p2' })
-    expect(second.state).toBe(finished)
-    expect(second.events).toEqual([])
+  it('asigna planetElegido al player', () => {
+    const next = reduce(state, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' })
+    expect(next.players.a.planetElegidoActual).toBe('PLN-NEB-ATQ')
+    expect(next.players.b.planetElegidoActual).toBeUndefined()
   })
 
-  it('CONCEDE se loggea', () => {
-    const { state } = apply(fresh(), { type: 'CONCEDE', player: 'p1' })
-    expect(state.log).toHaveLength(1)
-    expect(state.log[0]).toEqual({ type: 'CONCEDE', player: 'p1' })
+  it('cuando ambos eligen, avanza a sub-paso robo', () => {
+    let next = reduce(state, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' })
+    expect(next.subPaso).toBe('eleccion_planeta')
+    next = reduce(next, { type: 'SELECT_PLANET', playerId: 'b', planetId: 'PLN-NEB-DEF' })
+    expect(next.subPaso).toBe('robo')
+  })
+
+  it('rechaza planeta de tramo equivocado', () => {
+    expect(() =>
+      reduce(state, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-EST-ATQ' }),
+    ).toThrow(/pool del tramo/)
+  })
+
+  it('rechaza si el player ya eligió', () => {
+    const next = reduce(state, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' })
+    expect(() =>
+      reduce(next, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-DEF' }),
+    ).toThrow(/ya eligió/)
   })
 })
 
-describe('reducer — END_PHASE', () => {
-  it('avanza recolección → despliegue → combate → regroup → eclipse → recolección (turno+1)', () => {
-    let s = fresh()
-    expect(s.phase).toBe('recoleccion')
-    expect(s.activePlayer).toBe('p1')
-    expect(s.turn).toBe(1)
+describe('reducer — DRAW_BOTH', () => {
+  it('roba 1 carta a cada jugador y avanza a accion_pendiente', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
+    s = reduce(s, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' })
+    s = reduce(s, { type: 'SELECT_PLANET', playerId: 'b', planetId: 'PLN-NEB-DEF' })
+    expect(s.subPaso).toBe('robo')
+    const handsBeforeA = s.players.a.mano.length
+    const handsBeforeB = s.players.b.mano.length
+    s = reduce(s, { type: 'DRAW_BOTH' })
+    expect(s.subPaso).toBe('accion_pendiente')
+    expect(s.players.a.mano.length).toBe(handsBeforeA + 1)
+    expect(s.players.b.mano.length).toBe(handsBeforeB + 1)
+  })
+})
 
-    s = apply(s, { type: 'END_PHASE' }).state
-    expect(s.phase).toBe('despliegue')
-    s = apply(s, { type: 'END_PHASE' }).state
-    expect(s.phase).toBe('combate')
-    s = apply(s, { type: 'END_PHASE' }).state
-    expect(s.phase).toBe('regroup')
-    s = apply(s, { type: 'END_PHASE' }).state
-    expect(s.phase).toBe('eclipse')
-
-    s = apply(s, { type: 'END_PHASE' }).state
-    expect(s.phase).toBe('recoleccion')
-    expect(s.activePlayer).toBe('p2')
-    expect(s.turn).toBe(2)
+describe('reducer — PLAY_HIDDEN', () => {
+  it('mueve carta de mano a accionesPendientes, paga coste', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
+    s = reduce(s, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' })
+    s = reduce(s, { type: 'SELECT_PLANET', playerId: 'b', planetId: 'PLN-NEB-DEF' })
+    s = reduce(s, { type: 'DRAW_BOTH' })
+    const handBefore = [...s.players.a.mano]
+    const cardId = handBefore[0]!
+    s = reduce(s, { type: 'PLAY_HIDDEN', playerId: 'a', cardId })
+    expect(s.players.a.mano).not.toContain(cardId)
+    expect(s.accionesPendientes.a).toBe(cardId)
   })
 
-  it('emite PHASE_END + PHASE_START en avance dentro del mismo turno', () => {
-    const { events } = apply(fresh(), { type: 'END_PHASE' })
-    expect(events.map((e) => e.type)).toEqual(['PHASE_END', 'PHASE_START'])
+  it('rechaza si coste excede energía', () => {
+    const expensiveCard = mockCard({ id: 'CARD-EXPENSIVE', coste: 5, fuerzaBase: 5 })
+    const depsX = mockDeps([...ALL_CARDS, expensiveCard])
+    const reduceX = createReducer(depsX)
+    let s = initState({
+      deckA: { raza: 'Tezhal', cardIds: Array.from({ length: 20 }, () => expensiveCard.id), heroId: 'HRO-TEZHAL' },
+    })
+    s = reduceX(s, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' })
+    s = reduceX(s, { type: 'SELECT_PLANET', playerId: 'b', planetId: 'PLN-NEB-DEF' })
+    s = reduceX(s, { type: 'DRAW_BOTH' })
+    expect(() =>
+      reduceX(s, { type: 'PLAY_HIDDEN', playerId: 'a', cardId: expensiveCard.id }),
+    ).toThrow(/cuesta 5/)
+  })
+})
+
+describe('reducer — REVEAL flow', () => {
+  it('suma fuerza al atributo correcto', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
+    s = reduce(s, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' })
+    s = reduce(s, { type: 'SELECT_PLANET', playerId: 'b', planetId: 'PLN-NEB-DEF' })
+    s = reduce(s, { type: 'DRAW_BOTH' })
+    const cardIdA = s.players.a.mano[0]! // siempre cardAtq1
+    const cardIdB = s.players.b.mano[0]! // siempre cardDef1
+    s = reduce(s, { type: 'PLAY_HIDDEN', playerId: 'a', cardId: cardIdA })
+    s = reduce(s, { type: 'PLAY_HIDDEN', playerId: 'b', cardId: cardIdB })
+    s = reduce(s, { type: 'DECLARE_PREMONICION', playerId: 'a', categoria: 'Defensa' })
+    s = reduce(s, { type: 'DECLARE_PREMONICION', playerId: 'b', categoria: 'Ataque' })
+    expect(s.subPaso).toBe('revelar')
+    s = reduce(s, { type: 'REVEAL' })
+    // cardAtq1: base 2, A=Def → no aplica prem_propia. Bonus planeta PLN-NEB-ATQ (Atq) coincide con Atq → +1. Fuerza 3.
+    expect(s.players.a.atributos.fuerza).toBe(3)
+    // cardDef1: base 1, B=Atq → no aplica prem_propia. Bonus PLN-NEB-DEF coincide con Def → +1. Fuerza 2.
+    expect(s.players.b.atributos.resguardo).toBe(2)
+    // Turno avanza a 2.
+    expect(s.turno).toBe(2)
+    expect(s.subPaso).toBe('robo')
   })
 
-  it('emite TURN_START + PHASE_START + CARD_DRAWN al cambiar turno', () => {
-    const after4 = advancePhases(fresh(), 4)
-    const { events } = apply(after4, { type: 'END_PHASE' })
-    const types = events.map((e) => e.type)
-    expect(types).toContain('TURN_START')
-    expect(types).toContain('PHASE_START')
-    expect(types).toContain('CARD_DRAWN')
+  it('aplica anulación cruzada: A anula 2 a B', () => {
+    // Mazo A: cardAtq2 (base 3, condicional +2 si A=Atq). Mazo B: cardAnula (base 1, anula 2 si A=Atq).
+    const deckA2 = Array.from({ length: 20 }, () => cardAtq2.id)
+    const deckB2 = Array.from({ length: 20 }, () => cardAnula.id)
+    const reduce = createReducer(deps)
+    let s = initState({
+      deckA: { raza: 'Tezhal', cardIds: deckA2, heroId: 'HRO-TEZHAL' },
+      deckB: { raza: 'Würon', cardIds: deckB2, heroId: 'HRO-WURON' },
+    })
+    // Avanzamos a turno 2 manualmente para tener energía suficiente.
+    s = { ...s, turno: 2, energiaActual: 2 }
+    s = reduce(s, { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' })
+    s = reduce(s, { type: 'SELECT_PLANET', playerId: 'b', planetId: 'PLN-NEB-DEF' })
+    s = reduce(s, { type: 'DRAW_BOTH' })
+    s = reduce(s, { type: 'PLAY_HIDDEN', playerId: 'a', cardId: cardAtq2.id })
+    s = reduce(s, { type: 'PLAY_HIDDEN', playerId: 'b', cardId: cardAnula.id })
+    s = reduce(s, { type: 'DECLARE_PREMONICION', playerId: 'a', categoria: 'Ataque' })
+    s = reduce(s, { type: 'DECLARE_PREMONICION', playerId: 'b', categoria: 'Ataque' })
+    s = reduce(s, { type: 'REVEAL' })
+    // cardAtq2 fuerza inicial = 3 + 2 (prem_propia Atq, A=Atq) + 1 (bonus PLN-NEB-ATQ) = 6.
+    // cardAnula: clause prem_oponente=Ataque, A=Atq → APLICA, sideEffect anula 2 al oponente.
+    // Anulación cruzada: B le quita 2 a A → A fuerza final 4.
+    // No hay anulación de A a B (cardAtq2 no tiene clause anula).
+    expect(s.players.a.atributos.fuerza).toBe(4)
+    // cardAnula base 1 + 0 (prem_propia Def — B declaró Atq → no aplica) + 1 (bonus PLN-NEB-DEF=Def) = 2.
+    // No es anulado (A no jugó anula).
+    expect(s.players.b.atributos.resguardo).toBe(2)
   })
+})
 
-  it('p2 recibe energía + carta al iniciar su turno', () => {
-    const after5 = advancePhases(fresh(), 5)
-    expect(after5.activePlayer).toBe('p2')
-    // v3.0: energía cap creciente. Turno 2 de p2 → energy = min(2, 10) = 2.
-    expect(after5.players.p2.energy).toBe(2)
-    expect(after5.players.p2.hand).toHaveLength(6) // 5 setup + 1 turn-start
-  })
-
-  // v3.0: Edades eliminadas (sec 0). Las transiciones de Edad I/II/III ya no
-  // existen. Las mecánicas firma están disponibles desde turno 1 a costo normal.
-
-  it('END_PHASE sobre partida terminada es no-op', () => {
-    const finished = apply(fresh(), { type: 'CONCEDE', player: 'p1' }).state
-    const result = apply(finished, { type: 'END_PHASE' })
-    expect(result.state).toBe(finished)
-    expect(result.events).toEqual([])
-  })
-
-  it('decking out: si el mazo está vacío al iniciar turno → derrota', () => {
-    // p2 con mazo de 1: setup hand=5 toma 1, deja 0. Al primer turn-start de p2,
-    // intenta robar de mazo vacío → decking out.
-    const s = fresh({ p1Deck: deck(20), p2Deck: deck(1) })
-    const after5 = advancePhases(s, 5)
-    expect(after5.outcome.kind).toBe('win')
-    if (after5.outcome.kind === 'win') {
-      expect(after5.outcome.winner).toBe('p1')
-      expect(after5.outcome.reason).toBe('decking_out')
+describe('reducer — CLOSE_TRAMO', () => {
+  it('avanza héroe del jugador que ganó su atributo correspondiente', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
+    // Forzamos atributos para test: A va a planeta-Atq con Fuerza 10, B planeta-Def con Resguardo 5.
+    s = {
+      ...s,
+      tramo: 'nebulosa',
+      turno: 2,
+      subPaso: 'cierre_tramo',
+      players: {
+        a: { ...s.players.a, atributos: { fuerza: 10, resguardo: 0, resonancia: 0 }, planetElegidoActual: 'PLN-NEB-ATQ' },
+        b: { ...s.players.b, atributos: { fuerza: 0, resguardo: 5, resonancia: 0 }, planetElegidoActual: 'PLN-NEB-DEF' },
+      },
     }
+    s = reduce(s, { type: 'CLOSE_TRAMO' })
+    // A: planeta-Atq, A.fuerza 10 vs B.fuerza 0 → A gana → A despertado.
+    // B: planeta-Def, B.resguardo 5 vs A.resguardo 0 → B gana → B despertado.
+    expect(s.players.a.heroEstado).toBe('despertado')
+    expect(s.players.b.heroEstado).toBe('despertado')
+    // Atributos NO se resetean.
+    expect(s.players.a.atributos.fuerza).toBe(10)
+    expect(s.players.b.atributos.resguardo).toBe(5)
+    // Avanza a tramo estrellas.
+    expect(s.tramo).toBe('estrellas')
+    expect(s.turno).toBe(3)
+    expect(s.subPaso).toBe('eleccion_planeta')
   })
 
-  it('mano cap 7 al final de eclipse: descarta excedente', () => {
-    // p1 con mazo grande va a tener mano grande tras varios turnos.
-    let s = fresh({ p1Deck: deck(30), p2Deck: deck(30) })
-    // Inflar mano de p1 manualmente para test directo.
+  it('no avanza héroe si empate', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
+    s = {
+      ...s,
+      tramo: 'nebulosa',
+      turno: 2,
+      subPaso: 'cierre_tramo',
+      players: {
+        a: { ...s.players.a, atributos: { fuerza: 5, resguardo: 0, resonancia: 0 }, planetElegidoActual: 'PLN-NEB-ATQ' },
+        b: { ...s.players.b, atributos: { fuerza: 5, resguardo: 0, resonancia: 0 }, planetElegidoActual: 'PLN-NEB-ATQ' },
+      },
+    }
+    s = reduce(s, { type: 'CLOSE_TRAMO' })
+    expect(s.players.a.heroEstado).toBe('neutral')
+    expect(s.players.b.heroEstado).toBe('neutral')
+  })
+})
+
+describe('reducer — INVOKE_ECLIPSE + END_GAME', () => {
+  it('Eclipse fuerza el cierre tras REVEAL', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
+    // Forzamos a Sexto Sol turno 5.
+    s = {
+      ...s,
+      tramo: 'sexto_sol',
+      turno: 5,
+      energiaActual: 5,
+      subPaso: 'accion_pendiente',
+      players: {
+        a: { ...s.players.a, atributos: { fuerza: 5, resguardo: 3, resonancia: 1 }, planetElegidoActual: undefined },
+        b: { ...s.players.b, atributos: { fuerza: 1, resguardo: 5, resonancia: 8 }, planetElegidoActual: undefined },
+      },
+    }
+    // A invoca Eclipse.
+    s = reduce(s, { type: 'INVOKE_ECLIPSE', playerId: 'a' })
+    expect(s.eclipseInvocado).toBe(true)
+    expect(s.eclipseInvocador).toBe('a')
+    // B robó una carta extra.
+    const bHandSize = s.players.b.mano.length
+    expect(bHandSize).toBeGreaterThanOrEqual(5) // 4 inicial + 1 extra
+    // Ahora ambos juegan + premonician + revelan. La acción de A cuenta ×2.
+    const cardIdA = s.players.a.mano[0]!
+    const cardIdB = s.players.b.mano[0]!
+    s = reduce(s, { type: 'PLAY_HIDDEN', playerId: 'a', cardId: cardIdA })
+    s = reduce(s, { type: 'PLAY_HIDDEN', playerId: 'b', cardId: cardIdB })
+    s = reduce(s, { type: 'DECLARE_PREMONICION', playerId: 'a', categoria: 'Ataque' })
+    s = reduce(s, { type: 'DECLARE_PREMONICION', playerId: 'b', categoria: 'Defensa' })
+    s = reduce(s, { type: 'REVEAL' })
+    // Partida termina post-Eclipse.
+    expect(s.subPaso).toBe('terminado')
+    expect(s.ganador).toBeDefined()
+  })
+})
+
+describe('reducer — END_GAME tally 2-de-3', () => {
+  it('A gana 2-1', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
     s = {
       ...s,
       players: {
-        ...s.players,
-        p1: {
-          ...s.players.p1,
-          hand: deck(10, { id: 'h-x' }), // 10 cartas — excede cap 7
-        },
+        a: { ...s.players.a, atributos: { fuerza: 10, resguardo: 10, resonancia: 0 } },
+        b: { ...s.players.b, atributos: { fuerza: 5, resguardo: 5, resonancia: 8 } },
       },
     }
-    // Ir hasta eclipse de p1 y disparar END_PHASE.
-    s = advancePhases(s, 4) // recolección → despliegue → combate → regroup → eclipse
-    // pero advancePhases ya avanza hasta el end de la 4ta fase. Veamos...
-    // Después de 4 END_PHASE, estamos en eclipse. El siguiente END_PHASE dispara cap.
-    expect(s.phase).toBe('eclipse')
-    s = apply(s, { type: 'END_PHASE' }).state
-    expect(s.players.p1.hand.length).toBeLessThanOrEqual(7)
-    expect(s.players.p1.graveyard.length).toBeGreaterThan(0)
-  })
-})
-
-describe('reducer — PLAY_CARD (Naves)', () => {
-  it('jugar nave en Despliegue mueve carta a fleet y descuenta energía', () => {
-    const cardX: Card = {
-      id: 'x',
-      name: 'Nave X',
-      type: 'ship',
-      race: 'wuron',
-      cost: 1,
-      rarity: 'common',
-      abilities: [],
-      keywords: [],
-      strength: 2,
-      hp: 3,
-    }
-    let s = fresh({ p1Deck: [cardX, ...deck(30)] })
-    s = apply(s, { type: 'END_PHASE' }).state // recolección → despliegue
-    expect(s.phase).toBe('despliegue')
-    const handBefore = s.players.p1.hand.length
-    const energyBefore = s.players.p1.energy
-    const r = apply(s, { type: 'PLAY_CARD', cardId: 'x' })
-    expect(r.events).toContainEqual({ type: 'CARD_PLAYED', cardId: 'x', player: 'p1' })
-    expect(r.state.players.p1.hand.length).toBe(handBefore - 1)
-    expect(r.state.players.p1.fleet.length).toBe(1)
-    expect(r.state.players.p1.fleet[0]?.strength).toBe(2)
-    expect(r.state.players.p1.fleet[0]?.hp).toBe(3)
-    expect(r.state.players.p1.energy).toBe(energyBefore - 1)
+    s = reduce(s, { type: 'END_GAME' })
+    expect(s.ganador).toBe('a')
+    expect(s.finalTally).toEqual({ a: 2, b: 1 })
   })
 
-  it('jugar carta sin energía suficiente es no-op', () => {
-    const cardExpensive: Card = {
-      id: 'x',
-      name: 'Nave Cara',
-      type: 'ship',
-      race: 'wuron',
-      cost: 99,
-      rarity: 'common',
-      abilities: [],
-      keywords: [],
-      strength: 5,
-      hp: 5,
+  it('Tiebreaker: suma total si empate en 2-de-3', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
+    s = {
+      ...s,
+      players: {
+        a: { ...s.players.a, atributos: { fuerza: 5, resguardo: 5, resonancia: 5 } },
+        b: { ...s.players.b, atributos: { fuerza: 5, resguardo: 5, resonancia: 5 } },
+      },
     }
-    let s = fresh({ p1Deck: [cardExpensive, ...deck(30)] })
-    s = apply(s, { type: 'END_PHASE' }).state
-    const before = s
-    const r = apply(s, { type: 'PLAY_CARD', cardId: 'x' })
-    expect(r.state).toBe(before)
-    expect(r.events).toEqual([])
+    s = reduce(s, { type: 'END_GAME' })
+    // Suma igual → siguiente tiebreaker es héroe estado (ambos neutral) → empate técnico.
+    expect(s.ganador).toBe('empate')
   })
 
-  it('jugar carta fuera de fase Despliegue es no-op', () => {
-    const s = fresh()
-    expect(s.phase).toBe('recoleccion')
-    const r = apply(s, { type: 'PLAY_CARD', cardId: 'c0' })
-    expect(r.state).toBe(s)
+  it('Empate por suma total se rompe por mayor estado de héroe', () => {
+    const reduce = createReducer(deps)
+    let s = initState()
+    s = {
+      ...s,
+      players: {
+        a: { ...s.players.a, atributos: { fuerza: 5, resguardo: 5, resonancia: 5 }, heroEstado: 'ascendido' },
+        b: { ...s.players.b, atributos: { fuerza: 5, resguardo: 5, resonancia: 5 }, heroEstado: 'despertado' },
+      },
+    }
+    s = reduce(s, { type: 'END_GAME' })
+    expect(s.ganador).toBe('a')
   })
-
-  it('jugar tecnología sin abilities continuous entra a techInPlay (Phase 1 kernel)', () => {
-    // v3.0.3: relics y tech permanentes ahora se procesan vía handlePlayCard.
-    // Una tech sin abilities especiales entra a techInPlay del owner.
-    const tech: Card = {
-      id: 't',
-      name: 'Tech',
-      type: 'tech',
-      race: 'wuron',
-      cost: 0,
-      rarity: 'common',
-      abilities: [],
-      keywords: [],
-    }
-    let s = fresh({ p1Deck: [tech, ...deck(30)] })
-    s = apply(s, { type: 'END_PHASE' }).state
-    const r = apply(s, { type: 'PLAY_CARD', cardId: 't' })
-    expect(r.state.players.p1.techInPlay).toHaveLength(1)
-    expect(r.state.players.p1.techInPlay[0]?.cardId).toBe('t')
-    expect(r.state.players.p1.hand.find((c) => c.id === 't')).toBeUndefined()
-  })
-})
-
-// v3.0 GAME-RULES sec 0: planetas neutrales removidos del core. Los tests de
-// ACTIVATE_PLANET de v2.0 quedan eliminados; si Phase 2+ los reintroduce,
-// reescribir desde la spec actualizada (no resucitar los viejos).
-
-describe('reducer — energía v3.0', () => {
-  it('turno 1 → energía 1', () => {
-    const s = fresh()
-    expect(s.turn).toBe(1)
-    expect(s.players.p1.energy).toBe(1)
-  })
-
-  it('cap energía creciente: turno 2 → 2 energía al iniciar turno', () => {
-    // En v3.0, turn count es global: turn 1 = p1, turn 2 = p2, turn 3 = p1...
-    // Energía es min(turn, 10) al TURN_START.
-    let s = fresh({ p1Deck: deck(60), p2Deck: deck(60) })
-    while (!(s.turn === 2 && s.phase === 'recoleccion') && s.outcome.kind === 'in_progress') {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    expect(s.activePlayer).toBe('p2')
-    expect(s.players.p2.energy).toBe(2)
-  })
-
-  it('cap energía clamp en 10', () => {
-    let s = fresh({ p1Deck: deck(60), p2Deck: deck(60) })
-    while (s.turn < 12 && s.outcome.kind === 'in_progress') {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    expect(s.players.p1.energy).toBeLessThanOrEqual(10)
-    expect(s.players.p1.energy).toBeGreaterThanOrEqual(1)
-  })
-})
-
-describe('reducer — DECLARE_ATTACK', () => {
-  function setupCombat(): GameState {
-    const att: Card = {
-      id: 'att',
-      name: 'Atacante',
-      type: 'ship',
-      race: 'wuron',
-      cost: 0,
-      rarity: 'common',
-      abilities: [],
-      keywords: [],
-      strength: 3,
-      hp: 5,
-    }
-    const def: Card = {
-      id: 'def',
-      name: 'Defensor',
-      type: 'ship',
-      race: 'tezhal',
-      cost: 0,
-      rarity: 'common',
-      abilities: [],
-      keywords: [],
-      strength: 2,
-      hp: 4,
-    }
-    let s = fresh({
-      p1Deck: [att, ...deck(30)],
-      p2Deck: [def, ...deck(30)],
-    })
-    s = apply(s, { type: 'END_PHASE' }).state // p1 despliegue
-    s = apply(s, { type: 'PLAY_CARD', cardId: 'att' }).state
-    // Avanzar hasta turno de p2 despliegue para que p2 juegue su carta.
-    while (!(s.activePlayer === 'p2' && s.phase === 'despliegue')) {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    s = apply(s, { type: 'PLAY_CARD', cardId: 'def' }).state
-    // Avanzar al combate de p1 turno 2.
-    while (!(s.activePlayer === 'p1' && s.phase === 'combate')) {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    return s
-  }
-
-  it('combate ship-ship simultáneo aplica daño = fuerza del otro', () => {
-    const s = setupCombat()
-    const attackerId = s.players.p1.fleet[0]?.instanceId as string
-    const defenderId = s.players.p2.fleet[0]?.instanceId as string
-    const r = apply(s, {
-      type: 'DECLARE_ATTACK',
-      attackerShipId: attackerId,
-      target: { kind: 'ship', ref: defenderId },
-    })
-    const atk = r.state.players.p1.fleet.find((sh) => sh.instanceId === attackerId)
-    const def = r.state.players.p2.fleet.find((sh) => sh.instanceId === defenderId)
-    expect(atk?.hp).toBe(5 - 2)
-    expect(def?.hp).toBe(4 - 3)
-  })
-
-  it('combate ship-homeworld baja HP del mundo natal sin retorno', () => {
-    const s = setupCombat()
-    const attackerId = s.players.p1.fleet[0]?.instanceId as string
-    const r = apply(s, {
-      type: 'DECLARE_ATTACK',
-      attackerShipId: attackerId,
-      target: { kind: 'homeworld', ref: 'p2' },
-    })
-    expect(r.state.players.p2.homeworld.hp).toBe(20 - 3)
-    expect(r.state.players.p1.fleet[0]?.hp).toBe(5)
-  })
-
-  it('atacar mundo natal con Bastión defensor es ilegal — no-op', () => {
-    const att: Card = {
-      id: 'att',
-      name: 'Atacante',
-      type: 'ship',
-      race: 'wuron',
-      cost: 0,
-      rarity: 'common',
-      abilities: [],
-      keywords: [],
-      strength: 3,
-      hp: 5,
-    }
-    const bastion: Card = {
-      id: 'bas',
-      name: 'Bastión',
-      type: 'ship',
-      race: 'tezhal',
-      cost: 0,
-      rarity: 'common',
-      abilities: [],
-      keywords: ['bastion'],
-      strength: 1,
-      hp: 5,
-    }
-    let s = fresh({ p1Deck: [att, ...deck(30)], p2Deck: [bastion, ...deck(30)] })
-    s = apply(s, { type: 'END_PHASE' }).state
-    s = apply(s, { type: 'PLAY_CARD', cardId: 'att' }).state
-    while (!(s.activePlayer === 'p2' && s.phase === 'despliegue')) {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    s = apply(s, { type: 'PLAY_CARD', cardId: 'bas' }).state
-    while (!(s.activePlayer === 'p1' && s.phase === 'combate')) {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    const attackerId = s.players.p1.fleet[0]?.instanceId as string
-    const before = s
-    const r = apply(s, {
-      type: 'DECLARE_ATTACK',
-      attackerShipId: attackerId,
-      target: { kind: 'homeworld', ref: 'p2' },
-    })
-    expect(r.state).toBe(before)
-  })
-
-  it('Desgarro: exceso pasa al mundo natal cuando el atacante mata al defensor', () => {
-    const att: Card = {
-      id: 'att',
-      name: 'Atacante Desgarro',
-      type: 'ship',
-      race: 'wuron',
-      cost: 0,
-      rarity: 'common',
-      abilities: [],
-      keywords: ['desgarro'],
-      strength: 5,
-      hp: 5,
-    }
-    const def: Card = {
-      id: 'def',
-      name: 'Defensor débil',
-      type: 'ship',
-      race: 'tezhal',
-      cost: 0,
-      rarity: 'common',
-      abilities: [],
-      keywords: [],
-      strength: 1,
-      hp: 2,
-    }
-    let s = fresh({ p1Deck: [att, ...deck(30)], p2Deck: [def, ...deck(30)] })
-    s = apply(s, { type: 'END_PHASE' }).state
-    s = apply(s, { type: 'PLAY_CARD', cardId: 'att' }).state
-    while (!(s.activePlayer === 'p2' && s.phase === 'despliegue')) {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    s = apply(s, { type: 'PLAY_CARD', cardId: 'def' }).state
-    while (!(s.activePlayer === 'p1' && s.phase === 'combate')) {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    const attackerId = s.players.p1.fleet[0]?.instanceId as string
-    const defenderId = s.players.p2.fleet[0]?.instanceId as string
-    const r = apply(s, {
-      type: 'DECLARE_ATTACK',
-      attackerShipId: attackerId,
-      target: { kind: 'ship', ref: defenderId },
-    })
-    // Atacante 5 fuerza vs defensor 2 hp → mata, exceso 3 al natal.
-    expect(r.state.players.p2.homeworld.hp).toBe(20 - 3)
-  })
-
-  it('mundo natal a HP 0 → win por homeworld_destroyed', () => {
-    // Ataque masivo: nave con Embate (sin mareo de invocación) ataca natal
-    // en el mismo turno que entra.
-    const att: Card = {
-      id: 'att',
-      name: 'Megacañón',
-      type: 'ship',
-      race: 'wuron',
-      cost: 0,
-      rarity: 'common',
-      abilities: [],
-      keywords: ['embate'],
-      strength: 25,
-      hp: 5,
-    }
-    let s = fresh({ p1Deck: [att, ...deck(30)] })
-    s = apply(s, { type: 'END_PHASE' }).state
-    s = apply(s, { type: 'PLAY_CARD', cardId: 'att' }).state
-    while (!(s.activePlayer === 'p1' && s.phase === 'combate')) {
-      s = apply(s, { type: 'END_PHASE' }).state
-    }
-    const attackerId = s.players.p1.fleet[0]?.instanceId as string
-    const r = apply(s, {
-      type: 'DECLARE_ATTACK',
-      attackerShipId: attackerId,
-      target: { kind: 'homeworld', ref: 'p2' },
-    })
-    expect(r.state.outcome.kind).toBe('win')
-    if (r.state.outcome.kind === 'win') {
-      expect(r.state.outcome.winner).toBe('p1')
-      expect(r.state.outcome.reason).toBe('homeworld_destroyed')
-    }
-  })
-})
-
-// v3.0 GAME-RULES sec 0: héroes pasivos removidos del core. Las legendarias
-// ahora son Naves normales con rarity='legendary' max 1 copia. Los tests de
-// hero (DEPLOY_HERO / ACTIVATE_HERO_POWER / hero return) quedan eliminados.
-
-describe('reducer — acciones diferidas a Phase 3+', () => {
-  it.each<GameAction>([{ type: 'ACTIVATE_ABILITY', sourceId: 'src-1', abilityId: 'ab-1' }])(
-    'acción %s no muta state ni emite eventos',
-    (action) => {
-      const before = fresh()
-      const { state, events } = apply(before, action)
-      expect(state).toBe(before)
-      expect(events).toEqual([])
-    },
-  )
 })

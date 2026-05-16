@@ -31,13 +31,15 @@ export default defineConfig({
         'src/main.tsx',
         // types.ts es puro tipos — v8 no encuentra ejecutable y reporta 0%.
         'src/engine/types.ts',
-        // strategies/base.ts es puro interface — sin código a ejecutar.
-        'src/strategies/base.ts',
-        // App.tsx es placeholder UI; se cubrirá cuando llegue Phase 4.
+        // actions.ts es discriminated union — sin código ejecutable.
+        'src/engine/actions.ts',
+        // App.tsx es placeholder UI; UI completa llega en Phase 3.
         'src/App.tsx',
-        // scripts/ es tooling CLI (validate-cards, validators offline) — no
+        // scripts/ es tooling CLI (validate-cards, migrate scripts) — no
         // runtime de la app. Excluido del coverage threshold del engine.
         'scripts/**',
+        // docs/archive/ es código v3.0 archivado, no parte del bundle.
+        'docs/archive/**',
         'vite.config.ts',
         'eslint.config.js',
       ],
