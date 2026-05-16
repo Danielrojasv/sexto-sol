@@ -1,11 +1,13 @@
-// scripts/validate-cards.ts — Validador v4.1.
+// scripts/validate-cards.ts — Validador v4.2 + sanity check de balance.
 //
-// Lee los YAMLs de docs/playtest/cards-v4.1/ y docs/playtest/decks-v4.1/ con fs,
+// Lee los YAMLs de docs/playtest/cards-v4.2/ y docs/playtest/decks-v4.1/ con fs,
 // los valida con los type guards de src/data/schema.ts, y reporta:
 //   - Pool de acción: 30 cartas (15 Tezhal + 15 Würon), IDs únicos.
 //   - Pool de planetas: 6 cartas (3 por tramo), una por categoría.
 //   - Héroes: 4 entradas (2 razas × 2 estados).
 //   - Mazos: 4 mazos, cada uno 20 cartas con max 2 copias, IDs válidos del pool.
+//   - Stats por raza (fuerza_base y penalizacion_acierto promedios).
+//   - Asserts: Tezhal pen_acierto promedio < Würon, Tezhal fuerza_base > Würon.
 //
 // Uso: pnpm tsx scripts/validate-cards.ts
 // Sale con código != 0 si algo falla.
@@ -13,6 +15,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parse } from 'yaml'
+import type { CardActionDef, Raza } from '../src/engine/types'
 import {
   validateCardActionDef,
   validateCardPlanetDef,
@@ -21,7 +24,7 @@ import {
 } from '../src/data/schema'
 
 const ROOT = resolve(process.cwd())
-const CARDS_DIR = resolve(ROOT, 'docs/playtest/cards-v4.1')
+const CARDS_DIR = resolve(ROOT, 'docs/playtest/cards-v4.2')
 const DECKS_DIR = resolve(ROOT, 'docs/playtest/decks-v4.1')
 
 let errors = 0
@@ -33,7 +36,7 @@ function fail(msg: string): void {
 // ===== Pool de Acción =======================================================
 
 const cardIds = new Set<string>()
-let totalActionCards = 0
+const allCards: CardActionDef[] = []
 for (const filename of ['tezhal.yaml', 'wuron.yaml']) {
   try {
     const raw = readFileSync(resolve(CARDS_DIR, filename), 'utf8')
@@ -49,7 +52,7 @@ for (const filename of ['tezhal.yaml', 'wuron.yaml']) {
           fail(`Card ID duplicado: ${card.id}`)
         }
         cardIds.add(card.id)
-        totalActionCards++
+        allCards.push(card)
       } catch (e) {
         fail(`${filename}: ${(e as Error).message}`)
       }
@@ -58,10 +61,10 @@ for (const filename of ['tezhal.yaml', 'wuron.yaml']) {
     fail(`No se pudo leer ${filename}: ${(e as Error).message}`)
   }
 }
-if (totalActionCards !== 30) {
-  fail(`Se esperaban 30 cartas de Acción, se encontraron ${totalActionCards}`)
+if (allCards.length !== 30) {
+  fail(`Se esperaban 30 cartas de Acción, se encontraron ${allCards.length}`)
 }
-console.log(`✓ Pool de acción: ${totalActionCards} cartas`)
+console.log(`✓ Pool de acción: ${allCards.length} cartas`)
 
 // ===== Pool de Planetas =====================================================
 
@@ -124,6 +127,67 @@ try {
 }
 console.log(`✓ Héroes: 4 entradas → 2 héroes combinados`)
 
+// ===== Sanity check: balance por raza (v4.2) =================================
+
+function statsForRaza(raza: Raza): {
+  count: number
+  avgFuerzaBase: number
+  avgPenAcierto: number
+  byCat: Record<string, number>
+} {
+  const cards = allCards.filter((c) => c.raza === raza)
+  const byCat: Record<string, number> = { Ataque: 0, Defensa: 0, Ritual: 0 }
+  for (const c of cards) byCat[c.categoria]++
+  const avgFuerzaBase = avg(cards.map((c) => c.fuerzaBase))
+  const avgPenAcierto = avg(cards.map((c) => c.penalizacionAcierto))
+  return { count: cards.length, avgFuerzaBase, avgPenAcierto, byCat }
+}
+
+function avg(nums: number[]): number {
+  if (nums.length === 0) return 0
+  return nums.reduce((a, b) => a + b, 0) / nums.length
+}
+
+const tezhal = statsForRaza('Tezhal')
+const wuron = statsForRaza('Würon')
+
+console.log('\n--- Stats por raza (v4.2 sanity check) ---')
+console.log(
+  `Tezhal: count=${tezhal.count}, avg fuerza_base=${tezhal.avgFuerzaBase.toFixed(2)}, ` +
+    `avg pen_acierto=${tezhal.avgPenAcierto.toFixed(2)}, byCat=${JSON.stringify(tezhal.byCat)}`,
+)
+console.log(
+  `Würon:  count=${wuron.count}, avg fuerza_base=${wuron.avgFuerzaBase.toFixed(2)}, ` +
+    `avg pen_acierto=${wuron.avgPenAcierto.toFixed(2)}, byCat=${JSON.stringify(wuron.byCat)}`,
+)
+
+if (tezhal.count !== 15) fail(`Tezhal debe tener 15 cartas, got ${tezhal.count}`)
+if (wuron.count !== 15) fail(`Würon debe tener 15 cartas, got ${wuron.count}`)
+
+for (const [name, byCat] of [
+  ['Tezhal', tezhal.byCat],
+  ['Würon', wuron.byCat],
+] as const) {
+  for (const cat of ['Ataque', 'Defensa', 'Ritual']) {
+    if (byCat[cat] !== 5) fail(`${name} debe tener 5 cartas ${cat}, got ${byCat[cat]}`)
+  }
+}
+
+if (!(tezhal.avgPenAcierto < wuron.avgPenAcierto)) {
+  fail(
+    `Tezhal pen_acierto promedio (${tezhal.avgPenAcierto.toFixed(2)}) ` +
+      `debe ser < Würon (${wuron.avgPenAcierto.toFixed(2)})`,
+  )
+}
+if (!(tezhal.avgFuerzaBase > wuron.avgFuerzaBase)) {
+  fail(
+    `Tezhal fuerza_base promedio (${tezhal.avgFuerzaBase.toFixed(2)}) ` +
+      `debe ser > Würon (${wuron.avgFuerzaBase.toFixed(2)})`,
+  )
+}
+
+console.log('✓ Sanity check de balance v4.2 OK')
+
 // ===== Mazos preconstruidos =================================================
 
 const deckFiles = readdirSync(DECKS_DIR).filter((f) => f.endsWith('.yaml'))
@@ -133,7 +197,14 @@ if (deckFiles.length !== 4) {
 for (const filename of deckFiles) {
   try {
     const raw = readFileSync(resolve(DECKS_DIR, filename), 'utf8')
-    const doc = parse(raw) as { deck?: { name?: string; race?: string; hero?: string; cards?: Array<{ id: string; copies: number }> } }
+    const doc = parse(raw) as {
+      deck?: {
+        name?: string
+        race?: string
+        hero?: string
+        cards?: Array<{ id: string; copies: number }>
+      }
+    }
     if (!doc.deck || !doc.deck.cards) {
       fail(`${filename}: deck.cards no encontrado`)
       continue
@@ -167,4 +238,4 @@ if (errors > 0) {
   console.error(`\n✗ ${errors} error(es). Validación falló.`)
   process.exit(1)
 }
-console.log('\n✓ Validación completa OK.')
+console.log('\n✓ Validación v4.2 completa OK.')
