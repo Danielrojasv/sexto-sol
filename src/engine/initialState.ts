@@ -54,6 +54,7 @@ export function createInitialState(config: InitConfig): GameState {
     atributos: { fuerza: 0, resguardo: 0, resonancia: 0 },
     heroEstado: 'neutral',
     mulliganUsado: false,
+    manoAceptada: false,
   }
 
   const playerB: Player = {
@@ -65,6 +66,7 @@ export function createInitialState(config: InitConfig): GameState {
     atributos: { fuerza: 0, resguardo: 0, resonancia: 0 },
     heroEstado: 'neutral',
     mulliganUsado: false,
+    manoAceptada: false,
   }
 
   return {
@@ -72,7 +74,7 @@ export function createInitialState(config: InitConfig): GameState {
     rng: rng.snapshot(),
     tramo: 'nebulosa',
     turno: 1,
-    subPaso: 'eleccion_planeta',
+    subPaso: 'mulligan_inicial',
     jugadorActivo: 'a',
     players: { a: playerA, b: playerB },
     poolPlanetasNebulosa: [...config.planetIdsNebulosa],
@@ -83,6 +85,7 @@ export function createInitialState(config: InitConfig): GameState {
     paseDeclarado: {},
     eclipseInvocado: false,
     modo: config.modo,
+    historialPremoniciones: [],
   }
 }
 
@@ -107,7 +110,7 @@ export function isInitialState(state: GameState): boolean {
   return (
     state.tramo === 'nebulosa' &&
     state.turno === 1 &&
-    state.subPaso === 'eleccion_planeta' &&
+    state.subPaso === 'mulligan_inicial' &&
     !state.eclipseInvocado &&
     p('a').atributos.fuerza === 0 &&
     p('a').atributos.resguardo === 0 &&

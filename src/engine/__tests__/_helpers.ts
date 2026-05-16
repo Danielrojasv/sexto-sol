@@ -1,7 +1,7 @@
-// Helpers de tests para Sexto Sol v4.1.
+// Helpers de tests para Sexto Sol v4.2.
 //
 // Factories para crear card mocks + planet mocks + ReducerDeps + InitConfig.
-// Mantiene los tests aislados del loader real (que requiere import.meta.glob).
+// v4.2: cartas tienen `penalizacionAcierto` top-level + condicionales sobre estado del juego.
 
 import type {
   CardActionDef,
@@ -19,6 +19,7 @@ export function mockCard(opts: {
   categoria?: Categoria
   coste?: number
   fuerzaBase?: number
+  penalizacionAcierto?: number
   condicionales?: Condicional[]
 }): CardActionDef {
   mockCardCounter++
@@ -29,10 +30,9 @@ export function mockCard(opts: {
     categoria: opts.categoria ?? 'Ataque',
     coste: opts.coste ?? 1,
     fuerzaBase: opts.fuerzaBase ?? 2,
+    penalizacionAcierto: opts.penalizacionAcierto ?? 1,
     rareza: 'comun',
-    condicionales: opts.condicionales ?? [
-      { tipo: 'premonicion_propia', valor: 'Ataque', fuerzaDelta: 1 },
-    ],
+    condicionales: opts.condicionales ?? [],
     flavor: 'mock flavor',
   }
 }
@@ -43,7 +43,9 @@ export function mockPlanet(opts: {
   categoria?: Categoria
 }): CardPlanetDef {
   return {
-    id: opts.id ?? `PLN-${(opts.tramo ?? 'Nebulosa').slice(0, 3).toUpperCase()}-${(opts.categoria ?? 'Ataque').slice(0, 3).toUpperCase()}`,
+    id:
+      opts.id ??
+      `PLN-${(opts.tramo ?? 'Nebulosa').slice(0, 3).toUpperCase()}-${(opts.categoria ?? 'Ataque').slice(0, 3).toUpperCase()}`,
     nombre: 'Mock Planet',
     tramo: opts.tramo ?? 'Nebulosa',
     categoria: opts.categoria ?? 'Ataque',
@@ -52,11 +54,9 @@ export function mockPlanet(opts: {
   }
 }
 
-/** ReducerDeps con un set de cartas conocidas + 6 planetas estándar (3+3). */
 export function mockDeps(cards: CardActionDef[]): ReducerDeps {
   const cardMap = new Map<string, CardActionDef>()
   for (const c of cards) cardMap.set(c.id, c)
-
   const planets = [
     mockPlanet({ id: 'PLN-NEB-ATQ', tramo: 'Nebulosa', categoria: 'Ataque' }),
     mockPlanet({ id: 'PLN-NEB-DEF', tramo: 'Nebulosa', categoria: 'Defensa' }),
@@ -70,12 +70,10 @@ export function mockDeps(cards: CardActionDef[]): ReducerDeps {
   return { cards: cardMap, planets: planetMap }
 }
 
-/** Mazo de 20 cartas mockeadas (repetidas para llegar a 20). */
 export function mockDeckOf20(card: CardActionDef): string[] {
   return Array.from({ length: 20 }, () => card.id)
 }
 
-/** Mazo de 20 cartas mixtas: 10 de cardA + 10 de cardB. */
 export function mixedDeck(cardA: CardActionDef, cardB: CardActionDef): string[] {
   return [...Array(10).fill(cardA.id), ...Array(10).fill(cardB.id)]
 }
