@@ -1,0 +1,151 @@
+// HomeView v4.1 — Selector raza + modo + mazo preconstruido + toggle tooltips.
+
+import { useState } from 'react'
+import { decksByRaza } from '@/data/decks/loader'
+import type { Modo, Raza } from '@/engine/types'
+import { useGameStore } from '@/store/gameStore'
+
+const RAZAS: Raza[] = ['Tezhal', 'Würon']
+const MODOS: Array<{ value: Modo; label: string }> = [
+  { value: 'vsIA', label: 'vs IA' },
+  { value: 'hotseat', label: 'Hot-seat (2 jugadores)' },
+]
+
+export function HomeView() {
+  const startGame = useGameStore((s) => s.startGame)
+  const [razaA, setRazaA] = useState<Raza>('Tezhal')
+  const [razaB, setRazaB] = useState<Raza>('Würon')
+  const [modo, setModo] = useState<Modo>('vsIA')
+  const [showTooltips, setShowTooltips] = useState(true)
+  const decksA = decksByRaza(razaA)
+  const decksB = decksByRaza(razaB)
+  const [deckA, setDeckA] = useState(decksA[0]?.id ?? '')
+  const [deckB, setDeckB] = useState(decksB[0]?.id ?? '')
+
+  const handleRazaA = (r: Raza) => {
+    setRazaA(r)
+    setDeckA(decksByRaza(r)[0]?.id ?? '')
+  }
+  const handleRazaB = (r: Raza) => {
+    setRazaB(r)
+    setDeckB(decksByRaza(r)[0]?.id ?? '')
+  }
+
+  const handleStart = () => {
+    if (!deckA || !deckB) return
+    startGame({ modo, razaA, razaB, deckA_id: deckA, deckB_id: deckB, showTooltips })
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <header>
+          <h1 className="text-4xl font-bold tracking-tight">Sexto Sol</h1>
+          <p className="text-slate-400 mt-1">El Peregrinaje del Héroe — v4.1</p>
+        </header>
+
+        <section className="space-y-3 bg-slate-900 p-4 rounded-lg">
+          <h2 className="text-lg font-semibold">Modo</h2>
+          <div className="flex gap-3">
+            {MODOS.map((m) => (
+              <button
+                key={m.value}
+                onClick={() => setModo(m.value)}
+                className={`px-4 py-2 rounded ${
+                  modo === m.value ? 'bg-amber-600 text-slate-950' : 'bg-slate-700 text-slate-200'
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-3 bg-slate-900 p-4 rounded-lg">
+          <h2 className="text-lg font-semibold">Jugador A {modo === 'vsIA' ? '(vos)' : ''}</h2>
+          <RazaSelector value={razaA} onChange={handleRazaA} />
+          <DeckSelector decks={decksA} value={deckA} onChange={setDeckA} />
+        </section>
+
+        <section className="space-y-3 bg-slate-900 p-4 rounded-lg">
+          <h2 className="text-lg font-semibold">
+            Jugador B {modo === 'vsIA' ? '(IA)' : '(humano)'}
+          </h2>
+          <RazaSelector value={razaB} onChange={handleRazaB} />
+          <DeckSelector decks={decksB} value={deckB} onChange={setDeckB} />
+        </section>
+
+        <section className="bg-slate-900 p-4 rounded-lg">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showTooltips}
+              onChange={(e) => setShowTooltips(e.target.checked)}
+              className="w-5 h-5"
+            />
+            <span>
+              <span className="font-semibold">Mostrar tooltips de ayuda</span>
+              <span className="text-slate-400 text-sm block">
+                Recomendado para las primeras partidas. Apagalo cuando ya conozcas el flujo.
+              </span>
+            </span>
+          </label>
+        </section>
+
+        <button
+          onClick={handleStart}
+          className="w-full py-3 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-lg"
+        >
+          Iniciar Peregrinaje
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function RazaSelector({ value, onChange }: { value: Raza; onChange: (r: Raza) => void }) {
+  return (
+    <div className="flex gap-2">
+      {RAZAS.map((r) => (
+        <button
+          key={r}
+          onClick={() => onChange(r)}
+          className={`px-3 py-2 rounded ${
+            value === r ? 'bg-amber-700 text-slate-100' : 'bg-slate-700 text-slate-300'
+          }`}
+        >
+          {r}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function DeckSelector({
+  decks,
+  value,
+  onChange,
+}: {
+  decks: ReturnType<typeof decksByRaza>
+  value: string
+  onChange: (id: string) => void
+}) {
+  return (
+    <div className="space-y-1">
+      {decks.map((d) => (
+        <label key={d.id} className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="radio"
+            checked={value === d.id}
+            onChange={() => onChange(d.id)}
+            className="mt-1"
+          />
+          <span>
+            <span className="font-semibold">{d.name}</span>
+            <span className="text-slate-400 text-sm block">{d.archetype}</span>
+          </span>
+        </label>
+      ))}
+    </div>
+  )
+}
