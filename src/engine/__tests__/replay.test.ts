@@ -1,125 +1,53 @@
-// Replay tests: misma seed + misma secuencia de acciones produce el mismo state.
-// Es el contrato de determinismo que habilita PVP async, anti-cheat y spectator mode.
-
 import { describe, expect, it } from 'vitest'
-import fc from 'fast-check'
+import type { Action } from '../actions'
 import { createInitialState } from '../initialState'
-import { apply } from '../reducer'
-import type { Card, GameAction, Race } from '../types'
+import { createReducer } from '../reducer'
+import { mockCard, mockDeps } from './_helpers'
 
-function deck(size: number, race: Race = 'wuron'): Card[] {
-  return Array.from({ length: size }, (_, i) => ({
-    id: `c${i}`,
-    name: `Carta ${i}`,
-    type: 'ship',
-    race,
-    cost: 0,
-    rarity: 'common',
-    keywords: [],
-    abilities: [],
-    strength: 1,
-    hp: 1,
-  }))
+const cardAtq = mockCard({ id: 'CARD-ATQ', categoria: 'Ataque', coste: 1, fuerzaBase: 2, condicionales: [{ tipo: 'premonicion_propia', valor: 'Ataque', fuerzaDelta: 1 }] })
+const cardDef = mockCard({ id: 'CARD-DEF', raza: 'Würon', categoria: 'Defensa', coste: 1, fuerzaBase: 1, condicionales: [{ tipo: 'premonicion_propia', valor: 'Defensa', fuerzaDelta: 1 }] })
+
+const deps = mockDeps([cardAtq, cardDef])
+
+const actions: Action[] = [
+  { type: 'SELECT_PLANET', playerId: 'a', planetId: 'PLN-NEB-ATQ' },
+  { type: 'SELECT_PLANET', playerId: 'b', planetId: 'PLN-NEB-DEF' },
+  { type: 'DRAW_BOTH' },
+  { type: 'PLAY_HIDDEN', playerId: 'a', cardId: 'CARD-ATQ' },
+  { type: 'PLAY_HIDDEN', playerId: 'b', cardId: 'CARD-DEF' },
+  { type: 'DECLARE_PREMONICION', playerId: 'a', categoria: 'Defensa' },
+  { type: 'DECLARE_PREMONICION', playerId: 'b', categoria: 'Ataque' },
+  { type: 'REVEAL' },
+]
+
+function runReplay(seed: number) {
+  const state0 = createInitialState({
+    seed,
+    modo: 'vsIA',
+    deckA: { raza: 'Tezhal', cardIds: Array.from({ length: 20 }, () => 'CARD-ATQ'), heroId: 'HRO-TEZHAL' },
+    deckB: { raza: 'Würon', cardIds: Array.from({ length: 20 }, () => 'CARD-DEF'), heroId: 'HRO-WURON' },
+    planetIdsNebulosa: ['PLN-NEB-ATQ', 'PLN-NEB-DEF', 'PLN-NEB-RIT'],
+    planetIdsEstrellas: ['PLN-EST-ATQ', 'PLN-EST-DEF', 'PLN-EST-RIT'],
+  })
+  const reducer = createReducer(deps)
+  return actions.reduce((state, action) => reducer(state, action), state0)
 }
 
-const ALL_RACES: readonly Race[] = ['quralan', 'wuron', 'tezhal', 'zaqe']
-
-describe('replay — determinismo total', () => {
-  it('seed + END_PHASE x10 produce el mismo state byte-a-byte', () => {
-    const setup = {
-      seed: 12345,
-      p1Race: 'wuron' as const,
-      p2Race: 'quralan' as const,
-      p1Deck: deck(60, 'wuron'),
-      p2Deck: deck(60, 'quralan'),
-    }
-    const actions: readonly GameAction[] = Array.from({ length: 10 }, () => ({
-      type: 'END_PHASE',
-    }))
-
-    const states = Array.from({ length: 5 }, () => {
-      let s = createInitialState(setup)
-      for (const a of actions) s = apply(s, a).state
-      return s
-    })
-
-    // Todos iguales al primero.
-    for (let i = 1; i < states.length; i++) {
-      expect(states[i]).toEqual(states[0])
-    }
+describe('determinismo (replay)', () => {
+  it('misma seed + mismas actions = mismo state final', () => {
+    const stateA = runReplay(42)
+    const stateB = runReplay(42)
+    // Comparación exhaustiva via JSON.stringify (la única no determinista sería iteración
+    // de Maps/Sets, pero el state no usa esas estructuras).
+    expect(JSON.stringify(stateA)).toBe(JSON.stringify(stateB))
   })
 
-  it('property: cualquier seed + cualquier secuencia replay-able', () => {
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 10000 }),
-        fc.constantFrom(...ALL_RACES),
-        fc.constantFrom(...ALL_RACES),
-        fc.array(fc.constant<GameAction>({ type: 'END_PHASE' }), {
-          minLength: 0,
-          maxLength: 30,
-        }),
-        (seed, p1Race, p2Race, actions) => {
-          const stateA = (() => {
-            let s = createInitialState({
-              seed,
-              p1Race,
-              p2Race,
-              p1Deck: deck(60, p1Race),
-              p2Deck: deck(60, p2Race),
-            })
-            for (const a of actions) s = apply(s, a).state
-            return s
-          })()
-          const stateB = (() => {
-            let s = createInitialState({
-              seed,
-              p1Race,
-              p2Race,
-              p1Deck: deck(60, p1Race),
-              p2Deck: deck(60, p2Race),
-            })
-            for (const a of actions) s = apply(s, a).state
-            return s
-          })()
-          // Comparación estructural profunda usando JSON (los states son serializables).
-          return JSON.stringify(stateA) === JSON.stringify(stateB)
-        },
-      ),
-      { numRuns: 50 },
-    )
-  })
-
-  it('CONCEDE en cualquier punto produce mismo outcome al replayar', () => {
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 1000 }),
-        fc.integer({ min: 0, max: 8 }),
-        fc.constantFrom('p1' as const, 'p2' as const),
-        (seed, prefixLen, conceder) => {
-          const setup = {
-            seed,
-            p1Race: 'tezhal' as const,
-            p2Race: 'zaqe' as const,
-            p1Deck: deck(60, 'tezhal'),
-            p2Deck: deck(60, 'zaqe'),
-          }
-          const prefix: GameAction[] = Array.from({ length: prefixLen }, () => ({
-            type: 'END_PHASE',
-          }))
-          const fullSeq: readonly GameAction[] = [...prefix, { type: 'CONCEDE', player: conceder }]
-
-          const replay = (): ReturnType<typeof createInitialState> => {
-            let s = createInitialState(setup)
-            for (const a of fullSeq) s = apply(s, a).state
-            return s
-          }
-          const a = replay()
-          const b = replay()
-          return JSON.stringify(a) === JSON.stringify(b) && a.outcome.kind === 'win'
-        },
-      ),
-      { numRuns: 50 },
-    )
+  it('seeds distintas pueden producir states distintos', () => {
+    const stateA = runReplay(1)
+    const stateB = runReplay(2)
+    // Mano inicial diferente por shuffle distinto (cards son las mismas pero positions distintas
+    // — y como son todas CARD-ATQ, las manos coinciden. Validamos que al menos el rng counter difiere).
+    expect(stateA.rng.counter).toBe(stateB.rng.counter) // mismo número de calls
+    expect(stateA.rng.s0).not.toBe(stateB.rng.s0) // pero el estado interno difiere
   })
 })

@@ -1,783 +1,614 @@
-// Reducer puro del engine de Sexto Sol — alineado a GAME-RULES.md v3.0.
+// Reducer puro de Sexto Sol v4.1.
 //
-// Contrato:
-//   apply(state, action) → { state: nextState, events: emitted }
+// (state, action) => newState. Sin mutación in-place. Sin LLM. Determinismo total.
+// Flujo por turno: ELECCIÓN_PLANETA (solo Neb/Est) → ROBO → ACCIÓN_PENDIENTE
+// → PREMONICIÓN_PENDIENTE → REVELAR → (CIERRE_TRAMO o siguiente turno o duelo).
 //
-// Sin mutación in-place. Mismo input → mismo output. Determinismo total.
-//
-// Cambios v3.0 vs v2.0:
-//   - Sin planetas neutrales (handleActivatePlanet removido).
-//   - Sin Edades (handleAge transitions removidas; damage_homeworld sin restricción).
-//   - Sin héroes pasivos (handleDeployHero/handleActivateHeroPower removidos).
-//     Las legendarias son Naves normales en el deck.
-//   - Energía: cap creciente +1/turno hasta 10, reset al cap cada turno start.
-//   - Phase 'vigilia' → 'eclipse'.
-//   - Mareo de invocación: nuevo flag ShipInstance.summoningSickness, reset en
-//     TURN_START. Override por keyword `embate`.
-//   - Una nave sólo puede atacar 1 vez por turno (ShipInstance.hasAttackedThisTurn).
+// El reducer es una factory: createReducer(deps) devuelve (state, action) => state.
+// deps incluye los registries de cartas (definiciones estáticas del pool).
 
-import { createRng } from './rng'
-import { getEffectiveStrength } from './derive/strength'
-import { processEventWithCascade } from './eventBus'
-import { executeEffect } from './interpreter'
+import type { Action } from './actions'
+import { aplicarBonusWuronDespertada, interpretCondicionales, type InterpretInput } from './interpreter'
+import { createRng, shuffle } from './rng'
 import type {
-  AttackTarget,
-  Card,
-  GameAction,
-  GameEvent,
-  GameOutcome,
+  Categoria,
+  CardActionDef,
+  CardPlanetDef,
   GameState,
+  HeroEstado,
+  InterpretResult,
   PlayerId,
-  PlayerState,
-  ShipInstance,
-  ShipInstanceId,
-  TurnPhase,
+  Player,
+  SideEffect,
 } from './types'
 
-const PHASE_ORDER: readonly TurnPhase[] = [
-  'recoleccion',
-  'despliegue',
-  'combate',
-  'regroup',
-  'eclipse',
-] as const
-
-const HAND_CAP = 7
-const ENERGY_CAP = 10
-
-const KW_BASTION = 'bastion'
-const KW_DESGARRO = 'desgarro'
-const KW_EMBATE = 'embate'
-const KW_REFLUENCIA = 'refluencia'
-const KW_IGNICION = 'ignicion'
-const RACE_TEZHAL = 'tezhal'
-
-export interface ReducerResult {
-  state: GameState
-  events: readonly GameEvent[]
+export interface ReducerDeps {
+  /** Pool completo de cartas de Acción indexadas por id. */
+  cards: Map<string, CardActionDef>
+  /** Pool completo de cartas de Planeta indexadas por id. */
+  planets: Map<string, CardPlanetDef>
 }
 
-// ---- Helpers genéricos ----------------------------------------------------
+const MANO_INICIAL = 4
+const CAP_MANO = 7
 
-function opponentOf(player: PlayerId): PlayerId {
-  return player === 'p1' ? 'p2' : 'p1'
-}
-
-function nextPhaseInfo(currentPhase: TurnPhase): { nextPhase: TurnPhase; turnEnded: boolean } {
-  const idx = PHASE_ORDER.indexOf(currentPhase)
-  if (idx < 0 || idx === PHASE_ORDER.length - 1) {
-    return { nextPhase: 'recoleccion', turnEnded: idx === PHASE_ORDER.length - 1 }
-  }
-  return { nextPhase: PHASE_ORDER[idx + 1] as TurnPhase, turnEnded: false }
-}
-
-/**
- * Energía del turno N: min(N, ENERGY_CAP). En TURN_START se resetea al cap.
- */
-function energyForTurn(turn: number): number {
-  return Math.min(turn, ENERGY_CAP)
-}
-
-function appendLog(state: GameState, action: GameAction): GameState {
-  return { ...state, log: [...state.log, action] }
-}
-
-function setPlayer(state: GameState, id: PlayerId, player: PlayerState): GameState {
-  return { ...state, players: { ...state.players, [id]: player } }
-}
-
-function emitEvent(events: GameEvent[], event: GameEvent): void {
-  events.push(event)
-}
-
-// ---- Combate y damage helpers --------------------------------------------
-
-function applyDamageToShip(
-  ship: ShipInstance,
-  amount: number,
-): { ship: ShipInstance; destroyed: boolean } {
-  const newHp = ship.hp - amount
-  return {
-    ship: {
-      ...ship,
-      hp: newHp,
-      damageTaken: ship.damageTaken + amount,
-      damagedThisTurn: true,
-    },
-    destroyed: newHp <= 0,
+/** Factory del reducer puro. */
+export function createReducer(
+  deps: ReducerDeps,
+): (state: GameState, action: Action) => GameState {
+  return function reducer(state: GameState, action: Action): GameState {
+    switch (action.type) {
+      case 'MULLIGAN':
+        return applyMulligan(state, action.playerId)
+      case 'KEEP_HAND':
+        return applyKeepHand(state, action.playerId)
+      case 'SELECT_PLANET':
+        return applySelectPlanet(state, action.playerId, action.planetId, deps)
+      case 'DRAW_BOTH':
+        return applyDrawBoth(state)
+      case 'PLAY_HIDDEN':
+        return applyPlayHidden(state, action.playerId, action.cardId, deps)
+      case 'PASS_TURN':
+        return applyPass(state, action.playerId)
+      case 'DECLARE_PREMONICION':
+        return applyDeclarePremonicion(state, action.playerId, action.categoria)
+      case 'REVEAL':
+        return applyReveal(state, deps)
+      case 'CLOSE_TRAMO':
+        return applyCloseTramo(state, deps)
+      case 'INVOKE_ECLIPSE':
+        return applyInvokeEclipse(state, action.playerId)
+      case 'END_GAME':
+        return applyEndGame(state)
+      default: {
+        // Exhaustiveness check.
+        const _exhaust: never = action
+        void _exhaust
+        return state
+      }
+    }
   }
 }
 
-function findShipById(
+// ===== HELPERS PRIMITIVOS ===================================================
+
+function withRng<T>(
   state: GameState,
-  shipId: ShipInstanceId,
-): { ship: ShipInstance; ownerId: PlayerId } | null {
-  for (const id of ['p1', 'p2'] as const) {
-    const found = state.players[id].fleet.find((s) => s.instanceId === shipId)
-    if (found) return { ship: found, ownerId: id }
-  }
-  return null
+  fn: (rng: ReturnType<typeof createRng>) => T,
+): { result: T; rngState: GameState['rng'] } {
+  const rng = createRng(state.seed, state.rng)
+  const result = fn(rng)
+  return { result, rngState: rng.snapshot() }
 }
 
-function replaceShip(
+function updatePlayer(
   state: GameState,
-  ownerId: PlayerId,
-  shipId: ShipInstanceId,
-  next: ShipInstance | null,
+  id: PlayerId,
+  mutator: (p: Player) => Player,
 ): GameState {
-  const player = state.players[ownerId]
-  const fleet = next
-    ? player.fleet.map((s) => (s.instanceId === shipId ? next : s))
-    : player.fleet.filter((s) => s.instanceId !== shipId)
-  return setPlayer(state, ownerId, { ...player, fleet })
-}
-
-/**
- * Routing de muerte canónico v3.0:
- *   1. Nave con keyword `refluencia` que NO ha revivido → pozoAstral del owner
- *      (con stats base reseteados desde card def).
- *   2. Nave con `revivedFromRefluencia: true` → disolucion (terminal).
- *   3. Default → removida del fleet (sin destino persistente).
- */
-function killShip(
-  state: GameState,
-  ownerId: PlayerId,
-  ship: ShipInstance,
-): { state: GameState; events: readonly GameEvent[] } {
-  const events: GameEvent[] = []
-  if (ship.keywords.includes(KW_REFLUENCIA) && !ship.revivedFromRefluencia) {
-    const card = state.cardRegistry[ship.cardId]
-    const baseShip: ShipInstance =
-      card && card.strength !== undefined && card.hp !== undefined
-        ? {
-            ...ship,
-            strength: card.strength,
-            maxHp: card.hp,
-            hp: card.hp,
-            damageTaken: 0,
-            damagedThisTurn: false,
-            hasAttackedThisTurn: false,
-            summoningSickness: false,
-            keywords: card.keywords,
-          }
-        : ship
-    const player = state.players[ownerId]
-    const stateWithPozo = setPlayer(state, ownerId, {
-      ...player,
-      pozoAstral: [...player.pozoAstral, baseShip],
-    })
-    const next = replaceShip(stateWithPozo, ownerId, ship.instanceId, null)
-    emitEvent(events, { type: 'SHIP_DESTROYED', shipId: ship.instanceId, cause: 'combat' })
-    return { state: next, events }
-  }
-  if (ship.revivedFromRefluencia) {
-    const player = state.players[ownerId]
-    const stateWithDisolution = setPlayer(state, ownerId, {
-      ...player,
-      disolucion: [...player.disolucion, ship],
-    })
-    const next = replaceShip(stateWithDisolution, ownerId, ship.instanceId, null)
-    emitEvent(events, { type: 'SHIP_DESTROYED', shipId: ship.instanceId, cause: 'combat' })
-    return { state: next, events }
-  }
-  const next = replaceShip(state, ownerId, ship.instanceId, null)
-  emitEvent(events, { type: 'SHIP_DESTROYED', shipId: ship.instanceId, cause: 'combat' })
-  return { state: next, events }
-}
-
-function damageHomeworld(
-  state: GameState,
-  player: PlayerId,
-  amount: number,
-  source: string,
-): { state: GameState; events: readonly GameEvent[] } {
-  if (amount <= 0) return { state, events: [] }
-  const p = state.players[player]
-  const newHp = Math.max(0, p.homeworld.hp - amount)
-  const next = setPlayer(state, player, {
-    ...p,
-    homeworld: { ...p.homeworld, hp: newHp },
-  })
   return {
-    state: next,
-    events: [{ type: 'HOMEWORLD_DAMAGED', player, amount, source }],
-  }
-}
-
-/** Casos límite §10.1: si ambos mundos cayeron a 0 simultáneamente → tablas. */
-function checkGameOver(state: GameState): {
-  state: GameState
-  events: readonly GameEvent[]
-} {
-  if (state.outcome.kind !== 'in_progress') return { state, events: [] }
-  const p1Down = state.players.p1.homeworld.hp <= 0
-  const p2Down = state.players.p2.homeworld.hp <= 0
-  if (p1Down && p2Down) {
-    const outcome: GameOutcome = {
-      kind: 'draw',
-      reason: 'simultaneous_homeworld_destruction',
-    }
-    return {
-      state: { ...state, outcome },
-      events: [{ type: 'GAME_OVER', outcome }],
-    }
-  }
-  if (p1Down) {
-    const outcome: GameOutcome = { kind: 'win', winner: 'p2', reason: 'homeworld_destroyed' }
-    return { state: { ...state, outcome }, events: [{ type: 'GAME_OVER', outcome }] }
-  }
-  if (p2Down) {
-    const outcome: GameOutcome = { kind: 'win', winner: 'p1', reason: 'homeworld_destroyed' }
-    return { state: { ...state, outcome }, events: [{ type: 'GAME_OVER', outcome }] }
-  }
-  return { state, events: [] }
-}
-
-// ---- Turn start automático -----------------------------------------------
-
-/**
- * v3.0 TURN_START canónico:
- *   - Reset summoningSickness y hasAttackedThisTurn de todas las naves del
- *     player (las naves del oponente mantienen sus flags).
- *   - Reset damagedThisTurn de TODAS las naves (ambos players).
- *   - Energía al cap creciente: min(turn, 10).
- *   - Robo de 1 carta. Si el mazo está vacío → decking_out.
- */
-function applyTurnStart(
-  state: GameState,
-  player: PlayerId,
-): { state: GameState; events: readonly GameEvent[] } {
-  if (state.outcome.kind !== 'in_progress') return { state, events: [] }
-  const events: GameEvent[] = []
-
-  let next: GameState = {
     ...state,
     players: {
       ...state.players,
-      p1: {
-        ...state.players.p1,
-        fleet: state.players.p1.fleet.map((sh) => ({
-          ...sh,
-          damagedThisTurn: false,
-          ...(sh.controller === player
-            ? { summoningSickness: false, hasAttackedThisTurn: false }
-            : {}),
-        })),
-      },
-      p2: {
-        ...state.players.p2,
-        fleet: state.players.p2.fleet.map((sh) => ({
-          ...sh,
-          damagedThisTurn: false,
-          ...(sh.controller === player
-            ? { summoningSickness: false, hasAttackedThisTurn: false }
-            : {}),
-        })),
-      },
+      [id]: mutator(state.players[id]),
     },
   }
-
-  // Energía al cap creciente del turno.
-  const ps = next.players[player]
-  next = setPlayer(next, player, { ...ps, energy: energyForTurn(next.turn) })
-
-  // Robar 1 carta — si el mazo está vacío, decking out.
-  const refreshed = next.players[player]
-  if (refreshed.deck.length === 0) {
-    const winner = opponentOf(player)
-    const outcome: GameOutcome = { kind: 'win', winner, reason: 'decking_out' }
-    next = { ...next, outcome }
-    emitEvent(events, { type: 'GAME_OVER', outcome })
-    return { state: next, events }
-  }
-  const drawn = refreshed.deck[0] as Card
-  next = setPlayer(next, player, {
-    ...refreshed,
-    hand: [...refreshed.hand, drawn],
-    deck: refreshed.deck.slice(1),
-  })
-  emitEvent(events, { type: 'CARD_DRAWN', player })
-  return { state: next, events }
 }
 
-// ---- Acciones -------------------------------------------------------------
+function otherPlayer(id: PlayerId): PlayerId {
+  return id === 'a' ? 'b' : 'a'
+}
 
-function handleConcede(state: GameState, conceder: PlayerId): ReducerResult {
-  const logged = appendLog(state, { type: 'CONCEDE', player: conceder })
-  const winner = opponentOf(conceder)
-  const outcome: GameOutcome = { kind: 'win', winner, reason: 'concession' }
+function categoriaToAtributo(cat: Categoria): keyof Player['atributos'] {
+  switch (cat) {
+    case 'Ataque':
+      return 'fuerza'
+    case 'Defensa':
+      return 'resguardo'
+    case 'Ritual':
+      return 'resonancia'
+  }
+}
+
+function avanzarHeroEstado(actual: HeroEstado): HeroEstado {
+  switch (actual) {
+    case 'neutral':
+      return 'despertado'
+    case 'despertado':
+      return 'ascendido'
+    case 'ascendido':
+      return 'ascendido'
+  }
+}
+
+function capHand(mano: string[]): string[] {
+  if (mano.length > CAP_MANO) return mano.slice(0, CAP_MANO)
+  return mano
+}
+
+// ===== ENERGÍA POR JUGADOR ==================================================
+
+/** Energía efectiva del jugador en el turno actual (incluye bonus Würon Ascendida). */
+export function getEnergiaParaJugador(state: GameState, playerId: PlayerId): number {
+  let base = state.turno
+  const player = state.players[playerId]
+  if (player.heroEstado === 'ascendido' && player.raza === 'Würon') {
+    base += 1
+  }
+  return base
+}
+
+// ===== ACTIONS ==============================================================
+
+function applyMulligan(state: GameState, playerId: PlayerId): GameState {
+  const player = state.players[playerId]
+  if (player.mulliganUsado) {
+    throw new Error(`Player ${playerId} ya usó mulligan`)
+  }
+  if (state.tramo !== 'nebulosa' || state.turno !== 1 || state.subPaso !== 'eleccion_planeta') {
+    throw new Error('Mulligan solo válido al inicio de Nebulosa, antes de elegir planeta')
+  }
+  if (player.planetElegidoActual !== undefined) {
+    throw new Error('Mulligan no permitido después de elegir planeta')
+  }
+  // Devolver mano al mazo restante, mezclar, robar 4 nuevas.
+  const merged = [...player.mazoRestante, ...player.mano]
+  const { result: shuffled, rngState } = withRng(state, (r) => shuffle(r, merged))
+  const newMano = shuffled.slice(0, MANO_INICIAL)
+  const newMazo = shuffled.slice(MANO_INICIAL)
   return {
-    state: { ...logged, outcome },
-    events: [{ type: 'GAME_OVER', outcome }],
+    ...updatePlayer(state, playerId, (p) => ({
+      ...p,
+      mano: newMano,
+      mazoRestante: newMazo,
+      mulliganUsado: true,
+    })),
+    rng: rngState,
   }
 }
 
-function handleEndPhase(state: GameState): ReducerResult {
-  const logged = appendLog(state, { type: 'END_PHASE' })
-  const events: GameEvent[] = []
-  emitEvent(events, { type: 'PHASE_END', phase: logged.phase, player: logged.activePlayer })
+function applyKeepHand(state: GameState, playerId: PlayerId): GameState {
+  // Marcar mulliganUsado=true (la mano se acepta tal cual).
+  return updatePlayer(state, playerId, (p) => ({ ...p, mulliganUsado: true }))
+}
 
-  let next = logged
-  if (logged.phase === 'eclipse') {
-    next = enforceHandCap(next, next.activePlayer)
+function applySelectPlanet(
+  state: GameState,
+  playerId: PlayerId,
+  planetId: string,
+  deps: ReducerDeps,
+): GameState {
+  if (state.subPaso !== 'eleccion_planeta') {
+    throw new Error(`SELECT_PLANET solo válido en eleccion_planeta, actual: ${state.subPaso}`)
+  }
+  const pool = state.tramo === 'nebulosa' ? state.poolPlanetasNebulosa : state.poolPlanetasEstrellas
+  if (!pool.includes(planetId)) {
+    throw new Error(`Planet ${planetId} no está en el pool del tramo ${state.tramo}`)
+  }
+  if (!deps.planets.has(planetId)) {
+    throw new Error(`Planet ${planetId} no existe en el registry`)
+  }
+  if (state.players[playerId].planetElegidoActual !== undefined) {
+    throw new Error(`Player ${playerId} ya eligió planeta este tramo`)
   }
 
-  const { nextPhase, turnEnded } = nextPhaseInfo(next.phase)
-  let nextActivePlayer = next.activePlayer
-  let nextTurn = next.turn
+  let next = updatePlayer(state, playerId, (p) => ({
+    ...p,
+    planetElegidoActual: planetId,
+    // Si no usó mulligan al llegar acá, no podrá usarlo después.
+    mulliganUsado: true,
+  }))
 
-  if (turnEnded) {
-    nextActivePlayer = opponentOf(next.activePlayer)
-    nextTurn = next.turn + 1
-    emitEvent(events, { type: 'TURN_START', turn: nextTurn, player: nextActivePlayer })
+  // Si ambos eligieron, avanzar a sub-paso 'robo' del turno actual.
+  const bothChose =
+    next.players.a.planetElegidoActual !== undefined &&
+    next.players.b.planetElegidoActual !== undefined
+  if (bothChose) {
+    next = { ...next, subPaso: 'robo' }
+  }
+  return next
+}
+
+function applyDrawBoth(state: GameState): GameState {
+  if (state.subPaso !== 'robo') {
+    throw new Error(`DRAW_BOTH solo válido en sub-paso robo, actual: ${state.subPaso}`)
+  }
+  let next = state
+  for (const playerId of ['a', 'b'] as const) {
+    const player = next.players[playerId]
+    if (player.mazoRestante.length === 0) continue // decking out no aplica en v4.1
+    const [head, ...rest] = player.mazoRestante
+    next = updatePlayer(next, playerId, (p) => ({
+      ...p,
+      mano: capHand([...p.mano, head!]),
+      mazoRestante: rest,
+    }))
+  }
+  return {
+    ...next,
+    energiaActual: state.turno, // base, getEnergiaParaJugador agrega bonus
+    subPaso: 'accion_pendiente',
+  }
+}
+
+function applyPlayHidden(
+  state: GameState,
+  playerId: PlayerId,
+  cardId: string,
+  deps: ReducerDeps,
+): GameState {
+  if (state.subPaso !== 'accion_pendiente') {
+    throw new Error(`PLAY_HIDDEN solo válido en accion_pendiente`)
+  }
+  const player = state.players[playerId]
+  if (!player.mano.includes(cardId)) {
+    throw new Error(`Card ${cardId} no está en la mano de ${playerId}`)
+  }
+  const card = deps.cards.get(cardId)
+  if (!card) {
+    throw new Error(`Card ${cardId} no existe en el registry`)
+  }
+  if (state.accionesPendientes[playerId] !== undefined || state.paseDeclarado[playerId] === true) {
+    throw new Error(`Player ${playerId} ya jugó/pasó este turno`)
+  }
+  const energia = getEnergiaParaJugador(state, playerId)
+  if (card.coste > energia) {
+    throw new Error(
+      `Card ${cardId} cuesta ${card.coste} pero ${playerId} tiene ${energia} energía`,
+    )
   }
 
-  emitEvent(events, { type: 'PHASE_START', phase: nextPhase, player: nextActivePlayer })
-
+  let next: GameState = updatePlayer(state, playerId, (p) => ({
+    ...p,
+    mano: p.mano.filter((id) => id !== cardId),
+  }))
   next = {
     ...next,
-    phase: nextPhase,
-    turn: nextTurn,
-    activePlayer: nextActivePlayer,
+    accionesPendientes: { ...next.accionesPendientes, [playerId]: cardId },
   }
-
-  if (turnEnded) {
-    const ts = applyTurnStart(next, nextActivePlayer)
-    next = ts.state
-    for (const e of ts.events) events.push(e)
-  }
-
-  return { state: next, events }
+  return advanceIfBothActed(next)
 }
 
-function enforceHandCap(state: GameState, player: PlayerId): GameState {
-  const p = state.players[player]
-  if (p.hand.length <= HAND_CAP) return state
-  const keep = p.hand.slice(0, HAND_CAP)
-  const discarded = p.hand.slice(HAND_CAP)
-  return setPlayer(state, player, {
-    ...p,
-    hand: keep,
-    graveyard: [...p.graveyard, ...discarded],
-  })
+function applyPass(state: GameState, playerId: PlayerId): GameState {
+  if (state.subPaso !== 'accion_pendiente') {
+    throw new Error(`PASS_TURN solo válido en accion_pendiente`)
+  }
+  if (state.accionesPendientes[playerId] !== undefined || state.paseDeclarado[playerId] === true) {
+    throw new Error(`Player ${playerId} ya jugó/pasó este turno`)
+  }
+  const next: GameState = {
+    ...state,
+    paseDeclarado: { ...state.paseDeclarado, [playerId]: true },
+  }
+  return advanceIfBothActed(next)
 }
 
-function handlePlayCard(state: GameState, cardId: string): ReducerResult {
-  if (state.phase !== 'despliegue') return { state, events: [] }
-  const player = state.activePlayer
-  const ps = state.players[player]
-  const idx = ps.hand.findIndex((c) => c.id === cardId)
-  if (idx < 0) return { state, events: [] }
-  const card = ps.hand[idx]
-  if (!card) return { state, events: [] }
-  if (card.cost > ps.energy) return { state, events: [] }
-
-  if (card.type === 'ship') {
-    if (card.strength === undefined || card.hp === undefined) return { state, events: [] }
-    return playShipCard(state, ps, card, idx, player)
+function advanceIfBothActed(state: GameState): GameState {
+  const aActed =
+    state.accionesPendientes.a !== undefined || state.paseDeclarado.a === true
+  const bActed =
+    state.accionesPendientes.b !== undefined || state.paseDeclarado.b === true
+  if (aActed && bActed) {
+    return { ...state, subPaso: 'premonicion_pendiente' }
   }
-  if (card.type === 'relic' || card.type === 'tech') {
-    return playPermanentCard(state, ps, card, idx, player)
-  }
-  return { state, events: [] }
+  return state
 }
 
-function playShipCard(
+function applyDeclarePremonicion(
   state: GameState,
-  ps: PlayerState,
-  card: Card,
-  idx: number,
-  player: PlayerId,
-): ReducerResult {
-  if (card.strength === undefined || card.hp === undefined) return { state, events: [] }
-  const rng = createRng(state.seed, state.rng)
-  const instanceId = `ship_${rng.nextId()}`
-  // Mareo de invocación: por defecto la nave entra summoningSickness=true,
-  // salvo que tenga keyword Embate.
-  const hasEmbate = card.keywords.includes(KW_EMBATE)
-  const ship: ShipInstance = {
-    instanceId,
-    cardId: card.id,
-    controller: player,
-    strength: card.strength,
-    maxHp: card.hp,
-    hp: card.hp,
-    damageTaken: 0,
-    keywords: card.keywords,
-    summoningSickness: !hasEmbate,
+  playerId: PlayerId,
+  categoria: Categoria,
+): GameState {
+  if (state.subPaso !== 'premonicion_pendiente') {
+    throw new Error(`DECLARE_PREMONICION solo válido en premonicion_pendiente`)
   }
-  let next = setPlayer(state, player, {
-    ...ps,
-    hand: [...ps.hand.slice(0, idx), ...ps.hand.slice(idx + 1)],
-    fleet: [...ps.fleet, ship],
-    energy: ps.energy - card.cost,
-  })
-  next = { ...next, rng: rng.snapshot() }
-  const events: GameEvent[] = [{ type: 'CARD_PLAYED', cardId: card.id, player }]
-  for (const ability of card.abilities) {
-    if (ability.trigger.kind !== 'on_play') continue
-    const result = executeEffect(ability.effect, next, {
-      controller: player,
-      selfShipId: instanceId,
-      sourceCardId: card.id,
-    })
-    next = result.state
-    for (const e of result.emit) events.push(e)
+  if (state.premoniciones[playerId] !== undefined) {
+    throw new Error(`Player ${playerId} ya declaró premonición este turno`)
   }
-  return {
-    state: appendLog(next, { type: 'PLAY_CARD', cardId: card.id }),
-    events,
-  }
-}
-
-function playPermanentCard(
-  state: GameState,
-  ps: PlayerState,
-  card: Card,
-  idx: number,
-  player: PlayerId,
-): ReducerResult {
-  const rng = createRng(state.seed, state.rng)
-  const instanceId = `${card.type}_${rng.nextId()}`
-  const permanent: ShipInstance = {
-    instanceId,
-    cardId: card.id,
-    controller: player,
-    strength: 0,
-    maxHp: 0,
-    hp: 0,
-    damageTaken: 0,
-    keywords: card.keywords,
-  }
-  const zone = card.type === 'relic' ? 'relicsInPlay' : 'techInPlay'
   let next: GameState = {
     ...state,
-    rng: rng.snapshot(),
-    players: {
-      ...state.players,
-      [player]: {
-        ...ps,
-        hand: [...ps.hand.slice(0, idx), ...ps.hand.slice(idx + 1)],
-        [zone]: [...ps[zone], permanent],
-        energy: ps.energy - card.cost,
-      },
-    },
+    premoniciones: { ...state.premoniciones, [playerId]: categoria },
   }
-  for (const ability of card.abilities) {
-    if (ability.trigger.kind !== 'continuous') continue
-    if (ability.effect.op === 'keyword_amplifier') {
-      next = {
-        ...next,
-        keywordAmplifiers: [
-          ...next.keywordAmplifiers,
-          {
-            source: instanceId,
-            controller: player,
-            keyword: ability.effect.keyword,
-            deltaBonus: ability.effect.deltaBonus,
-          },
-        ],
-      }
-    } else if (ability.effect.op === 'cost_modifier') {
-      next = {
-        ...next,
-        costModifiers: [
-          ...next.costModifiers,
-          {
-            source: instanceId,
-            scope: 'refluencia',
-            target: { keyword: ability.effect.target.keyword },
-            amount: ability.effect.delta,
-            minCost: ability.effect.minCost,
-          },
-        ],
-      }
-    }
+  if (next.premoniciones.a !== undefined && next.premoniciones.b !== undefined) {
+    next = { ...next, subPaso: 'revelar' }
   }
-  const events: GameEvent[] = [{ type: 'CARD_PLAYED', cardId: card.id, player }]
-  for (const ability of card.abilities) {
-    if (ability.trigger.kind !== 'on_play') continue
-    const result = executeEffect(ability.effect, next, {
-      controller: player,
-      selfShipId: instanceId,
-      sourceCardId: card.id,
+  return next
+}
+
+// ===== REVEAL ==============================================================
+
+function applyReveal(state: GameState, deps: ReducerDeps): GameState {
+  if (state.subPaso !== 'revelar') {
+    throw new Error(`REVEAL solo válido en revelar`)
+  }
+  if (state.premoniciones.a === undefined || state.premoniciones.b === undefined) {
+    throw new Error(`No se puede REVEAL sin ambas premoniciones declaradas`)
+  }
+
+  const cardIdA = state.accionesPendientes.a
+  const cardIdB = state.accionesPendientes.b
+  const cardA = cardIdA ? deps.cards.get(cardIdA) : undefined
+  const cardB = cardIdB ? deps.cards.get(cardIdB) : undefined
+
+  // 1. Interpretar ambas cartas (puro, no toca atributos todavía).
+  const resultA = cardA ? interpretCard(state, 'a', cardA, deps) : undefined
+  const resultB = cardB ? interpretCard(state, 'b', cardB, deps) : undefined
+
+  // 1b. Bonus Würon Despertada: +1 a la fuerza si MI premonición acertó la
+  //     categoría jugada por el OPONENTE (info que requiere el segundo pase).
+  let fuerzaA = resultA?.fuerzaFinal ?? 0
+  let fuerzaB = resultB?.fuerzaFinal ?? 0
+  if (resultA) {
+    fuerzaA += aplicarBonusWuronDespertada({
+      heroEstado: state.players.a.heroEstado,
+      raza: state.players.a.raza,
+      miPremonicion: state.premoniciones.a!,
+      categoriaJugadaPorOponente: resultB?.categoria,
     })
-    next = result.state
-    for (const e of result.emit) events.push(e)
   }
-  return {
-    state: appendLog(next, { type: 'PLAY_CARD', cardId: card.id }),
-    events,
-  }
-}
-
-/**
- * Combate v3.0: ship vs ship es simultáneo; ship vs homeworld no tiene retorno.
- *
- * Reglas:
- *  - Mareo de invocación: nave con summoningSickness=true no puede atacar
- *    (salvo Embate, que ya se manejó al entrar al campo).
- *  - Una nave sólo puede atacar 1 vez por turno (hasAttackedThisTurn).
- *  - Bastión: si el defensor tiene una nave con Bastión, el atacante DEBE
- *    apuntar a esa nave antes que a otras o al mundo natal.
- *  - Desgarro: si la fuerza del atacante > HP del defensor (ship), el exceso
- *    pasa al mundo natal.
- */
-function handleDeclareAttack(
-  state: GameState,
-  attackerShipId: ShipInstanceId,
-  target: AttackTarget,
-): ReducerResult {
-  if (state.phase !== 'combate') return { state, events: [] }
-  const attackerInfo = findShipById(state, attackerShipId)
-  if (!attackerInfo || attackerInfo.ownerId !== state.activePlayer) return { state, events: [] }
-  const attacker = attackerInfo.ship
-  // Mareo de invocación: la nave no puede atacar.
-  if (attacker.summoningSickness) return { state, events: [] }
-  // Una nave sólo puede atacar 1 vez por turno.
-  if (attacker.hasAttackedThisTurn) return { state, events: [] }
-
-  const defenderId: PlayerId = opponentOf(state.activePlayer)
-  const defenderState = state.players[defenderId]
-
-  // Bastión enforcement.
-  const bastions = defenderState.fleet.filter((s) => s.keywords.includes(KW_BASTION))
-  if (bastions.length > 0) {
-    const isBastion =
-      target.kind === 'ship' && bastions.some((b) => b.instanceId === target.ref)
-    if (!isBastion) return { state, events: [] }
-  }
-
-  let next = appendLog(state, { type: 'DECLARE_ATTACK', attackerShipId, target })
-  const events: GameEvent[] = []
-
-  // Marcar atacante como "ya atacó" inmediatamente (antes de aplicar daño,
-  // así si la nave se autodaña en su propio trigger no bug-loop).
-  next = replaceShip(next, attackerInfo.ownerId, attacker.instanceId, {
-    ...attacker,
-    hasAttackedThisTurn: true,
-  })
-
-  // Fuerza efectiva del atacante congelada al inicio del combate.
-  const attackerEffStrength = getEffectiveStrength(attacker, state)
-
-  // Emit SHIP_ATTACKED al inicio.
-  const defenderRef: ShipInstanceId | PlayerId =
-    target.kind === 'ship' ? (target.ref as ShipInstanceId) : defenderId
-  const attackedEvent: GameEvent = {
-    type: 'SHIP_ATTACKED',
-    attackerId: attackerShipId,
-    defenderId: defenderRef,
-  }
-  events.push(attackedEvent)
-  next = processEventWithCascade(next, attackedEvent, events)
-
-  if (target.kind === 'homeworld') {
-    if (target.ref !== defenderId) return { state, events: [] }
-    const dmg = damageHomeworld(next, defenderId, attackerEffStrength, attackerShipId)
-    next = dmg.state
-    for (const e of dmg.events) {
-      events.push(e)
-      next = processEventWithCascade(next, e, events)
-    }
-  } else {
-    const defInfo = findShipById(next, target.ref as ShipInstanceId)
-    if (!defInfo || defInfo.ownerId !== defenderId) return { state, events: [] }
-    const defender = defInfo.ship
-    const defenderEffStrength = getEffectiveStrength(defender, state)
-    const atkResult = applyDamageToShip(
-      // Re-lookup attacker en next, ya tiene hasAttackedThisTurn=true.
-      next.players[attackerInfo.ownerId].fleet.find((s) => s.instanceId === attacker.instanceId) ??
-        attacker,
-      defenderEffStrength,
-    )
-    const defResult = applyDamageToShip(defender, attackerEffStrength)
-    next = replaceShip(next, attackerInfo.ownerId, attacker.instanceId, atkResult.ship)
-    next = replaceShip(next, defInfo.ownerId, defender.instanceId, defResult.ship)
-
-    const defDamagedEvent: GameEvent = {
-      type: 'SHIP_DAMAGED',
-      shipId: defender.instanceId,
-      amount: attackerEffStrength,
-      source: attackerShipId,
-    }
-    events.push(defDamagedEvent)
-    next = processEventWithCascade(next, defDamagedEvent, events)
-
-    const atkDamagedEvent: GameEvent = {
-      type: 'SHIP_DAMAGED',
-      shipId: attacker.instanceId,
-      amount: defenderEffStrength,
-      source: defender.instanceId,
-    }
-    events.push(atkDamagedEvent)
-    next = processEventWithCascade(next, atkDamagedEvent, events)
-
-    // Desgarro: si atacante tiene Desgarro y mata al defensor con exceso, pasa al natal.
-    if (defResult.destroyed && attacker.keywords.includes(KW_DESGARRO)) {
-      const excess = attackerEffStrength - defender.hp
-      if (excess > 0) {
-        const dmg = damageHomeworld(next, defenderId, excess, attackerShipId)
-        next = dmg.state
-        for (const e of dmg.events) {
-          events.push(e)
-          next = processEventWithCascade(next, e, events)
-        }
-      }
-    }
-
-    if (atkResult.destroyed) {
-      const k = killShip(next, attackerInfo.ownerId, atkResult.ship)
-      next = k.state
-      for (const e of k.events) {
-        events.push(e)
-        next = processEventWithCascade(next, e, events)
-      }
-    }
-    if (defResult.destroyed) {
-      const k = killShip(next, defInfo.ownerId, defResult.ship)
-      next = k.state
-      for (const e of k.events) {
-        events.push(e)
-        next = processEventWithCascade(next, e, events)
-      }
-    }
-  }
-
-  const over = checkGameOver(next)
-  next = over.state
-  for (const e of over.events) events.push(e)
-
-  return { state: next, events }
-}
-
-/**
- * v3.0.3 — Activa una carta con keyword `ignicion` sacrificando una nave
- * Tezhal aliada (mandatory).
- */
-function handleActivateIgnicion(
-  state: GameState,
-  cardId: string,
-  sacrificeShipId: ShipInstanceId,
-): ReducerResult {
-  if (state.phase !== 'despliegue') return { state, events: [] }
-  const player = state.activePlayer
-  const ps = state.players[player]
-  const idx = ps.hand.findIndex((c) => c.id === cardId)
-  if (idx < 0) return { state, events: [] }
-  const card = ps.hand[idx]
-  if (!card || !card.keywords.includes(KW_IGNICION)) return { state, events: [] }
-  if (card.cost > ps.energy) return { state, events: [] }
-  const sacrificeShip = ps.fleet.find((s) => s.instanceId === sacrificeShipId)
-  if (!sacrificeShip) return { state, events: [] }
-  const sacCard = state.cardRegistry[sacrificeShip.cardId]
-  if (!sacCard || sacCard.race !== RACE_TEZHAL) return { state, events: [] }
-
-  let next = setPlayer(state, player, {
-    ...ps,
-    hand: [...ps.hand.slice(0, idx), ...ps.hand.slice(idx + 1)],
-    energy: ps.energy - card.cost,
-    graveyard: [...ps.graveyard, card],
-  })
-  const events: GameEvent[] = [{ type: 'CARD_PLAYED', cardId, player }]
-
-  for (const ability of card.abilities) {
-    if (ability.trigger.kind !== 'on_play') continue
-    const result = executeEffect(ability.effect, next, {
-      controller: player,
-      sourceCardId: card.id,
-      chosenTargets: [sacrificeShipId],
+  if (resultB) {
+    fuerzaB += aplicarBonusWuronDespertada({
+      heroEstado: state.players.b.heroEstado,
+      raza: state.players.b.raza,
+      miPremonicion: state.premoniciones.b!,
+      categoriaJugadaPorOponente: resultA?.categoria,
     })
-    next = result.state
-    for (const e of result.emit) {
-      events.push(e)
-      next = processEventWithCascade(next, e, events)
+  }
+
+  // 2. Aplicar anulaciones cruzadas: side effect 'anula' de A le resta fuerza a B y viceversa.
+  if (resultA) {
+    for (const eff of resultA.sideEffects) {
+      if (eff.tipo === 'anula' && eff.target === 'oponente') {
+        fuerzaB = Math.max(0, fuerzaB - eff.valor)
+      }
+    }
+  }
+  if (resultB) {
+    for (const eff of resultB.sideEffects) {
+      if (eff.tipo === 'anula' && eff.target === 'oponente') {
+        fuerzaA = Math.max(0, fuerzaA - eff.valor)
+      }
+    }
+  }
+
+  // 3. Aplicar Eclipse ×2 (después de anulaciones, antes de sumar a atributos).
+  if (state.eclipseInvocado && state.eclipseInvocador === 'a') {
+    fuerzaA *= 2
+  }
+  if (state.eclipseInvocado && state.eclipseInvocador === 'b') {
+    fuerzaB *= 2
+  }
+
+  // 4. Sumar fuerza a atributos del jugador correspondiente.
+  let next = state
+  if (resultA) {
+    const key = categoriaToAtributo(resultA.categoria)
+    next = updatePlayer(next, 'a', (p) => ({
+      ...p,
+      atributos: { ...p.atributos, [key]: p.atributos[key] + fuerzaA },
+    }))
+  }
+  if (resultB) {
+    const key = categoriaToAtributo(resultB.categoria)
+    next = updatePlayer(next, 'b', (p) => ({
+      ...p,
+      atributos: { ...p.atributos, [key]: p.atributos[key] + fuerzaB },
+    }))
+  }
+
+  // 5. Aplicar side effects no-anula (descarte, robo).
+  if (resultA) {
+    next = applyNonAnularSideEffects(next, 'a', resultA.sideEffects)
+  }
+  if (resultB) {
+    next = applyNonAnularSideEffects(next, 'b', resultB.sideEffects)
+  }
+
+  // 6. Mover cartas reveladas al pozo.
+  if (cardIdA) {
+    next = updatePlayer(next, 'a', (p) => ({ ...p, pozo: [...p.pozo, cardIdA] }))
+  }
+  if (cardIdB) {
+    next = updatePlayer(next, 'b', (p) => ({ ...p, pozo: [...p.pozo, cardIdB] }))
+  }
+
+  // 7. Cleanup del turno.
+  next = {
+    ...next,
+    accionesPendientes: {},
+    premoniciones: {},
+    paseDeclarado: {},
+  }
+
+  // 8. Eclipse fuerza el final.
+  if (next.eclipseInvocado) {
+    next = { ...next, subPaso: 'duelo_final' }
+    return applyEndGame(next)
+  }
+
+  // 9. Cierre de tramo si fue el último turno.
+  const isLastTurnOfTramo =
+    (next.tramo === 'nebulosa' && next.turno === 2) ||
+    (next.tramo === 'estrellas' && next.turno === 4)
+  if (isLastTurnOfTramo) {
+    return { ...next, subPaso: 'cierre_tramo' }
+  }
+
+  // 10. Fin del turno 7 sin Eclipse → duelo final.
+  if (next.turno === 7) {
+    next = { ...next, subPaso: 'duelo_final' }
+    return applyEndGame(next)
+  }
+
+  // 11. Avanzar al siguiente turno.
+  return {
+    ...next,
+    turno: next.turno + 1,
+    subPaso: 'robo',
+  }
+}
+
+function interpretCard(
+  state: GameState,
+  ownerId: PlayerId,
+  card: CardActionDef,
+  deps: ReducerDeps,
+): InterpretResult {
+  const owner = state.players[ownerId]
+  const planetId = owner.planetElegidoActual
+  const planet = planetId ? deps.planets.get(planetId) : undefined
+  const input: InterpretInput = {
+    card,
+    miPremonicion: state.premoniciones[ownerId]!,
+    oponentePremonicion: state.premoniciones[otherPlayer(ownerId)]!,
+    planetElegido: planet,
+    tramo: state.tramo,
+    heroEstado: owner.heroEstado,
+    raza: owner.raza,
+    owner: ownerId,
+  }
+  return interpretCondicionales(input)
+}
+
+function applyNonAnularSideEffects(
+  state: GameState,
+  sourceOwner: PlayerId,
+  sideEffects: SideEffect[],
+): GameState {
+  let next = state
+  for (const eff of sideEffects) {
+    if (eff.tipo === 'anula') continue // ya aplicado en pre-cálculo
+    const target: PlayerId = eff.target === 'propio' ? sourceOwner : otherPlayer(sourceOwner)
+    if (eff.tipo === 'descarte') {
+      next = discardCardsFromHand(next, target, eff.valor)
+    } else if (eff.tipo === 'robo') {
+      next = drawCardsToHand(next, target, eff.valor)
+    }
+  }
+  return next
+}
+
+function discardCardsFromHand(state: GameState, playerId: PlayerId, n: number): GameState {
+  return updatePlayer(state, playerId, (p) => {
+    const descartadas = p.mano.slice(0, n)
+    const remaining = p.mano.slice(n)
+    return { ...p, mano: remaining, pozo: [...p.pozo, ...descartadas] }
+  })
+}
+
+function drawCardsToHand(state: GameState, playerId: PlayerId, n: number): GameState {
+  let next = state
+  for (let i = 0; i < n; i++) {
+    const player = next.players[playerId]
+    if (player.mazoRestante.length === 0) break
+    const [head, ...rest] = player.mazoRestante
+    next = updatePlayer(next, playerId, (p) => ({
+      ...p,
+      mano: capHand([...p.mano, head!]),
+      mazoRestante: rest,
+    }))
+  }
+  return next
+}
+
+// ===== CIERRE TRAMO ========================================================
+
+function applyCloseTramo(state: GameState, deps: ReducerDeps): GameState {
+  if (state.subPaso !== 'cierre_tramo') {
+    throw new Error(`CLOSE_TRAMO solo válido en cierre_tramo`)
+  }
+  // Per jugador independientemente: comparar SU atributo del planeta-elegido
+  // contra el atributo del oponente en la MISMA categoría.
+  let next = state
+  for (const playerId of ['a', 'b'] as const) {
+    const player = next.players[playerId]
+    if (!player.planetElegidoActual) {
+      throw new Error(`Player ${playerId} no tiene planeta elegido en cierre de tramo`)
+    }
+    const planet = deps.planets.get(player.planetElegidoActual)
+    if (!planet) {
+      throw new Error(`Planet ${player.planetElegidoActual} no en registry`)
+    }
+    const atributoKey = categoriaToAtributo(planet.categoria)
+    const miValor = player.atributos[atributoKey]
+    const oponenteValor = next.players[otherPlayer(playerId)].atributos[atributoKey]
+    if (miValor > oponenteValor) {
+      next = updatePlayer(next, playerId, (p) => ({
+        ...p,
+        heroEstado: avanzarHeroEstado(p.heroEstado),
+      }))
+    }
+    // Si <= empate o menor: NO avanza.
+  }
+  // Reset planetElegidoActual para el siguiente tramo.
+  next = updatePlayer(next, 'a', (p) => ({ ...p, planetElegidoActual: undefined }))
+  next = updatePlayer(next, 'b', (p) => ({ ...p, planetElegidoActual: undefined }))
+
+  // Avanzar tramo + turno.
+  if (next.tramo === 'nebulosa') {
+    return { ...next, tramo: 'estrellas', turno: 3, subPaso: 'eleccion_planeta' }
+  } else if (next.tramo === 'estrellas') {
+    return { ...next, tramo: 'sexto_sol', turno: 5, subPaso: 'robo' }
+  }
+  return next
+}
+
+// ===== ECLIPSE =============================================================
+
+function applyInvokeEclipse(state: GameState, playerId: PlayerId): GameState {
+  if (state.tramo !== 'sexto_sol') {
+    throw new Error(`Eclipse solo en Sexto Sol`)
+  }
+  if (state.eclipseInvocado) {
+    throw new Error(`Eclipse ya invocado`)
+  }
+  // Eclipse se invoca al INICIO del turno antes de jugar acción (sub-paso accion_pendiente
+  // o premonicion_pendiente — práctico para UI: el jugador puede invocar antes de
+  // comprometerse con su acción).
+  if (state.subPaso !== 'accion_pendiente' && state.subPaso !== 'premonicion_pendiente') {
+    throw new Error(`Eclipse se invoca en accion_pendiente o premonicion_pendiente`)
+  }
+  // El oponente roba 1 extra antes de jugar su acción.
+  const next = drawCardsToHand(state, otherPlayer(playerId), 1)
+  return { ...next, eclipseInvocado: true, eclipseInvocador: playerId }
+}
+
+// ===== END GAME ============================================================
+
+function applyEndGame(state: GameState): GameState {
+  const a = state.players.a.atributos
+  const b = state.players.b.atributos
+
+  let tallyA = 0
+  let tallyB = 0
+  if (a.fuerza > b.fuerza) tallyA++
+  else if (b.fuerza > a.fuerza) tallyB++
+  if (a.resguardo > b.resguardo) tallyA++
+  else if (b.resguardo > a.resguardo) tallyB++
+  if (a.resonancia > b.resonancia) tallyA++
+  else if (b.resonancia > a.resonancia) tallyB++
+
+  let ganador: PlayerId | 'empate'
+  if (tallyA >= 2 && tallyA > tallyB) ganador = 'a'
+  else if (tallyB >= 2 && tallyB > tallyA) ganador = 'b'
+  else {
+    // Tiebreakers (§10.1).
+    const sumA = a.fuerza + a.resguardo + a.resonancia
+    const sumB = b.fuerza + b.resguardo + b.resonancia
+    if (sumA > sumB) ganador = 'a'
+    else if (sumB > sumA) ganador = 'b'
+    else {
+      const orden = (e: HeroEstado) => (e === 'ascendido' ? 2 : e === 'despertado' ? 1 : 0)
+      if (orden(state.players.a.heroEstado) > orden(state.players.b.heroEstado)) ganador = 'a'
+      else if (orden(state.players.b.heroEstado) > orden(state.players.a.heroEstado)) ganador = 'b'
+      else ganador = 'empate'
     }
   }
 
   return {
-    state: appendLog(next, { type: 'ACTIVATE_IGNICION', cardId, sacrificeShipId }),
-    events,
-  }
-}
-
-/**
- * v3.0.3 — Revival via Refluencia. La nave debe estar en `pozoAstral`. El
- * costo es card.cost - mods aplicables (clamp mínimo 1).
- */
-function handlePayRefluencia(state: GameState, shipId: ShipInstanceId): ReducerResult {
-  if (state.phase !== 'despliegue') return { state, events: [] }
-  const player = state.activePlayer
-  const ps = state.players[player]
-  const ship = ps.pozoAstral.find((s) => s.instanceId === shipId)
-  if (!ship) return { state, events: [] }
-  const card = state.cardRegistry[ship.cardId]
-  if (!card || card.strength === undefined || card.hp === undefined) {
-    return { state, events: [] }
-  }
-  const cost = computeRevivalCost(state, card.cost)
-  if (ps.energy < cost) return { state, events: [] }
-
-  const revivedShip: ShipInstance = {
-    ...ship,
-    strength: card.strength,
-    maxHp: card.hp,
-    hp: card.hp,
-    damageTaken: 0,
-    damagedThisTurn: false,
-    hasAttackedThisTurn: false,
-    summoningSickness: !card.keywords.includes(KW_EMBATE),
-    keywords: card.keywords,
-    revivedFromRefluencia: true,
-  }
-
-  const next = setPlayer(state, player, {
-    ...ps,
-    energy: ps.energy - cost,
-    pozoAstral: ps.pozoAstral.filter((s) => s.instanceId !== shipId),
-    fleet: [...ps.fleet, revivedShip],
-  })
-  return {
-    state: appendLog(next, { type: 'PAY_REFLUENCIA', shipId }),
-    events: [{ type: 'CARD_PLAYED', cardId: card.id, player }],
-  }
-}
-
-function computeRevivalCost(state: GameState, baseCost: number): number {
-  let cost = baseCost
-  let minCost = 1
-  for (const mod of state.costModifiers) {
-    if (mod.scope !== 'refluencia') continue
-    if (mod.target.keyword !== KW_REFLUENCIA) continue
-    cost += mod.amount
-    if (mod.minCost > minCost) minCost = mod.minCost
-  }
-  return Math.max(minCost, cost)
-}
-
-/**
- * Apply pure: aplica una acción al state, devuelve el nuevo state + eventos
- * que emitió la acción.
- */
-export function apply(state: GameState, action: GameAction): ReducerResult {
-  if (state.outcome.kind !== 'in_progress') {
-    return { state, events: [] }
-  }
-  switch (action.type) {
-    case 'CONCEDE':
-      return handleConcede(state, action.player)
-    case 'END_PHASE':
-      return handleEndPhase(state)
-    case 'PLAY_CARD':
-      return handlePlayCard(state, action.cardId)
-    case 'DECLARE_ATTACK':
-      return handleDeclareAttack(state, action.attackerShipId, action.target)
-    case 'ACTIVATE_ABILITY':
-      // Phase 3+ implementará habilidades activadas explícitas. No-op por ahora.
-      return { state, events: [] }
-    case 'ACTIVATE_IGNICION':
-      return handleActivateIgnicion(state, action.cardId, action.sacrificeShipId)
-    case 'PAY_REFLUENCIA':
-      return handlePayRefluencia(state, action.shipId)
+    ...state,
+    subPaso: 'terminado',
+    ganador,
+    finalTally: { a: tallyA, b: tallyB },
   }
 }

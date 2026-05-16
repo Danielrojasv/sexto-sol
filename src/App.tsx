@@ -1,28 +1,10 @@
-import { useGameStore } from './store/gameStore'
-import { CardCatalog } from './ui/CardCatalog'
-import { HomeView } from './ui/HomeView'
-import { PlayView } from './ui/PlayView'
+// Stub temporal — Phase 1 (engine-only). UI completa se construye en Phase 3.
 
-export function App() {
-  const view = useGameStore((s) => s.view)
-  const setView = useGameStore((s) => s.setView)
-
-  if (view === 'cards') {
-    return (
-      <div>
-        <button
-          onClick={() => setView('home')}
-          className="fixed top-4 right-4 z-10 px-3 py-1.5 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-200"
-        >
-          ← Home
-        </button>
-        <CardCatalog />
-      </div>
-    )
-  }
-
-  if (view === 'play') return <PlayView />
-
-  // 'home' or 'gameover' (gameover handled in PR-H3)
-  return <HomeView />
+export default function App() {
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
+      <h1>Sexto Sol</h1>
+      <p>Engine v4.1 — UI pendiente (Phase 3 del refactor engine-v4.1-migration).</p>
+    </div>
+  )
 }

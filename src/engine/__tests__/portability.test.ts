@@ -11,11 +11,7 @@ import { join } from 'path'
 import { createInitialState } from '../initialState'
 
 const ENGINE_DIR = join(process.cwd(), 'src/engine')
-const PRIMITIVES_DIR = join(process.cwd(), 'src/data/primitives')
 
-/**
- * Listado recursivo de archivos .ts en un directorio, excluyendo tests.
- */
 function listTsFiles(dir: string): string[] {
   const out: string[] = []
   for (const entry of readdirSync(dir)) {
@@ -38,13 +34,8 @@ interface Violation {
   rule: string
 }
 
-/**
- * Scan estático línea por línea buscando patrones prohibidos.
- * Devuelve lista de violaciones encontradas. Lista vacía = passing.
- */
 function scanForBrowserUsage(files: string[]): Violation[] {
   const violations: Violation[] = []
-  // Imports prohibidos: librerías exclusivamente browser-side.
   const prohibitedImports: { pattern: RegExp; rule: string }[] = [
     { pattern: /from ['"]react['"]/, rule: 'no-react-import' },
     { pattern: /from ['"]react-dom['"]/, rule: 'no-react-dom-import' },
@@ -54,7 +45,6 @@ function scanForBrowserUsage(files: string[]): Violation[] {
     { pattern: /from ['"]@\/ui\//, rule: 'no-ui-import' },
     { pattern: /from ['"]@\/store\//, rule: 'no-store-import' },
   ]
-  // APIs browser prohibidas. Detectamos uso como `window.`, `document.`, etc.
   const prohibitedApis: { pattern: RegExp; rule: string }[] = [
     { pattern: /\bwindow\./, rule: 'no-window' },
     { pattern: /\bdocument\./, rule: 'no-document' },
@@ -68,8 +58,6 @@ function scanForBrowserUsage(files: string[]): Violation[] {
     const lines = readFileSync(file, 'utf8').split('\n')
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i] ?? ''
-      // Saltar comentarios single-line. Multi-line comments podrían pasar pero
-      // bajo riesgo (el formato del repo es mayoritariamente single-line).
       const trimmed = line.trim()
       if (trimmed.startsWith('//')) continue
       for (const { pattern, rule } of prohibitedImports) {
@@ -149,27 +137,20 @@ describe('engine portability — scan estático', () => {
     }
     expect(violations).toEqual([])
   })
-
-  it('src/data/primitives/spec.ts no importa librerías browser', () => {
-    const files = listTsFiles(PRIMITIVES_DIR)
-    const violations = scanForBrowserUsage(files).filter((v) =>
-      v.rule.startsWith('no-react') ||
-      v.rule === 'no-zustand-import' ||
-      v.rule === 'no-pixi-import' ||
-      v.rule === 'no-framer-import' ||
-      v.rule === 'no-ui-import' ||
-      v.rule === 'no-store-import',
-    )
-    expect(violations).toEqual([])
-  })
 })
+
+const SAMPLE_DECK = Array.from({ length: 20 }, (_, i) => `TZH-${String(i + 1).padStart(3, '0')}`)
+const SAMPLE_DECK_B = Array.from({ length: 20 }, (_, i) => `WUR-${String(i + 1).padStart(3, '0')}`)
 
 describe('engine portability — GameState serialización', () => {
   it('GameState es JSON-serializable round-trip', () => {
     const state = createInitialState({
       seed: 42,
-      p1Race: 'wuron',
-      p2Race: 'tezhal',
+      modo: 'vsIA',
+      deckA: { raza: 'Tezhal', cardIds: SAMPLE_DECK, heroId: 'HRO-TEZHAL' },
+      deckB: { raza: 'Würon', cardIds: SAMPLE_DECK_B, heroId: 'HRO-WURON' },
+      planetIdsNebulosa: ['PLN-NEB-ATQ', 'PLN-NEB-DEF', 'PLN-NEB-RIT'],
+      planetIdsEstrellas: ['PLN-EST-ATQ', 'PLN-EST-DEF', 'PLN-EST-RIT'],
     })
     const serialized = JSON.stringify(state)
     const parsed = JSON.parse(serialized)
@@ -179,8 +160,11 @@ describe('engine portability — GameState serialización', () => {
   it('GameState NO contiene Map, Set, Date, BigInt o funciones', () => {
     const state = createInitialState({
       seed: 1,
-      p1Race: 'quralan',
-      p2Race: 'zaqe',
+      modo: 'vsIA',
+      deckA: { raza: 'Tezhal', cardIds: SAMPLE_DECK, heroId: 'HRO-TEZHAL' },
+      deckB: { raza: 'Würon', cardIds: SAMPLE_DECK_B, heroId: 'HRO-WURON' },
+      planetIdsNebulosa: ['PLN-NEB-ATQ', 'PLN-NEB-DEF', 'PLN-NEB-RIT'],
+      planetIdsEstrellas: ['PLN-EST-ATQ', 'PLN-EST-DEF', 'PLN-EST-RIT'],
     })
     function checkPlainValue(v: unknown, path: string): void {
       if (v === null) return
@@ -204,29 +188,16 @@ describe('engine portability — GameState serialización', () => {
     expect(() => checkPlainValue(state, 'state')).not.toThrow()
   })
 
-  it('engine corre sin DOM (este test ejecuta en modo node-like sin window/document)', () => {
-    // El test mismo prueba esto: si vitest está corriendo el módulo con
-    // jsdom y nuestro engine usara DOM accidentalmente, fallaría al cargar.
-    // Como pasa, certifica que el engine es Node-compatible.
-    const placeholderCard = {
-      id: 'p',
-      name: 'Placeholder',
-      type: 'ship' as const,
-      race: 'wuron' as const,
-      cost: 0,
-      rarity: 'common' as const,
-      keywords: [],
-      abilities: [],
-      strength: 1,
-      hp: 1,
-    }
+  it('engine corre sin DOM', () => {
     const state = createInitialState({
-      seed: 1,
-      p1Race: 'wuron',
-      p2Race: 'tezhal',
-      p1Deck: Array.from({ length: 30 }, () => placeholderCard),
-      p2Deck: Array.from({ length: 30 }, () => placeholderCard),
+      seed: 99,
+      modo: 'vsIA',
+      deckA: { raza: 'Tezhal', cardIds: SAMPLE_DECK, heroId: 'HRO-TEZHAL' },
+      deckB: { raza: 'Würon', cardIds: SAMPLE_DECK_B, heroId: 'HRO-WURON' },
+      planetIdsNebulosa: ['PLN-NEB-ATQ', 'PLN-NEB-DEF', 'PLN-NEB-RIT'],
+      planetIdsEstrellas: ['PLN-EST-ATQ', 'PLN-EST-DEF', 'PLN-EST-RIT'],
     })
-    expect(state.outcome.kind).toBe('in_progress')
+    expect(state.tramo).toBe('nebulosa')
+    expect(state.turno).toBe(1)
   })
 })
