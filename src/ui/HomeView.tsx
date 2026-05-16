@@ -41,7 +41,7 @@ export function HomeView() {
       <div className="max-w-2xl mx-auto space-y-6">
         <header>
           <h1 className="text-4xl font-bold tracking-tight">Sexto Sol</h1>
-          <p className="text-slate-400 mt-1">El Peregrinaje del Héroe — v4.1</p>
+          <p className="text-slate-400 mt-1">Premonición como Lectura — v4.2</p>
         </header>
 
         <section className="space-y-3 bg-slate-900 p-4 rounded-lg">

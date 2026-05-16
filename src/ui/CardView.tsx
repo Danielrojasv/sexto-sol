@@ -1,5 +1,18 @@
 import { useState } from 'react'
-import type { CardActionDef, CardPlanetDef } from '@/engine/types'
+import type { CardActionDef, CardPlanetDef, SideEffectTipo } from '@/engine/types'
+
+function prettyEffectLabel(tipo: SideEffectTipo, valor: number): string {
+  switch (tipo) {
+    case 'descarte_oponente':
+      return `Rival descarta ${valor}`
+    case 'robo_propio':
+      return `Robás ${valor}`
+    case 'mirar_mazo_oponente':
+      return `Mirás ${valor} carta del mazo rival`
+    case 'bloqueo_planeta':
+      return `Bloqueo de planeta (${valor})`
+  }
+}
 
 const CAT_COLOR: Record<string, string> = {
   Ataque: 'border-red-500 bg-red-950',
@@ -43,9 +56,17 @@ export function CardView({
       <div className="text-xs text-slate-300 mt-1">
         {card.categoria} · {card.fuerzaBase} fuerza
       </div>
+      <div className="text-[10px] text-amber-300 mt-0.5">
+        Si el rival lee: -{card.penalizacionAcierto}
+      </div>
       <ul className="text-xs text-slate-300 mt-2 space-y-1">
         {card.condicionales.map((c, i) => (
           <li key={i}>· {c.efectoTexto ?? '(efecto)'}</li>
+        ))}
+        {card.sideEffects?.map((eff, i) => (
+          <li key={`se-${i}`} className="text-cyan-300">
+            ⚙ {prettyEffectLabel(eff.tipo, eff.valor)}
+          </li>
         ))}
       </ul>
       {bonusActivo && (
