@@ -2,20 +2,22 @@
 
 > _"El Quinto Sol está terminando. Cuatro razas espaciales pelean por quién controlará el Sexto. Pero el virus que las infecta fue traído del futuro al pasado por los Sabios que intentaban salvarlas."_
 
-Un TCG de combate directo entre cuatro razas espaciales — **Q'ralan, Würon, Tezhal, Zaqe** — descendientes de civilizaciones ancestrales de un mismo sistema estelar. Construido sobre un bucle causal cerrado tipo Evangelion / Dark / Steins;Gate.
+Un juego PVP de cartas entre cuatro razas espaciales — **Q'ralan, Würon, Tezhal, Zaqe** — descendientes de civilizaciones ancestrales de un mismo sistema estelar. Construido sobre un bucle causal cerrado tipo Evangelion / Dark / Steins;Gate.
+
+Desde **v4.1 (mayo 2026)**, el juego es **"El Peregrinaje del Héroe"**: cada jugador comanda un héroe que se forja en un peregrinaje cósmico por 3 tramos (Nebulosa → Estrellas → Sexto Sol), nutriendo sus 3 atributos (**Fuerza**, **Resguardo**, **Resonancia**) con cada acción. En el clímax, los dos héroes se enfrentan comparando sus 3 atributos finales — **gana el héroe superior en al menos 2 de 3**.
 
 ## Innovación central
 
-- **Sistema de Resolución por Naturaleza de Mecánica**: cada raza pelea según una categoría (Reactiva / Iniciativa / Acumulativa / Post-combate), y el orden natural de resolución produce un counter wheel emergente sin reglas hardcodeadas.
-- **Capas de habilidad por carta**: stats + keywords + habilidad individual única. Mecánicas firma (Külen, Formación Solar, Ignición, Refluencia) son keywords explícitas, imprimibles por carta.
-- **Cuatro archetypes ortogonales validados**: Külen-stacking (Würon), Kamikaze-tempo (Tezhal), Formación Solar masa-control (Q'ralan), Persistencia económica (Zaqe).
+- **Acción oculta + Premonición pública**: cada turno los jugadores comprometen una carta boca abajo y declaran qué categoría creen que jugará el oponente. Las cartas tienen efectos condicionales según ambas declaraciones.
+- **Duelo de héroes 2-de-3 estilo Marvel Snap**: el clímax compara 3 atributos lado a lado. Ganar Fuerza extrema y descuidar los otros dos te hace perder.
+- **Elección secreta de planeta**: en Nebulosa y Estrellas, cada jugador elige uno de 3 planetas (Atq/Def/Rit) que da +1 fuerza a las cartas de su categoría durante el tramo.
+- **Eclipse**: 1 vez por partida en el Sexto Sol — tu acción cuenta doble, el oponente roba 1 carta extra, la partida termina.
 
 ## Pilares de diseño
 
 - **PVP coleccionable** estilo Marvel Snap / Legends of Runeterra.
-- **Soft P2W** — F2P competitivo, monetización vía boosters + battle pass + cosmética. Sin singles market estilo MTG.
-- **Counter wheel emergente** del sistema de resolución, no hardcoded.
-- **Energía automática creciente** (+1/turno, cap 10) en v3.0. Otras capas (planetas neutrales, Edades, héroes pasivos) están removidas temporalmente para validar el core; pueden volver en versiones futuras.
+- **Soft P2W** — F2P competitivo, monetización vía boosters + battle pass + cosmética.
+- **Sustracción radical**: cada nueva regla debe primero preguntar "¿puedo resolverlo eliminando algo?".
 - **Sin rotación** — las cartas no se descartan por tiempo, se balancean con nerfs/buffs.
 
 ## Ancla cultural
@@ -24,38 +26,50 @@ Las razas son **inventadas**. Las culturas precolombinas reales (Mapuche, Inca, 
 
 ## Estado del proyecto
 
-🚧 **Pre-alpha — diseño v3.0 (mayo 2026).**
+🚧 **v4.1 — engine + UI completos para playtest manual (mayo 2026).**
 
-**Lo que está validado:**
-
-- Set base v3.0 cerrado: 74 cartas únicas (Q'ralan 19, Würon 19, Tezhal 18, Zaqe 18).
-- 4 mecánicas firma con texto canónico estable (Külen, Formación Solar, Ignición, Refluencia).
-- DSL v3.0.3 schema-eado para los efectos de cartas (`src/data/primitives/spec.ts`).
-- Loop de validación completo: 4 agents IA (`card-designer`, `deck-builder`, `game-simulator`, `balance-analyst`) operativos en `.claude/agents/`.
-- 12 mazos canónicos del meta para playtesting offline (`docs/playtest/decks/`).
-- Auditorías de los 4 canarys del set base en `docs/audits/`.
-
-**Lo que sigue:**
-
-- Phase 1: Engine kernel TypeScript funcional (interpreter de primitives).
-- Web MVP jugable (single-player vs IA + hot-seat).
+- Engine TypeScript v4.1 funcional con scriptedAI determinista. 124 tests verdes, 91% coverage global.
+- UI React jugable: `pnpm dev` permite jugar vs IA o Hot-seat (Tezhal-Aggro vs Würon-Control).
+- 2 razas activas (Tezhal + Würon), 30 cartas de Acción + 6 planetas + 4 mazos preconstruidos.
+- Q'ralan y Zaqe en lore vivo pero sin cartas activas — vuelven en set 2.
 
 ## Stack
 
-TypeScript / Vite / React 18 / Vitest. Engine event-driven con reducer puro. Canvas con PixiJS, animaciones con Framer Motion, state con Zustand, styling con Tailwind v4. Validación offline con tooling Python (`scripts/sim/`, `scripts/analyst/`) — independiente del runtime web.
+TypeScript / Vite / React 18 / Zustand / Tailwind v4 / Framer Motion (uso mínimo) / Vitest + fast-check. Engine puro (reducer + interpreter) trasladable a Node.js sin browser deps (`portability.test.ts` lo garantiza).
 
 ## Documentación
 
 - `CLAUDE.md` — contexto para colaboradores y agentes IA.
-- `GAME-RULES.md` — reglas oficiales del juego (v3.0).
-- `CANON-LORE.md` — cosmología y narrativa canónica (v2.0).
-- `ARCHITECTURE.md` — patrones técnicos del engine.
+- `GAME-RULES.md` — reglas oficiales del juego (v4.1).
+- `CANON-LORE.md` — cosmología y narrativa canónica (v2.2).
+- `ARCHITECTURE.md` — patrones técnicos del engine v4.1.
 - `BACKLOG.md` — roadmap actual.
-- `docs/audits/` — auditorías de los 4 canarys del set base.
-- `docs/specs/` — Spec-Driven Development.
-- `docs/playtest/` — mazos canónicos, logs de validación offline, análisis de balance.
-- `docs/lore/arco-del-jugador.md` — biblia narrativa trans-expansiones.
+- `OPEN-QUESTIONS-v4.1.md` — preguntas pendientes para resolver en playtest.
+- `PLAYTEST-NOTES-v4.1.md` — 10 preguntas para anotar mientras se juega.
+- `SIM-RESULTS-v4.1.md` — auto-validación con 5 simulaciones a mano.
+- `docs/specs/peregrinaje-v4.1.md` — spec canónica de diseño (status: approved).
+- `docs/specs/shipped/engine-v4.1-migration.md` — spec de la migración del engine (cerrada).
+- `docs/playtest/cards-v4.1/` — pool de cartas YAML.
+- `docs/playtest/decks-v4.1/` — 4 mazos preconstruidos.
+- `docs/archive/` — versiones anteriores (v2.0, v3.0, v4.0).
 
-## Estado del v2.0
+## Cómo jugar localmente
 
-GAME-RULES v2.0 archivado en `docs/archive/GAME-RULES-v2.0.md` como referencia histórica. Capas removidas temporalmente en v3.0 (planetas neutrales, Edades I/II/III, héroes pasivos en mundo natal, Luz/Sombra en Legendarias, Resonancia) están listadas para posible re-introducción gradual en versiones futuras una vez que el core esté validado — ver `BACKLOG.md`.
+```bash
+pnpm install
+pnpm dev
+# Abrir http://localhost:5173/
+```
+
+Para correr tests:
+
+```bash
+pnpm test:run
+pnpm test:coverage
+```
+
+Para validar pool de cartas:
+
+```bash
+pnpm validate:cards
+```

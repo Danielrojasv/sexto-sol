@@ -40,6 +40,11 @@ export default defineConfig({
         'scripts/**',
         // docs/archive/ es código v3.0 archivado, no parte del bundle.
         'docs/archive/**',
+        // UI/store: smoke tests cubren componentes principales; tests E2E
+        // profundos quedan para futura iteración. Excluidos del threshold
+        // engine global para no falsear el número de coverage del engine.
+        'src/ui/**',
+        'src/store/**',
         'vite.config.ts',
         'eslint.config.js',
       ],

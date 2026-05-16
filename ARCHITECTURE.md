@@ -1,8 +1,8 @@
 # ARCHITECTURE.md — Sexto Sol
 
-Documento técnico del engine y patrones. Vivo.
+Documento técnico del engine y patrones. Vivo. Actualizado a v4.1 ("El Peregrinaje del Héroe").
 
-> Para reglas de juego: `GAME-RULES.md`. Para diseño de alto nivel: `docs/specs/design-v0.md`.
+> Para reglas del juego: `GAME-RULES.md`. Para diseño v4.1 canónico: `docs/specs/peregrinaje-v4.1.md`. Para historia de la migración del engine: `docs/specs/shipped/engine-v4.1-migration.md`.
 
 ---
 
@@ -12,261 +12,168 @@ Documento técnico del engine y patrones. Vivo.
 
 - **Cero LLM** en el motor de reglas.
 - **Reducer puro**: `(state, action) => newState`. Mismo input → mismo output.
-- **RNG seedable**: toda aleatoriedad pasa por un PRNG con seed conocida (estilo `seedrandom` o `xorshift32`).
-- Tests de regresión pasan seeds y replays exactos.
+- **RNG seedable**: toda aleatoriedad pasa por `createRng(seed, restoreState?)` en `src/engine/rng.ts`.
+- Tests de regresión pasan con seeds conocidas (ver `src/engine/__tests__/replay.test.ts`).
 
-### Por qué este approach
+### Sustracción radical (v4.1)
 
-- Replay determinista para PVP async (envías la lista de acciones, el cliente reproduce el game state)
-- Testabilidad extrema (property tests + invariant tests con `fast-check`)
-- Anti-cheat: el server puede re-validar cualquier acción
-- Spectator mode trivial: replay desde seed + acciones
-
----
-
-## 2. Estructura del state
-
-```ts
-type GameState = {
-  seed: number // RNG seed (immutable)
-  rngState: number // current RNG state (mutable across turns)
-  turn: number // global turn counter
-  age: 1 | 2 | 3 // current Edad
-  activePlayer: 'p1' | 'p2'
-  phase: TurnPhase // 'recoleccion' | 'despliegue' | 'combate' | 'regroup' | 'vigilia'
-
-  players: {
-    p1: PlayerState
-    p2: PlayerState
-  }
-
-  sector: SectorState // tablero espacial
-  pendingEvents: GameEvent[] // event bus queue
-  log: GameAction[] // action log para replay
-}
-
-type PlayerState = {
-  race: 'quralan' | 'wuron' | 'tezhal' | 'zaqe'
-  homeworld: { hp: number; maxHp: number } // HP base 20
-  hero: HeroInstance | null // 1 héroe por mazo
-  hand: Card[]
-  deck: Card[] // ordered, top of deck = index 0
-  graveyard: Card[]
-  energy: number // gastable este turno (no acumula)
-  fleet: ShipInstance[] // naves desplegadas en el campo
-}
-
-type SectorState = {
-  planets: PlanetState[] // 3 planetas neutrales con Don revelado al setup
-}
-
-type PlanetState = {
-  id: PlanetId
-  name: string
-  gift: PlanetGift // efecto único activable (Don del Archivo, etc.)
-  exhausted: boolean // true después de activarse, hasta el próximo turno del activador
-  exhaustedBy: PlayerId | null // quién lo agotó (vuelve disponible al inicio de su turno)
-}
-
-// Categorías de mecánica que dictan el orden de resolución del event bus.
-type MechanicCategory = 'reactive' | 'initiative' | 'accumulative' | 'post_combat'
-
-type Age = 1 | 2 | 3 // I, II, III; transición global en turnos 5 y 9
-```
+- v4.1 eliminó del engine v3.0: event bus complejo, Strategy Pattern por raza, primitives DSL, keywords (Bastión/Embate/etc.), combate con HP, 5 fases por turno, counter wheel por categoría de mecánica.
+- También se desinstaló `pixi.js` (v4.1 visualmente simple — DOM + Tailwind alcanzan).
+- Lo que queda: reducer puro + interpreter + scriptedAI + loaders + UI React/Zustand/framer-motion.
 
 ---
 
-## 3. Acciones (lo que el jugador puede hacer)
+## 2. Estructura del state (v4.1)
 
 ```ts
-type GameAction =
-  | { type: 'PLAY_CARD'; cardId: string; targets?: Target[] }
-  | { type: 'DECLARE_ATTACK'; attackerShipId: string; target: Target } // sin DECLARE_BLOCK — bloqueo solo via Bastión
-  | { type: 'ACTIVATE_PLANET'; planetId: PlanetId } // activa Don del planeta, agota
-  | { type: 'ACTIVATE_HERO_POWER'; abilityId: string } // hero power Edad I+
-  | { type: 'DEPLOY_HERO' } // Edad II+
-  | { type: 'ACTIVATE_ABILITY'; sourceId: string; abilityId: string }
-  | { type: 'END_PHASE' }
-  | { type: 'CONCEDE'; player: 'p1' | 'p2' }
-```
+interface GameState {
+  seed: number
+  rng: RngState
+  tramo: 'nebulosa' | 'estrellas' | 'sexto_sol'
+  turno: number // 1-7
+  subPaso:
+    | 'eleccion_planeta'
+    | 'robo'
+    | 'accion_pendiente'
+    | 'premonicion_pendiente'
+    | 'revelar'
+    | 'cierre_tramo'
+    | 'duelo_final'
+    | 'terminado'
+  jugadorActivo: 'a' | 'b'
+  players: { a: Player; b: Player }
+  poolPlanetasNebulosa: string[] // 3 ids
+  poolPlanetasEstrellas: string[] // 3 ids
+  energiaActual: number // = turno (base)
+  premoniciones: { a?: Categoria; b?: Categoria }
+  accionesPendientes: { a?: string; b?: string } // cardIds boca abajo
+  paseDeclarado: { a?: boolean; b?: boolean }
+  eclipseInvocado: boolean
+  eclipseInvocador?: 'a' | 'b'
+  modo: 'vsIA' | 'hotseat'
+  ganador?: 'a' | 'b' | 'empate'
+  finalTally?: { a: number; b: number }
+}
 
-El reducer aplica una acción y devuelve `{ newState, eventsTriggered }`. Los eventos se procesan después por el event bus.
-
----
-
-## 4. Event bus + Resolución por Naturaleza de Mecánica
-
-Habilidades triggered escuchan eventos. Cuando un evento ocurre, todas las habilidades suscriptas se evalúan **en orden de categoría de mecánica**:
-
-1. **Reactive** (Würon)
-2. **Initiative** (Tezhal)
-3. **Accumulative** (Q'ralan)
-4. **Post-combat** (Zaqe)
-
-Este orden es la regla central del juego. Produce el counter wheel emergente sin lógica hardcodeada por raza. La keyword `Premonition` permite a una habilidad romper el orden y resolver primero.
-
-```ts
-type GameEvent =
-  | { type: 'SHIP_DESTROYED'; shipId: string; cause: 'combat' | 'sacrifice' | 'ability' }
-  | { type: 'SHIP_DAMAGED'; shipId: string; amount: number; source: string }
-  | { type: 'PLANET_ACTIVATED'; planetId: string; activatedBy: PlayerId }
-  | { type: 'PHASE_START'; phase: TurnPhase; player: PlayerId }
-  | { type: 'AGE_CHANGED'; from: Age; to: Age }
-  | { type: 'CARD_PLAYED'; cardId: string; player: PlayerId }
-  | { type: 'HERO_DEPLOYED' | 'HERO_RETURNED'; player: PlayerId }
-// ... más
-```
-
-Las habilidades se registran como:
-
-```ts
-{
-  trigger: 'SHIP_DAMAGED',
-  category: 'reactive',                                  // dicta el orden de resolución
-  premonition: false,                                    // si true, salta antes de cualquier categoría
-  filter: (event, ctx) => event.shipId === ctx.selfId,   // ej. Külen activa cuando el self recibe daño
-  effect: (event, state) => /* +1 fuerza permanente */
+interface Player {
+  id: 'a' | 'b'
+  raza: 'Tezhal' | 'Würon'
+  mazoRestante: string[]
+  mano: string[]
+  pozo: string[]
+  atributos: { fuerza: number; resguardo: number; resonancia: number }
+  heroEstado: 'neutral' | 'despertado' | 'ascendido'
+  mulliganUsado: boolean
+  planetElegidoActual?: string // id del planet card; undefined fuera de Neb/Est
 }
 ```
 
 ---
 
-## 5. Strategy pattern por raza
+## 3. Acciones del reducer
 
-Cada raza implementa `BaseRaceStrategy`:
+Discriminated union en `src/engine/actions.ts`:
 
-```ts
-interface BaseRaceStrategy {
-  race: RaceId // 'quralan' | 'wuron' | 'tezhal' | 'zaqe'
-  category: MechanicCategory // categoría firma (reactive | initiative | accumulative | post_combat)
-  signatureKeyword: string // 'kulen' | 'ignicion' | 'formacion_solar' | 'refluencia'
-  startingDeck: Card[] // mazo inicial sugerido
-  heroOptions: HeroDefinition[] // 1-3 héroes elegibles
-
-  // Mecánicas firma — hooks específicos por raza
-  registerKeywords(): KeywordHandler[]
-  registerPassives(): PassiveEffect[]
-}
-```
-
-Ejemplos:
-
-- `WuronStrategy` registra el keyword `kulen` que se hookea a `SHIP_DAMAGED` (categoría `reactive`) para sumar +1 fuerza permanente al receptor.
-- `TezhalStrategy` registra `ignicion` (categoría `initiative`) que permite consumir naves propias para potenciar otra acción.
-- `QuralanStrategy` registra `formacion_solar` (categoría `accumulative`): cada nave Q'ralan en el campo otorga +1 fuerza a las demás.
-- `ZaqeStrategy` registra `refluencia` (categoría `post_combat`): naves derrotadas vuelven al fondo del mazo, -1 al ser robadas otra vez.
+- `MULLIGAN` / `KEEP_HAND` — manejar mano inicial.
+- `SELECT_PLANET` — elegir planeta secreto (Nebulosa, Estrellas).
+- `DRAW_BOTH` — robar 1 carta a ambos al inicio del turno.
+- `PLAY_HIDDEN` / `PASS_TURN` — jugar carta boca abajo o declarar "Pasa".
+- `DECLARE_PREMONICION` — declarar categoría (Atq/Def/Rit).
+- `REVEAL` — revelar ambas cartas, ejecutar interpreter, sumar a atributos, side effects.
+- `CLOSE_TRAMO` — comparar atributos del planeta-elegido, avanzar héroe del ganador.
+- `INVOKE_ECLIPSE` — solo Sexto Sol, una vez por partida.
+- `END_GAME` — calcular tally 2-de-3 + tiebreakers.
 
 ---
 
-## 6. Port del kernel desde myl-game
+## 4. Interpreter
 
-`/opt/myl-game/src/engine/` tiene piezas reutilizables que se portan poco a poco a `sexto-sol`:
+`src/engine/interpreter.ts` — función pura `interpretCondicionales(input) → { fuerzaFinal, sideEffects }`.
 
-- ✅ `rng.ts` — RNG seedable
-- ✅ `types.ts` — patrón de tipos básicos (algunos)
-- ✅ Estructura de Strategy pattern
-- ✅ Event bus skeleton
-- ❌ Card data (myl-specific, no se porta)
-- ❌ Reglas específicas de myl (combate al castillo directo, oro como cartas, etc.)
+Evalúa:
 
-El port se hace **a demanda** — copiamos cuando necesitamos, no por defecto. Cada pieza portada se renombra/refactoriza para Sexto Sol.
+- Cláusulas `premonicion_propia`, `premonicion_oponente`, `premonicion_acierta`.
+- Bonus de planeta (+1) SOLO en Nebulosa y Estrellas (NUNCA Sexto Sol).
+- Habilidad pasiva Tezhal Despertado (+1 fuerza a cartas Ataque).
 
----
+NO aplica (los hace el reducer en `applyReveal`):
 
-## 7. Testing
+- Eclipse ×2 (después de anulaciones cruzadas).
+- Anulaciones (`sideEffect.tipo === 'anula'`) cruzadas entre cartas reveladas.
+- Bonus Würon Despertada (requiere conocer categoría jugada por el oponente — segundo pase con `aplicarBonusWuronDespertada`).
 
-### Niveles
-
-- **Unit**: cada reducer action, cada keyword handler.
-- **Integration**: secuencias de acciones representando partidas reales.
-- **Property tests**: invariantes del juego que NUNCA pueden romperse:
-  - Total HP nunca negativo
-  - Energy income nunca negativo
-  - Planetas controlados ⊆ planetas existentes
-  - Cards en mano + deck + graveyard = constante (modulo cartas exiliadas)
-  - Después de aplicar + revertir una acción, state es idéntico (excepto rng state)
-- **Replay tests**: seed + lista de acciones produce siempre el mismo estado final.
-
-### Cobertura objetivo
-
-- Engine puro: ≥90%
-- UI: ≥70%
-- Globales: ≥80%
+Fuerza final siempre ≥ 0 (`Math.max(0, ...)`).
 
 ---
 
-## 8. UI (cuando arranque)
+## 5. Loaders
 
-- **Web-first PWA** (Vite + React 18). Mobile nativo después de validar mecánicas.
-- Stack lockeado:
-  - TypeScript strict
-  - **Tailwind v4** para styling rápido
-  - **PixiJS** para canvas del sector estelar (planetas, naves, combat animations, particles)
-  - **Framer Motion** para animaciones de cartas (industria estándar para CCGs en React)
-  - **Zustand** para game state (sin React Context — Zustand directo)
-  - DOM/CSS para cartas en mano y UI (drag/drop nativo, accesibilidad)
-- Razón Pixi vs Konva: el sector estelar va a tener muchos sprites animados (naves, partículas, efectos de habilidades). PixiJS es WebGL-first y maneja mejor cantidad. Konva es DOM-canvas-fallback, sufre con sprites pesados.
-- HTTP client: TBD cuando haya backend.
+- `src/data/cards/loader.ts` — `POOL_REGISTRY` con 30 cartas + 6 planetas + 2 héroes, cargados via Vite glob desde `docs/playtest/cards-v4.1/`.
+- `src/data/decks/loader.ts` — 4 mazos preconstruidos desde `docs/playtest/decks-v4.1/`.
+- `src/data/schema.ts` — type guards manuales (IQ2 cerrada — sin zod, sustracción).
+
+Las cartas YAML están en formato estructurado (`fuerzaDelta`, `sideEffect`) parseado por el script `scripts/migrate-v4.1-cards-to-structured.ts`. No hay parsing de strings en runtime.
 
 ---
 
-## 9. Roadmap técnico
+## 6. scriptedAI
 
-### Fase 0 — Infraestructura ✅
+`src/engine/ai/scriptedAI.ts` — 5 heurísticas §7.5 del SPEC v4.1:
 
-- Scaffold Vite + React 18 + TS strict, ESLint + Prettier + Vitest + fast-check, CI con gitleaks, husky pre-commit. Cerrada 2026-05-08.
+1. `shouldMulligan`: true si mano sin coste ≤ 2.
+2. `pickPlanet`: distribución 70/15/15 según eficiencia de mano por categoría.
+3. `pickPremonicion`: tracking de últimos 3 turnos del oponente, top 70%.
+4. `pickAccion`: max fuerza esperada considerando premonición + bonus planeta + habilidades.
+5. `shouldInvokeEclipse`: solo Sexto Sol + no invocado previo + voy perdiendo Y fuerza×2 ≥ 5.
 
-### Fase 1 — Engine kernel
-
-- [ ] Port RNG seedable desde myl-game (splitmix32 + xoshiro128\*\*)
-- [ ] Definir GameState types (con `MechanicCategory`, `Age`, `PlanetGift`, `Hero`)
-- [ ] Reducer puro skeleton + acciones triviales (CONCEDE, END_PHASE)
-- [ ] Event bus con resolución por categoría (Reactive→Initiative→Accumulative→Post-combat) + Premonition
-- [ ] Strategy pattern base + 4 esqueletos (Q'ralan, Würon, Tezhal, Zaqe)
-- [ ] Property tests baseline (fast-check) sobre invariantes
-- [ ] Replay tests deterministas
-
-### Fase 2 — Mecánicas core
-
-- [ ] Despliegue de naves
-- [ ] Combate simultáneo (sin DECLARE_BLOCK; bloqueo solo via Bastión)
-- [ ] Daño residual via Desgarro
-- [ ] Energía territorial: mundo natal +1, planetas neutros activables (gastá 1 → +1)
-- [ ] Activación de Don de planeta (efecto único + agotamiento)
-- [ ] Transición de Edades (turno 5 → II, turno 9 → III) con costo +1 / normal / x2 a la firma
-- [ ] Win condition: mundo natal HP 0
-- [ ] Sistema de Héroe (Edad I residente, Edad II desplegable, Edad III natales)
-
-### Fase 3 — 4 razas (set base mínimo, ~30 cartas por raza)
-
-- [ ] Würon con `Külen` (Reactiva) — primera por ancla narrativa
-- [ ] Q'ralan con `Formación Solar` (Acumulativa)
-- [ ] Tezhal con `Ignición` (Iniciativa)
-- [ ] Zaqe con `Refluencia` (Post-combate)
-- [ ] Habilidades duales Luz/Sombra en Legendarias
-- [ ] 1-3 héroes por raza
-- [ ] 12-16 Dones de planetas únicos
-
-### Fase 4 — UI playable
-
-- [ ] React shell + routing
-- [ ] Canvas del sector estelar (PixiJS)
-- [ ] Mano + deck + tablero + héroe en mundo natal
-- [ ] AI scripted ("si puedo matar, mato; si no, defiendo")
-- [ ] Modo "Playtest local" (1 humano vs IA + hot-seat)
-
-### Fase 5 — Multiplayer (TBD)
-
-- [ ] Backend: arquitectura TBD (Node + WebSocket vs Cloudflare Durable Objects)
-- [ ] Async PVP estilo Marvel Snap: enviar acciones, replay
-- [ ] Matchmaking básico
-
-### Fase 6 — Beta cerrada
-
-- [ ] 50 jugadores invitados
-- [ ] Telemetría de balance por raza
-- [ ] Iteración de meta
+Determinista vía `createRng(state.seed, state.rng)`.
 
 ---
 
-_Vivo. Última actualización: 2026-05-09._
+## 7. UI
+
+- Stack: React 18, Zustand, Tailwind v4, framer-motion (uso mínimo).
+- `src/store/gameStore.ts`: store Zustand que envuelve el reducer + provee `stepIA()` para vsIA con delay 150ms (IQ7).
+- `src/ui/`: HomeView, PlayView, modales (PlanetChoice, EclipseConfirm, TramoClosing, GameOver), CardView, AttributeCounters, HeroBadge, PlanetCard, PrivacyShield.
+
+UI completa pero sin polish visual. Animación de revelado (IQ4) queda como TODO opcional.
+
+---
+
+## 8. Portabilidad Node.js
+
+El engine (`src/engine/`) NO importa:
+
+- React, React-DOM, Zustand, PixiJS, Framer Motion.
+- `@/ui/*`, `@/store/*`.
+- `window`, `document`, `localStorage`, `fetch`, `Math.random`, `Date.now`.
+
+Garantizado por `src/engine/__tests__/portability.test.ts` (scan estático + serialización JSON round-trip).
+
+El engine se puede mover a Fastify/Express (Fase 6 multiplayer) sin reescritura.
+
+---
+
+## 9. Tests
+
+- 14 archivos de tests, 124 pass + 1 skipped.
+- Coverage global 91.74%, engine 93.93%, engine/ai 97.72%.
+- Property tests con fast-check (`invariants.test.ts`).
+- Determinismo verificado (`replay.test.ts`, `integration-batch.test.ts`).
+- Walkthrough §11 estructural reproducible (`walkthrough.test.ts`) — flow Eclipse T7, ganador definido. Test numérico paso a paso queda como `it.skip` por default.
+
+---
+
+## 10. Roadmap post-v4.1
+
+Diferido a futuras specs:
+
+- Implementar Q'ralan y Zaqe (set 2).
+- Multiplayer online (Fase 6) — el engine portable lo soporta sin cambios.
+- Persistencia / replay viewer / spectator mode.
+- Custom deck builder, sobres, crafting.
+- Animaciones premium con Framer Motion.
+- Mobile native (RN port).
+- i18n.
+
+Open questions del juego (no del engine) en `OPEN-QUESTIONS-v4.1.md`. Notas de playtest manual en `PLAYTEST-NOTES-v4.1.md`.
