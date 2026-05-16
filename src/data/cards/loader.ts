@@ -1,11 +1,11 @@
-// Loader del pool de cartas v4.1.
+// Loader del pool de cartas v4.2.
 //
-// Carga vía Vite glob (eager) todos los YAMLs de docs/playtest/cards-v4.1/
+// Carga vía Vite glob (eager) todos los YAMLs de docs/playtest/cards-v4.2/
 // y los normaliza a las definiciones tipadas del engine (CardActionDef,
 // CardPlanetDef, CardHeroDef).
 //
-// Sin parsing de strings de condicionales — los YAMLs ya están migrados al
-// formato estructurado (fuerzaDelta, sideEffect). Ver scripts/migrate-v4.1-cards-to-structured.ts.
+// v4.2 schema: penalizacion_acierto + condicionales sobre estado del juego.
+// Ver docs/specs/engine-v4.2-migration.md y SPEC v4.2 §5.
 
 import { parse as parseYaml } from 'yaml'
 import type {
@@ -33,7 +33,7 @@ interface HeroesYamlDoc {
   heroes?: unknown[]
 }
 
-const allYamlRaw = import.meta.glob('/docs/playtest/cards-v4.1/*.yaml', {
+const allYamlRaw = import.meta.glob('/docs/playtest/cards-v4.2/*.yaml', {
   eager: true,
   query: '?raw',
   import: 'default',
@@ -42,7 +42,7 @@ const allYamlRaw = import.meta.glob('/docs/playtest/cards-v4.1/*.yaml', {
 function pickYaml(filename: string): string {
   const key = Object.keys(allYamlRaw).find((p) => p.endsWith(`/${filename}`))
   if (!key) {
-    throw new Error(`Pool loader: archivo ${filename} no encontrado en cards-v4.1/`)
+    throw new Error(`Pool loader: archivo ${filename} no encontrado en cards-v4.2/`)
   }
   return allYamlRaw[key]!
 }

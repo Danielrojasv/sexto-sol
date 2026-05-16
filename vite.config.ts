@@ -45,11 +45,7 @@ export default defineConfig({
         // engine global para no falsear el número de coverage del engine.
         'src/ui/**',
         'src/store/**',
-        // Phase 1a v4.2: stubs temporales. Phase 1b restaura schema + loaders
-        // con tests; Phase 2 restaura scriptedAI con tracking de historial.
-        'src/data/schema.ts',
-        'src/data/cards/loader.ts',
-        'src/data/decks/loader.ts',
+        // Phase 1a v4.2: scriptedAI sigue stub hasta Phase 2.
         'src/engine/ai/scriptedAI.ts',
         'vite.config.ts',
         'eslint.config.js',

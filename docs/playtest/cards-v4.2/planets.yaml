@@ -1,0 +1,63 @@
+# SEXTO SOL — Cartas de Planeta v4.1
+# 6 cartas: 3 para Nebulosa + 3 para Estrellas, cada una asociada a una
+# categoría (Ataque, Defensa, Ritual). En v4.1 no tienen efectos especiales,
+# solo categoría + flavor. El único efecto mecánico es el +1 de bonus a
+# las cartas de la misma categoría durante el tramo (ver GAME-RULES.md §6).
+#
+# Reservado para v4.2+: efecto_especial: null permite agregar reglas
+# en versiones futuras sin re-numerar IDs.
+#
+# Convención de IDs: PLN-<TRAMO>-<CATEGORÍA>.
+# Tramo: NEB = Nebulosa, EST = Estrellas.
+# Categoría: ATQ = Ataque, DEF = Defensa, RIT = Ritual.
+
+planets:
+  # ============================================================================
+  # Nebulosa — turnos 1-2
+  # ============================================================================
+
+  - id: "PLN-NEB-ATQ"
+    nombre: "Cráter de Itzpapálotl"
+    tramo: "Nebulosa"
+    categoria: "Ataque"
+    flavor: "Donde el primer cuchillo cósmico cortó la oscuridad. El peregrino que toca este cráter aprende que el primer golpe ya existía antes de él."
+    efecto_especial: null
+
+  - id: "PLN-NEB-DEF"
+    nombre: "Bóveda Argéntea de Lhuf"
+    tramo: "Nebulosa"
+    categoria: "Defensa"
+    flavor: "Lhuf descendió antes del tiempo y plantó su escudo en la nebulosa. La sombra encontró ahí su primer límite."
+    efecto_especial: null
+
+  - id: "PLN-NEB-RIT"
+    nombre: "Templo del Eco Primero"
+    tramo: "Nebulosa"
+    categoria: "Ritual"
+    flavor: "El primer canto rebotó aquí, antes de que hubiera oídos. Quien escucha este templo, escucha lo que el cosmos dijo antes de aprender a hablar."
+    efecto_especial: null
+
+  # ============================================================================
+  # Estrellas — turnos 3-4
+  # ============================================================================
+
+  - id: "PLN-EST-ATQ"
+    nombre: "Forja Helíaca"
+    tramo: "Estrellas"
+    categoria: "Ataque"
+    flavor: "Cuando el sol fragua filos, busca peregrinos que sepan empuñarlos. La Forja Helíaca no entrega armas — entrega permisos."
+    efecto_especial: null
+
+  - id: "PLN-EST-DEF"
+    nombre: "Coraza de Antara"
+    tramo: "Estrellas"
+    categoria: "Defensa"
+    flavor: "Las estrellas también se cubren entre sí. Quien aprende este resguardo no cae solo, porque ya no está solo."
+    efecto_especial: null
+
+  - id: "PLN-EST-RIT"
+    nombre: "Cántico de las Constelaciones"
+    tramo: "Estrellas"
+    categoria: "Ritual"
+    flavor: "Las constelaciones cantan en un orden que nadie puede romper. Quien las escucha bien, las hereda."
+    efecto_especial: null
