@@ -1,4 +1,4 @@
-# SEXTO SOL — Pool de cartas Tezhal v4.0
+# SEXTO SOL — Pool de cartas Tezhal v4.1 (formato estructurado)
 # 15 cartas: 5 Ataque + 5 Defensa + 5 Ritual
 # Distribución coste: 3 cards 1-2 + 6 cards 3-4 + 4 cards 5-6 + 2 flex
 # Vibe Tezhal: aggro, sacrificio, comprometerse temprano. Premia declarar Ataque
@@ -6,254 +6,299 @@
 # propio a cambio de fuerza explosiva). Defensas son punzantes — anular + contraatacar,
 # no absorber.
 #
-# Formato: ver GAME-RULES.md §4 y SPEC v4.0 §6.3.
+# Formato v4.1: condicionales con campos estructurados (fuerzaDelta, sideEffect)
+# parseados al cargar. efectoTexto preserva el texto original para UI.
+# Ver GAME-RULES.md §4 y docs/specs/engine-v4.1-migration.md (rev 3, IQ3 cerrada).
 
 cards:
-  # ============================================================================
-  # ATAQUE — 5 cartas
-  # ============================================================================
-
-  - id: "TZH-001"
-    nombre: "Lanza Solar"
-    raza: "Tezhal"
-    categoria: "Ataque"
+  - id: TZH-001
+    nombre: Lanza Solar
+    raza: Tezhal
+    categoria: Ataque
     coste: 2
     fuerza_base: 3
-    rareza: "comun"
+    rareza: comun
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ataque"
-        efecto: "+2 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Defensa"
-        efecto: "el oponente descarta 1 carta"
-    flavor: "El primer rayo cae antes de que el enemigo nombre su miedo."
-
-  - id: "TZH-002"
-    nombre: "Filo del Tonatzin"
-    raza: "Tezhal"
-    categoria: "Ataque"
+      - tipo: premonicion_propia
+        valor: Ataque
+        fuerzaDelta: 2
+        efectoTexto: +2 fuerza
+      - tipo: premonicion_oponente
+        valor: Defensa
+        sideEffect:
+          tipo: descarte
+          target: oponente
+          valor: 1
+        efectoTexto: el oponente descarta 1 carta
+    flavor: El primer rayo cae antes de que el enemigo nombre su miedo.
+  - id: TZH-002
+    nombre: Filo del Tonatzin
+    raza: Tezhal
+    categoria: Ataque
     coste: 1
     fuerza_base: 2
-    rareza: "comun"
+    rareza: comun
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ataque"
-        efecto: "+1 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Ataque"
-        efecto: "+1 fuerza"
-    flavor: "Los filos no negocian. Se cruzan."
-
-  - id: "TZH-003"
-    nombre: "Cuchilla del Quinto Sol"
-    raza: "Tezhal"
-    categoria: "Ataque"
+      - tipo: premonicion_propia
+        valor: Ataque
+        fuerzaDelta: 1
+        efectoTexto: +1 fuerza
+      - tipo: premonicion_oponente
+        valor: Ataque
+        fuerzaDelta: 1
+        efectoTexto: +1 fuerza
+    flavor: Los filos no negocian. Se cruzan.
+  - id: TZH-003
+    nombre: Cuchilla del Quinto Sol
+    raza: Tezhal
+    categoria: Ataque
     coste: 4
     fuerza_base: 4
-    rareza: "rara"
+    rareza: rara
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ataque"
-        efecto: "+3 fuerza, y descartá 1 carta de tu mano"
-      - tipo: "premonicion_acierta"
-        efecto: "-2 fuerza"
-    flavor: "El sol que vendrá se forja en lo que estamos dispuestos a perder."
-
-  - id: "TZH-004"
-    nombre: "Salva Ritual"
-    raza: "Tezhal"
-    categoria: "Ataque"
+      - tipo: premonicion_propia
+        valor: Ataque
+        fuerzaDelta: 3
+        sideEffect:
+          tipo: descarte
+          target: propio
+          valor: 1
+        efectoTexto: +3 fuerza, y descartá 1 carta de tu mano
+      - tipo: premonicion_acierta
+        fuerzaDelta: -2
+        efectoTexto: -2 fuerza
+    flavor: El sol que vendrá se forja en lo que estamos dispuestos a perder.
+  - id: TZH-004
+    nombre: Salva Ritual
+    raza: Tezhal
+    categoria: Ataque
     coste: 3
     fuerza_base: 3
-    rareza: "comun"
+    rareza: comun
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ataque"
-        efecto: "+1 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Defensa"
-        efecto: "+2 fuerza adicional"
-    flavor: "Cuando el otro alza el escudo, el atacante ya leyó el escudo."
-
-  - id: "TZH-005"
-    nombre: "Plumaje Encendido"
-    raza: "Tezhal"
-    categoria: "Ataque"
+      - tipo: premonicion_propia
+        valor: Ataque
+        fuerzaDelta: 1
+        efectoTexto: +1 fuerza
+      - tipo: premonicion_oponente
+        valor: Defensa
+        fuerzaDelta: 2
+        efectoTexto: +2 fuerza adicional
+    flavor: Cuando el otro alza el escudo, el atacante ya leyó el escudo.
+  - id: TZH-005
+    nombre: Plumaje Encendido
+    raza: Tezhal
+    categoria: Ataque
     coste: 5
     fuerza_base: 5
-    rareza: "rara"
+    rareza: rara
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ataque"
-        efecto: "+1 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Defensa"
-        efecto: "+2 fuerza adicional"
-      - tipo: "premonicion_acierta"
-        efecto: "-2 fuerza"
-    flavor: "Las plumas arden mejor cuando nadie esperaba el pájaro."
-
-  # ============================================================================
-  # DEFENSA — 5 cartas
-  # ============================================================================
-
-  - id: "TZH-006"
-    nombre: "Espejo Disolutorio"
-    raza: "Tezhal"
-    categoria: "Defensa"
+      - tipo: premonicion_propia
+        valor: Ataque
+        fuerzaDelta: 1
+        efectoTexto: +1 fuerza
+      - tipo: premonicion_oponente
+        valor: Defensa
+        fuerzaDelta: 2
+        efectoTexto: +2 fuerza adicional
+      - tipo: premonicion_acierta
+        fuerzaDelta: -2
+        efectoTexto: -2 fuerza
+    flavor: Las plumas arden mejor cuando nadie esperaba el pájaro.
+  - id: TZH-006
+    nombre: Espejo Disolutorio
+    raza: Tezhal
+    categoria: Defensa
     coste: 3
     fuerza_base: 2
-    rareza: "rara"
+    rareza: rara
     condicionales:
-      - tipo: "premonicion_oponente"
-        valor: "Ataque"
-        efecto: "anula 3 fuerza de la carta enemiga este turno"
-      - tipo: "premonicion_acierta"
-        efecto: "descartá 1 carta de tu mano"
-    flavor: "El espejo no devuelve la imagen. La consume."
-
-  - id: "TZH-007"
-    nombre: "Hangar de Tlapetl"
-    raza: "Tezhal"
-    categoria: "Defensa"
+      - tipo: premonicion_oponente
+        valor: Ataque
+        sideEffect:
+          tipo: anula
+          target: oponente
+          valor: 3
+        efectoTexto: anula 3 fuerza de la carta enemiga este turno
+      - tipo: premonicion_acierta
+        sideEffect:
+          tipo: descarte
+          target: propio
+          valor: 1
+        efectoTexto: descartá 1 carta de tu mano
+    flavor: El espejo no devuelve la imagen. La consume.
+  - id: TZH-007
+    nombre: Hangar de Tlapetl
+    raza: Tezhal
+    categoria: Defensa
     coste: 4
     fuerza_base: 3
-    rareza: "comun"
+    rareza: comun
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Defensa"
-        efecto: "+2 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Ataque"
-        efecto: "+1 fuerza adicional"
-    flavor: "El hangar no protege a las naves. Las prepara."
-
-  - id: "TZH-008"
-    nombre: "Iniciado Xocotzin"
-    raza: "Tezhal"
-    categoria: "Defensa"
+      - tipo: premonicion_propia
+        valor: Defensa
+        fuerzaDelta: 2
+        efectoTexto: +2 fuerza
+      - tipo: premonicion_oponente
+        valor: Ataque
+        fuerzaDelta: 1
+        efectoTexto: +1 fuerza adicional
+    flavor: El hangar no protege a las naves. Las prepara.
+  - id: TZH-008
+    nombre: Iniciado Xocotzin
+    raza: Tezhal
+    categoria: Defensa
     coste: 5
     fuerza_base: 4
-    rareza: "rara"
+    rareza: rara
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Defensa"
-        efecto: "+2 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Ritual"
-        efecto: "+1 fuerza y robá 1 carta"
-    flavor: "El iniciado mira el ritual ajeno y aprende su nombre."
-
-  - id: "TZH-009"
-    nombre: "Brasero del Sol Quinto"
-    raza: "Tezhal"
-    categoria: "Defensa"
+      - tipo: premonicion_propia
+        valor: Defensa
+        fuerzaDelta: 2
+        efectoTexto: +2 fuerza
+      - tipo: premonicion_oponente
+        valor: Ritual
+        fuerzaDelta: 1
+        sideEffect:
+          tipo: robo
+          target: propio
+          valor: 1
+        efectoTexto: +1 fuerza y robá 1 carta
+    flavor: El iniciado mira el ritual ajeno y aprende su nombre.
+  - id: TZH-009
+    nombre: Brasero del Sol Quinto
+    raza: Tezhal
+    categoria: Defensa
     coste: 4
     fuerza_base: 3
-    rareza: "comun"
+    rareza: comun
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Defensa"
-        efecto: "+1 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Ritual"
-        efecto: "anula 3 fuerza enemiga este turno"
-    flavor: "Para apagar el ritual ajeno, primero hay que oler su humo."
-
-  - id: "TZH-010"
-    nombre: "Obsidiana Ardiente"
-    raza: "Tezhal"
-    categoria: "Defensa"
+      - tipo: premonicion_propia
+        valor: Defensa
+        fuerzaDelta: 1
+        efectoTexto: +1 fuerza
+      - tipo: premonicion_oponente
+        valor: Ritual
+        sideEffect:
+          tipo: anula
+          target: oponente
+          valor: 3
+        efectoTexto: anula 3 fuerza enemiga este turno
+    flavor: Para apagar el ritual ajeno, primero hay que oler su humo.
+  - id: TZH-010
+    nombre: Obsidiana Ardiente
+    raza: Tezhal
+    categoria: Defensa
     coste: 5
     fuerza_base: 4
-    rareza: "rara"
+    rareza: rara
     condicionales:
-      - tipo: "premonicion_oponente"
-        valor: "Ataque"
-        efecto: "anula 4 fuerza enemiga y +1 fuerza propia"
-      - tipo: "premonicion_acierta"
-        efecto: "-2 fuerza"
-    flavor: "Lo negro absorbe. Lo ardiente devuelve."
-
-  # ============================================================================
-  # RITUAL — 5 cartas (sangre, descarte, todo-o-nada)
-  # ============================================================================
-
-  - id: "TZH-011"
-    nombre: "Ofrenda del Xocotzin"
-    raza: "Tezhal"
-    categoria: "Ritual"
+      - tipo: premonicion_oponente
+        valor: Ataque
+        fuerzaDelta: 1
+        sideEffect:
+          tipo: anula
+          target: oponente
+          valor: 4
+        efectoTexto: anula 4 fuerza enemiga y +1 fuerza propia
+      - tipo: premonicion_acierta
+        fuerzaDelta: -2
+        efectoTexto: -2 fuerza
+    flavor: Lo negro absorbe. Lo ardiente devuelve.
+  - id: TZH-011
+    nombre: Ofrenda del Xocotzin
+    raza: Tezhal
+    categoria: Ritual
     coste: 4
     fuerza_base: 2
-    rareza: "rara"
+    rareza: rara
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ritual"
-        efecto: "descartá 1 carta de tu mano, +3 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Defensa"
-        efecto: "+1 fuerza adicional"
-    flavor: "La sangre del iniciado enciende el siguiente sol."
-
-  - id: "TZH-012"
-    nombre: "Cántico Tlapetl"
-    raza: "Tezhal"
-    categoria: "Ritual"
+      - tipo: premonicion_propia
+        valor: Ritual
+        fuerzaDelta: 3
+        sideEffect:
+          tipo: descarte
+          target: propio
+          valor: 1
+        efectoTexto: descartá 1 carta de tu mano, +3 fuerza
+      - tipo: premonicion_oponente
+        valor: Defensa
+        fuerzaDelta: 1
+        efectoTexto: +1 fuerza adicional
+    flavor: La sangre del iniciado enciende el siguiente sol.
+  - id: TZH-012
+    nombre: Cántico Tlapetl
+    raza: Tezhal
+    categoria: Ritual
     coste: 5
     fuerza_base: 4
-    rareza: "rara"
+    rareza: rara
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ritual"
-        efecto: "+2 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Defensa"
-        efecto: "robá 1 carta"
-      - tipo: "premonicion_acierta"
-        efecto: "-1 fuerza"
-    flavor: "El canto no pide permiso al silencio."
-
-  - id: "TZH-013"
-    nombre: "Brasa Tlani"
-    raza: "Tezhal"
-    categoria: "Ritual"
+      - tipo: premonicion_propia
+        valor: Ritual
+        fuerzaDelta: 2
+        efectoTexto: +2 fuerza
+      - tipo: premonicion_oponente
+        valor: Defensa
+        sideEffect:
+          tipo: robo
+          target: propio
+          valor: 1
+        efectoTexto: robá 1 carta
+      - tipo: premonicion_acierta
+        fuerzaDelta: -1
+        efectoTexto: -1 fuerza
+    flavor: El canto no pide permiso al silencio.
+  - id: TZH-013
+    nombre: Brasa Tlani
+    raza: Tezhal
+    categoria: Ritual
     coste: 2
     fuerza_base: 2
-    rareza: "comun"
+    rareza: comun
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ritual"
-        efecto: "+1 fuerza"
-    flavor: "Todo gran fuego empezó como una brasa olvidada."
-
-  - id: "TZH-014"
-    nombre: "Pirámide Orbital Quetlani"
-    raza: "Tezhal"
-    categoria: "Ritual"
+      - tipo: premonicion_propia
+        valor: Ritual
+        fuerzaDelta: 1
+        efectoTexto: +1 fuerza
+    flavor: Todo gran fuego empezó como una brasa olvidada.
+  - id: TZH-014
+    nombre: Pirámide Orbital Quetlani
+    raza: Tezhal
+    categoria: Ritual
     coste: 6
     fuerza_base: 4
-    rareza: "epica"
+    rareza: epica
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ritual"
-        efecto: "descartá 2 cartas de tu mano, +6 fuerza"
-      - tipo: "premonicion_acierta"
-        efecto: "-3 fuerza"
-    flavor: "La pirámide quema todo lo que sube. Por eso solo sube lo que arde."
-
-  - id: "TZH-015"
-    nombre: "Cuchilla del Tonatzin"
-    raza: "Tezhal"
-    categoria: "Ritual"
+      - tipo: premonicion_propia
+        valor: Ritual
+        fuerzaDelta: 6
+        sideEffect:
+          tipo: descarte
+          target: propio
+          valor: 2
+        efectoTexto: descartá 2 cartas de tu mano, +6 fuerza
+      - tipo: premonicion_acierta
+        fuerzaDelta: -3
+        efectoTexto: -3 fuerza
+    flavor: La pirámide quema todo lo que sube. Por eso solo sube lo que arde.
+  - id: TZH-015
+    nombre: Cuchilla del Tonatzin
+    raza: Tezhal
+    categoria: Ritual
     coste: 3
     fuerza_base: 2
-    rareza: "comun"
+    rareza: comun
     condicionales:
-      - tipo: "premonicion_propia"
-        valor: "Ritual"
-        efecto: "+2 fuerza"
-      - tipo: "premonicion_oponente"
-        valor: "Defensa"
-        efecto: "el oponente descarta 1 carta"
-    flavor: "El ritual también corta. Pero corta hacia adentro."
+      - tipo: premonicion_propia
+        valor: Ritual
+        fuerzaDelta: 2
+        efectoTexto: +2 fuerza
+      - tipo: premonicion_oponente
+        valor: Defensa
+        sideEffect:
+          tipo: descarte
+          target: oponente
+          valor: 1
+        efectoTexto: el oponente descarta 1 carta
+    flavor: El ritual también corta. Pero corta hacia adentro.
