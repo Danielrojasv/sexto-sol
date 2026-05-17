@@ -48,8 +48,11 @@ export function PlayView() {
     if (!state) return
     if (lastConfig?.modo !== 'vsIA') return
     if (state.subPaso === 'terminado') return
-    // El humano controla revisar_resolucion (la IA no auto-avanza acá).
+    // Sub-pasos donde el humano controla el avance (modal/panel con su botón):
+    // no auto-step para que el jugador alcance a leer.
     if (state.subPaso === 'revisar_resolucion') return
+    if (state.subPaso === 'cierre_tramo') return
+    if (state.subPaso === 'duelo_final') return
     const t = setTimeout(() => {
       stepIA()
     }, 150)
