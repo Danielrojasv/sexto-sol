@@ -1,6 +1,7 @@
-// HomeView v4.1 — Selector raza + modo + mazo preconstruido + toggle tooltips.
+// HomeView v4.2 — Selector raza + modo + mazo preconstruido + toggle tooltips
+// + sección de logs (descargar consolidado de partidas guardadas, limpiar).
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { decksByRaza } from '@/data/decks/loader'
 import type { Modo, Raza } from '@/engine/types'
 import { useGameStore } from '@/store/gameStore'
@@ -98,8 +99,113 @@ export function HomeView() {
         >
           Iniciar Peregrinaje
         </button>
+
+        <GameLogsSection />
       </div>
     </div>
+  )
+}
+
+function GameLogsSection() {
+  const [count, setCount] = useState<number | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+
+  const refresh = async () => {
+    try {
+      const res = await fetch('/api/logs/count')
+      if (!res.ok) return
+      const data = (await res.json()) as { count: number }
+      setCount(data.count)
+    } catch {
+      setCount(null)
+    }
+  }
+
+  useEffect(() => {
+    refresh()
+  }, [])
+
+  const handleDownload = async () => {
+    setBusy(true)
+    setMsg(null)
+    try {
+      const res = await fetch('/api/logs/all')
+      if (!res.ok) throw new Error('fetch falló')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'sexto-sol-logs.json'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      setMsg('Descargado.')
+    } catch (e) {
+      setMsg(`Error: ${(e as Error).message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleClear = async () => {
+    if (!confirm('¿Borrar todos los logs guardados?')) return
+    setBusy(true)
+    setMsg(null)
+    try {
+      const res = await fetch('/api/logs', { method: 'DELETE' })
+      if (!res.ok) throw new Error('delete falló')
+      const data = (await res.json()) as { deleted: number }
+      setMsg(`Borrados ${data.deleted} logs.`)
+      await refresh()
+    } catch (e) {
+      setMsg(`Error: ${(e as Error).message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="bg-slate-900 p-4 rounded-lg space-y-2">
+      <h2 className="text-lg font-semibold">📂 Logs de partidas</h2>
+      <p className="text-sm text-slate-400">
+        {count === null ? (
+          <span className="italic">Sin conexión al server de logs (dev mode requerido).</span>
+        ) : (
+          <>
+            <b>{count}</b> partida{count === 1 ? '' : 's'} guardada{count === 1 ? '' : 's'} en{' '}
+            <code className="text-xs">logs/games/</code>. Cada partida se postea automáticamente al terminar.
+          </>
+        )}
+      </p>
+      {count !== null && (
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={handleDownload}
+            disabled={busy || count === 0}
+            className="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 rounded text-sm font-semibold"
+          >
+            ⬇ Descargar consolidado (.json)
+          </button>
+          <button
+            onClick={handleClear}
+            disabled={busy || count === 0}
+            className="px-3 py-2 bg-rose-800 hover:bg-rose-700 disabled:opacity-40 rounded text-sm font-semibold"
+          >
+            🗑 Limpiar
+          </button>
+          <button
+            onClick={refresh}
+            disabled={busy}
+            className="px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 rounded text-sm font-semibold"
+          >
+            ↻ Refrescar
+          </button>
+        </div>
+      )}
+      {msg && <div className="text-xs text-amber-300">{msg}</div>}
+    </section>
   )
 }
 
