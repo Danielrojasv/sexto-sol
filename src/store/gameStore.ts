@@ -48,6 +48,12 @@ interface GameStore {
   privacyShieldActive: boolean
   /** Si la app está en HomeView (no en partida). */
   inHome: boolean
+  /** Log de acciones de la partida actual (para replay/análisis). Reset por partida. */
+  actionLog: Action[]
+  /** Seed + timestamp de la partida actual (para identificar el log). */
+  gameStartedAt: string | undefined
+  /** Flag para evitar postear el log dos veces si re-render entra a terminado. */
+  logPosted: boolean
 
   // Actions del store
   startGame: (config: GameConfig) => void
@@ -65,6 +71,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   aiPlannedPremonicion: {},
   privacyShieldActive: false,
   inHome: true,
+  actionLog: [],
+  gameStartedAt: undefined,
+  logPosted: false,
 
   startGame: (config: GameConfig) => {
     const seed = Math.floor(Math.random() * 1_000_000_000) // browser-side, OK acá (no engine)
@@ -86,6 +95,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       aiPlannedPremonicion: {},
       privacyShieldActive: false,
       inHome: false,
+      actionLog: [],
+      gameStartedAt: new Date().toISOString().replace(/[:.]/g, '-'),
+      logPosted: false,
     })
     // No auto-keep — el user verá su mano en mulligan_inicial y decidirá.
     // stepIA() resolverá automáticamente el mulligan del jugador B (IA).
@@ -108,7 +120,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ aiHistory: aiHistoryNext, aiPlannedPremonicion: {} })
     }
     const next = REDUCER(s, action)
-    set({ state: next })
+    const log = [...get().actionLog, action]
+    set({ state: next, actionLog: log })
+    // Si la partida acaba de terminar, postear el log al server (best-effort).
+    if (next.subPaso === 'terminado' && !get().logPosted) {
+      set({ logPosted: true })
+      postGameLog({
+        ts: get().gameStartedAt ?? new Date().toISOString(),
+        seed: next.seed,
+        config: get().lastConfig,
+        actions: log,
+        finalState: snapshotForLog(next),
+      }).catch(() => {
+        // best-effort; no romper UX si server no responde.
+      })
+    }
   },
 
   stepIA: () => {
@@ -217,3 +243,44 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   acknowledgePrivacy: () => set({ privacyShieldActive: false }),
 }))
+
+// ===== Logging =================================================================
+
+interface PostLogPayload {
+  ts: string
+  seed: number
+  config: GameConfig | undefined
+  actions: Action[]
+  finalState: ReturnType<typeof snapshotForLog>
+}
+
+async function postGameLog(payload: PostLogPayload): Promise<void> {
+  try {
+    await fetch('/api/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    // best-effort
+  }
+}
+
+function snapshotForLog(state: GameState) {
+  return {
+    tramo: state.tramo,
+    turno: state.turno,
+    subPaso: state.subPaso,
+    ganador: state.ganador,
+    finalTally: state.finalTally,
+    eclipseInvocado: state.eclipseInvocado,
+    eclipseInvocador: state.eclipseInvocador,
+    historialPremoniciones: state.historialPremoniciones,
+    atributosA: state.players.a.atributos,
+    atributosB: state.players.b.atributos,
+    razaA: state.players.a.raza,
+    razaB: state.players.b.raza,
+    heroEstadoA: state.players.a.heroEstado,
+    heroEstadoB: state.players.b.heroEstado,
+  }
+}
